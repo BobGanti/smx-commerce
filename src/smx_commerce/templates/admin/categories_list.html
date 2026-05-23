@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ commerce_config.project_title }} · Commerce Categories Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% if commerce_config.favicon_url %}
+    <link rel="icon" href="{{ commerce_config.favicon_url }}">
+  {% endif %}
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f7f8fa; color: #18202a; }
+    main { max-width: 1100px; margin: 0 auto; padding: 40px 20px; }
+    header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 24px; }
+    nav { display: flex; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
+    .panel, table { background: white; border: 1px solid #e6e8eb; border-radius: 16px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); }
+    .panel { padding: 22px; margin-bottom: 24px; }
+    table { width: 100%; border-collapse: collapse; overflow: hidden; }
+    th, td { padding: 14px 16px; border-bottom: 1px solid #e6e8eb; text-align: left; vertical-align: top; }
+    th { background: #f1f5f9; font-size: 0.9rem; color: #475467; }
+    tr:last-child td { border-bottom: 0; }
+    label { display: block; font-weight: 650; margin-top: 12px; }
+    input, select, textarea { width: 100%; box-sizing: border-box; padding: 11px; border: 1px solid #ccd2da; border-radius: 10px; margin-top: 6px; font: inherit; }
+    textarea { min-height: 80px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #ecfdf3; color: #027a48; font-weight: 700; font-size: 0.82rem; }
+    .muted { color: #667085; }
+    .error { color: #b42318; font-weight: 650; }
+    a { color: #0f766e; text-decoration: none; font-weight: 650; }
+    button { padding: 10px 14px; border: 0; border-radius: 10px; font-weight: 750; cursor: pointer; background: #0f766e; color: white; }
+    .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+    .brand img { max-height: 48px; max-width: 180px; object-fit: contain; }
+    .brand-title { font-size: 1.05rem; font-weight: 800; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <div class="brand">
+          {% if commerce_config.logo_url %}
+            <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.project_title }} logo">
+          {% endif %}
+          <span class="brand-title">{{ commerce_config.project_title }}</span>
+        </div>
+
+        <h1>Categories</h1>
+        <p class="muted">Manage product categories for {{ commerce_config.project_title }} from the admin UI.</p>
+      </div>
+
+      <form method="post" action="/commerce/admin/logout">
+        <button type="submit">Sign out</button>
+      </form>
+    </header>
+
+    <nav>
+      <a href="{{ commerce_config.project_home_url }}">Back to {{ commerce_config.project_title }}</a>
+      <a href="/commerce/admin">Admin home</a>
+      <a href="/commerce/admin/products">Products</a>
+      <a href="/commerce/admin/categories">Categories</a>
+      <a href="/commerce/admin/orders">Orders</a>
+    </nav>
+
+    {% set page_error = error or request.args.get("error") %}
+    {% if page_error %}
+      <section class="panel">
+        <p id="safe-delete-category-error" class="error">{{ page_error }}</p>
+      </section>
+    {% endif %}
+
+    <section class="panel">
+      <h2>Create category</h2>
+
+      {% if error %}
+        <p class="error">{{ error }}</p>
+      {% endif %}
+
+      <form method="post" action="/commerce/admin/categories">
+        <div class="grid">
+          <div>
+            <label for="slug">Slug</label>
+            <input id="slug" name="slug" placeholder="bootcamps" required>
+          </div>
+
+          <div>
+            <label for="name">Name</label>
+            <input id="name" name="name" required>
+          </div>
+
+          <div>
+            <label for="status">Status</label>
+            <select id="status" name="status">
+              <option value="active">Active</option>
+              <option value="hidden">Hidden</option>
+              <option value="archived">Archived</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="parent_slug">Parent category</label>
+            <select id="parent_slug" name="parent_slug">
+              <option value="">None</option>
+              {% for category in categories or [] %}
+                <option value="{{ category.slug }}">{{ category.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label for="sort_order">Sort order</label>
+            <input id="sort_order" name="sort_order" type="number" value="0">
+          </div>
+        </div>
+
+        <label for="description">Description</label>
+        <textarea id="description" name="description"></textarea>
+
+        <button type="submit">Create category</button>
+      </form>
+    </section>
+
+    {% if categories %}
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Slug</th>
+            <th>Status</th>
+            <th>Parent</th>
+            <th>Sort</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for category in categories %}
+            <tr>
+              <td>{{ category.name }}</td>
+              <td>{{ category.slug }}</td>
+              <td><span class="badge">{{ category.status.value }}</span></td>
+              <td>{{ category.parent_slug or "" }}</td>
+              <td>{{ category.sort_order }}</td>
+              <td>
+                <a href="/commerce/admin/categories/{{ category.slug }}/edit">Edit category</a>
+                <form method="post" action="/commerce/admin/categories/{{ category.slug }}/delete" onsubmit="return confirm('Delete this category? This is allowed only if no product or child category references it.');">
+                  <button type="submit">Delete unused category</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="muted">No categories have been created yet.</p>
+    {% endif %}
+  </main>
+</body>
+</html>

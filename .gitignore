@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Local databases / runtime files
+*.db
+*.sqlite
+*.sqlite3
+data/
+instance/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+!.env.smx-commerce.example
+
+# Temporary patch/repair scripts used during development
+patch_*.py
+repair_*.py
+fix_*.py
+inspect_*.py
+_tmp_*.py
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
+smx_commerce_scripts.sh
+tests/
+scripts/
+MANIFEST.in
+pyproject.toml
+pytest_fail.txt

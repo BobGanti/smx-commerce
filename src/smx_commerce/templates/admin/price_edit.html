@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ commerce_config.project_title }} · Edit {{ price.label }} · Commerce Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% if commerce_config.favicon_url %}
+    <link rel="icon" href="{{ commerce_config.favicon_url }}">
+  {% endif %}
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f7f8fa; color: #18202a; }
+    main { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+    nav { display: flex; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
+    .panel { background: white; border: 1px solid #e6e8eb; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); }
+    label { display: block; font-weight: 650; margin-top: 12px; }
+    input, select { width: 100%; box-sizing: border-box; padding: 11px; border: 1px solid #ccd2da; border-radius: 10px; margin-top: 6px; font: inherit; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+    .muted { color: #667085; }
+    .error { color: #b42318; font-weight: 650; }
+    a { color: #0f766e; text-decoration: none; font-weight: 700; }
+    button { margin-top: 18px; padding: 12px 16px; border: 0; border-radius: 12px; font-weight: 750; cursor: pointer; background: #0f766e; color: white; }
+    .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+    .brand img { max-height: 48px; max-width: 180px; object-fit: contain; }
+    .brand-title { font-size: 1.05rem; font-weight: 800; }
+  </style>
+</head>
+<body>
+  <main>
+    <nav>
+      <a href="{{ commerce_config.project_home_url }}">Back to {{ commerce_config.project_title }}</a>
+      <a href="/commerce/admin">Admin home</a>
+      <a href="/commerce/admin/products">Products</a>
+      <a href="/commerce/admin/products/{{ product.slug }}">Back to product</a>
+      <a href="/commerce/admin/categories">Categories</a>
+      <a href="/commerce/admin/orders">Orders</a>
+    </nav>
+
+    <section class="panel">
+      <div class="brand">
+        {% if commerce_config.logo_url %}
+          <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.project_title }} logo">
+        {% endif %}
+        <span class="brand-title">{{ commerce_config.project_title }}</span>
+      </div>
+
+      <h1>Edit price option</h1>
+      <p class="muted">Product: {{ product.name }} · Code: {{ price.code }}</p>
+
+      {% if error %}
+        <p class="error">{{ error }}</p>
+      {% endif %}
+
+      <form method="post" action="/commerce/admin/products/{{ product.slug }}/prices/{{ price.code }}/update">
+        <div class="grid">
+          <div>
+            <label for="label">Label</label>
+            <input id="label" name="label" value="{{ price.label }}" required>
+          </div>
+
+          <div>
+            <label for="amount_major">Amount</label>
+            <input id="amount_major" name="amount_major" type="number" min="0" step="0.01" value="{{ price.amount.major() }}" required>
+          </div>
+
+          <div>
+            <label for="currency">Currency</label>
+            <input id="currency" name="currency" value="{{ price.amount.currency }}" required>
+          </div>
+
+          <div>
+            <label for="billing_mode">Billing mode</label>
+            <select id="billing_mode" name="billing_mode">
+              {% for value in ["one_time", "recurring"] %}
+                <option value="{{ value }}" {% if price.billing_mode.value == value %}selected{% endif %}>{{ value }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label for="billing_interval">Billing interval</label>
+            <input id="billing_interval" name="billing_interval" value="{{ price.billing_interval or '' }}" placeholder="month">
+          </div>
+
+          <div>
+            <label for="status">Status</label>
+            <select id="status" name="status">
+              {% for value in ["active", "inactive", "archived"] %}
+                <option value="{{ value }}" {% if price.status.value == value %}selected{% endif %}>{{ value }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label for="sort_order">Sort order</label>
+            <input id="sort_order" name="sort_order" type="number" value="{{ price.sort_order }}">
+          </div>
+        </div>
+
+        <button type="submit">Save price changes</button>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

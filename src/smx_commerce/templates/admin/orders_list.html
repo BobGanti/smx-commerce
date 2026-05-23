@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ commerce_config.project_title }} · Commerce Orders Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% if commerce_config.favicon_url %}
+    <link rel="icon" href="{{ commerce_config.favicon_url }}">
+  {% endif %}
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f7f8fa; color: #18202a; }
+    main { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+    header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 24px; }
+    nav { display: flex; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
+    table { width: 100%; border-collapse: collapse; background: white; border: 1px solid #e6e8eb; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); }
+    th, td { padding: 14px 16px; border-bottom: 1px solid #e6e8eb; text-align: left; vertical-align: top; }
+    th { background: #f1f5f9; font-size: 0.9rem; color: #475467; }
+    tr:last-child td { border-bottom: 0; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #ecfdf3; color: #027a48; font-weight: 700; font-size: 0.82rem; }
+    .muted { color: #667085; }
+    a { color: #0f766e; text-decoration: none; font-weight: 650; }
+    button { padding: 10px 14px; border: 0; border-radius: 10px; font-weight: 750; cursor: pointer; background: #0f766e; color: white; }
+    .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+    .brand img { max-height: 48px; max-width: 180px; object-fit: contain; }
+    .brand-title { font-size: 1.05rem; font-weight: 800; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <div class="brand">
+          {% if commerce_config.logo_url %}
+            <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.project_title }} logo">
+          {% endif %}
+          <span class="brand-title">{{ commerce_config.project_title }}</span>
+        </div>
+
+        <h1>Orders</h1>
+        <p class="muted">View commerce orders for {{ commerce_config.project_title }} from the admin UI.</p>
+      </div>
+
+      <form method="post" action="/commerce/admin/logout">
+        <button type="submit">Sign out</button>
+      </form>
+    </header>
+
+    <nav>
+      <a href="{{ commerce_config.project_home_url }}">Back to {{ commerce_config.project_title }}</a>
+      <a href="/commerce/admin">Admin home</a>
+      <a href="/commerce/admin/products">Products</a>
+      <a href="/commerce/admin/categories">Categories</a>
+      <a href="/commerce/admin/orders">Orders</a>
+      <a href="/commerce/admin/orders.csv">Download CSV</a>
+    </nav>
+
+    {% if status or product_slug %}
+      <p class="muted">
+        Filter:
+        {% if status %}status={{ status }}{% endif %}
+        {% if product_slug %} product={{ product_slug }}{% endif %}
+      </p>
+    {% endif %}
+
+    {% if orders %}
+      <table>
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Buyer</th>
+            <th>Product</th>
+            <th>Price</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Payment reference</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+            <tr>
+              <td>{{ order.public_id }}</td>
+              <td>
+                {{ order.buyer.full_name }}<br>
+                <span class="muted">{{ order.buyer.email }}</span>
+              </td>
+              <td>{{ order.product_slug }}</td>
+              <td>{{ order.price_code }}</td>
+              <td>{{ order.amount.currency }} {{ order.amount.major() }}</td>
+              <td><span class="badge">{{ order.status.value }}</span></td>
+              <td>{{ order.payment_reference or "" }}</td>
+              <td><a href="/commerce/admin/orders/{{ order.public_id }}/edit">Edit order</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="muted">No orders found.</p>
+    {% endif %}
+  </main>
+</body>
+</html>

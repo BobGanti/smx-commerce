@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ commerce_config.site_title }} · {{ commerce_config.module_title }} Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% if commerce_config.favicon_url %}
+    <link rel="icon" href="{{ commerce_config.favicon_url }}">
+  {% endif %}
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f7f8fa; color: #18202a; }
+    main { max-width: 1100px; margin: 0 auto; padding: 40px 20px; }
+    header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 24px; }
+    nav { display: flex; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
+    .panel { background: white; border: 1px solid #e6e8eb; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); margin-bottom: 24px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+    label { display: block; font-weight: 650; margin-top: 12px; }
+    input { width: 100%; box-sizing: border-box; padding: 11px; border: 1px solid #ccd2da; border-radius: 10px; margin-top: 6px; font: inherit; }
+    button { margin-top: 18px; padding: 12px 16px; border: 0; border-radius: 12px; font-weight: 750; cursor: pointer; background: #0f766e; color: white; }
+    a { color: #0f766e; text-decoration: none; font-weight: 700; }
+    .muted { color: #667085; }
+    .success { color: #027a48; font-weight: 700; }
+    .error { color: #b42318; font-weight: 700; }
+    .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+    .brand img { max-height: 56px; max-width: 220px; object-fit: contain; }
+    .brand-title { font-size: 1.05rem; font-weight: 800; }
+    .preview { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
+    .preview-logo { max-height: 80px; max-width: 260px; object-fit: contain; border: 1px solid #e6e8eb; border-radius: 12px; padding: 8px; background: white; }
+    .preview-favicon { width: 48px; height: 48px; object-fit: contain; border: 1px solid #e6e8eb; border-radius: 12px; padding: 8px; background: white; }
+    .card-link { display: block; padding: 18px; border: 1px solid #e6e8eb; border-radius: 14px; background: #ffffff; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <div class="brand">
+          {% if commerce_config.logo_url %}
+            <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.site_title }} logo">
+          {% endif %}
+          <span class="brand-title">{{ commerce_config.site_title }} · {{ commerce_config.module_title }}</span>
+        </div>
+
+        <h1>Admin Dashboard</h1>
+        <p class="muted">Manage {{ commerce_config.module_title }} for {{ commerce_config.site_title }}.</p>
+      </div>
+
+      <form method="post" action="/commerce/admin/logout">
+        <button type="submit">Sign out</button>
+      </form>
+    </header>
+
+    <nav>
+      <a href="{{ commerce_config.project_home_url }}">Back to {{ commerce_config.site_title }}</a>
+      <a href="/commerce/admin">Admin home</a>
+      <a href="/commerce/admin/products">Products</a>
+      <a href="/commerce/admin/categories">Categories</a>
+      <a href="/commerce/admin/orders">Orders</a>
+    </nav>
+
+    {% if message %}
+      <section class="panel">
+        <p class="success">{{ message }}</p>
+      </section>
+    {% endif %}
+
+    {% if error %}
+      <section class="panel">
+        <p class="error">{{ error }}</p>
+      </section>
+    {% endif %}
+
+    <section class="panel">
+      <h2>Branding assets</h2>
+      <p class="muted">
+        Upload a logo and favicon for this client project. Images are stored in
+        <code>smxcommerce/assets/</code>. Existing assets are replaced only when you upload new files.
+      </p>
+
+      <div class="preview">
+        {% if commerce_config.logo_url %}
+          <div>
+            <p class="muted">Current logo</p>
+            <img class="preview-logo" src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.site_title }} logo preview">
+          </div>
+        {% endif %}
+
+        {% if commerce_config.favicon_url %}
+          <div>
+            <p class="muted">Current favicon</p>
+            <img class="preview-favicon" src="{{ commerce_config.favicon_url }}" alt="{{ commerce_config.site_title }} favicon preview">
+          </div>
+        {% endif %}
+      </div>
+
+      <form method="post" action="/commerce/admin/branding/assets" enctype="multipart/form-data">
+        <label for="logo">Upload logo</label>
+        <input id="logo" name="logo" type="file" accept=".png,.jpg,.jpeg,.webp,.gif,image/png,image/jpeg,image/webp,image/gif">
+
+        <label for="favicon">Upload favicon</label>
+        <input id="favicon" name="favicon" type="file" accept=".png,.ico,image/png,image/x-icon">
+
+        <button type="submit">Upload branding assets</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Commerce sections</h2>
+
+      <div class="grid">
+        <a class="card-link" href="/commerce/admin/products">
+          <strong>Products</strong><br>
+          <span class="muted">Create, update, price, archive, and safely delete products.</span>
+        </a>
+
+        <a class="card-link" href="/commerce/admin/categories">
+          <strong>Categories</strong><br>
+          <span class="muted">Organize products and manage category hierarchy.</span>
+        </a>
+
+        <a class="card-link" href="/commerce/admin/orders">
+          <strong>Orders</strong><br>
+          <span class="muted">Review practice/live orders and export CSV.</span>
+        </a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

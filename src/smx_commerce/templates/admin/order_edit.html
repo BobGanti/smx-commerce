@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Edit Order · Commerce Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f7f8fa; color: #18202a; }
+    main { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+    nav { display: flex; gap: 14px; margin-bottom: 20px; }
+    .panel { background: white; border: 1px solid #e6e8eb; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); }
+    label { display: block; font-weight: 650; margin-top: 12px; }
+    input, select, textarea { width: 100%; box-sizing: border-box; padding: 11px; border: 1px solid #ccd2da; border-radius: 10px; margin-top: 6px; font: inherit; }
+    textarea { min-height: 100px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+    .muted { color: #667085; }
+    .error { color: #b42318; font-weight: 650; }
+    a { color: #0f766e; text-decoration: none; font-weight: 700; }
+    button { margin-top: 18px; padding: 12px 16px; border: 0; border-radius: 12px; font-weight: 750; cursor: pointer; background: #0f766e; color: white; }
+  </style>
+</head>
+<body>
+  <main>
+    <nav>
+      <a href="/commerce/admin/orders">Orders</a>
+      <a href="/commerce/admin/products">Products</a>
+      <a href="/commerce/admin/categories">Categories</a>
+    </nav>
+
+    <section class="panel">
+      <h1>Edit order</h1>
+      <p class="muted">Order ID: {{ order.public_id }}</p>
+      <p class="muted">Product: {{ order.product_slug }} · Price: {{ order.price_code }} · Amount: {{ order.amount.currency }} {{ order.amount.major() }}</p>
+      <p class="muted">Payment reference: {{ order.payment_reference or "not set" }}</p>
+
+          {% set page_error = error or request.args.get("error") %}
+          {% if page_error %}
+            <p id="order-delete-error" class="error">{{ page_error }}</p>
+          {% endif %}
+
+      {% if error %}
+        <p class="error">{{ error }}</p>
+      {% endif %}
+
+      <form method="post" action="/commerce/admin/orders/{{ order.public_id }}/update">
+        <div class="grid">
+          <div>
+            <label for="buyer_full_name">Buyer full name</label>
+            <input id="buyer_full_name" name="buyer_full_name" value="{{ order.buyer.full_name }}" required>
+          </div>
+
+          <div>
+            <label for="buyer_email">Buyer email</label>
+            <input id="buyer_email" name="buyer_email" type="email" value="{{ order.buyer.email }}" required>
+          </div>
+
+          <div>
+            <label for="buyer_phone">Buyer phone</label>
+            <input id="buyer_phone" name="buyer_phone" value="{{ order.buyer.phone }}">
+          </div>
+
+          <div>
+            <label for="buyer_company">Buyer company</label>
+            <input id="buyer_company" name="buyer_company" value="{{ order.buyer.company }}">
+          </div>
+
+          <div>
+            <label for="status">Status</label>
+            <select id="status" name="status">
+              {% for value in editable_statuses %}
+                <option value="{{ value }}" {% if order.status.value == value %}selected{% endif %}>{{ value }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes">{{ order.notes }}</textarea>
+
+        <button type="submit">Save order changes</button>
+      </form>
+
+          <form method="post" action="/commerce/admin/orders/{{ order.public_id }}/delete" onsubmit="return confirm('Delete this practice order? This is blocked for paid/refunded orders or orders with payment events.');">
+            <button type="submit">Delete practice order</button>
+          </form>
+
+    </section>
+  </main>
+</body>
+</html>

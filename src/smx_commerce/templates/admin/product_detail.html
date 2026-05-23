@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ commerce_config.project_title }} · {{ product.name }} · Commerce Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% if commerce_config.favicon_url %}
+    <link rel="icon" href="{{ commerce_config.favicon_url }}">
+  {% endif %}
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f7f8fa; color: #18202a; }
+    main { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+    nav { display: flex; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
+    .panel, table { background: white; border: 1px solid #e6e8eb; border-radius: 16px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); }
+    .panel { padding: 22px; margin-bottom: 24px; }
+    table { width: 100%; border-collapse: collapse; overflow: hidden; }
+    th, td { padding: 14px 16px; border-bottom: 1px solid #e6e8eb; text-align: left; vertical-align: top; }
+    th { background: #f1f5f9; font-size: 0.9rem; color: #475467; }
+    tr:last-child td { border-bottom: 0; }
+    label { display: block; font-weight: 650; margin-top: 12px; }
+    input, select { width: 100%; box-sizing: border-box; padding: 11px; border: 1px solid #ccd2da; border-radius: 10px; margin-top: 6px; font: inherit; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #ecfdf3; color: #027a48; font-weight: 700; font-size: 0.82rem; }
+    .muted { color: #667085; }
+    .error { color: #b42318; font-weight: 650; }
+    a { color: #0f766e; text-decoration: none; font-weight: 650; }
+    button { margin-top: 16px; padding: 10px 14px; border: 0; border-radius: 10px; font-weight: 750; cursor: pointer; background: #0f766e; color: white; }
+    .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+    .brand img { max-height: 48px; max-width: 180px; object-fit: contain; }
+    .brand-title { font-size: 1.05rem; font-weight: 800; }
+    .inline-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  </style>
+</head>
+<body>
+  <main>
+    <nav>
+      <a href="{{ commerce_config.project_home_url }}">Back to {{ commerce_config.project_title }}</a>
+      <a href="/commerce/admin">Admin home</a>
+      <a href="/commerce/admin/products">Products</a>
+      <a href="/commerce/admin/categories">Categories</a>
+      <a href="/commerce/admin/orders">Orders</a>
+    </nav>
+
+    <section class="panel">
+      <div class="brand">
+        {% if commerce_config.logo_url %}
+          <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.project_title }} logo">
+        {% endif %}
+        <span class="brand-title">{{ commerce_config.project_title }}</span>
+      </div>
+
+      <h1>{{ product.name }}</h1>
+      <p class="muted">{{ product.slug }} · {{ product.kind.value }} · {{ product.status.value }}</p>
+
+      {% if error %}
+        <p id="safe-delete-product-detail-error" class="error">{{ error }}</p>
+      {% endif %}
+
+      {% if product.summary %}
+        <p>{{ product.summary }}</p>
+      {% endif %}
+
+      {% if product.description %}
+        <p class="muted">{{ product.description }}</p>
+      {% endif %}
+
+      <div class="inline-actions">
+        <p><a href="/products/{{ product.slug }}">View public product page</a></p>
+        <p><a href="/commerce/admin/products/{{ product.slug }}/edit">Edit product</a></p>
+      </div>
+
+      <form method="post" action="/commerce/admin/products/{{ product.slug }}/delete" onsubmit="return confirm('Delete this product? This is allowed only if no order references it.');">
+        <button type="submit">Delete unused product</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Add price option</h2>
+
+      {% if error %}
+        <p class="error">{{ error }}</p>
+      {% endif %}
+
+      <form method="post" action="/commerce/admin/products/{{ product.slug }}/prices">
+        <div class="grid">
+          <div>
+            <label for="code">Code</label>
+            <input id="code" name="code" placeholder="standard" required>
+          </div>
+
+          <div>
+            <label for="label">Label</label>
+            <input id="label" name="label" placeholder="Standard" required>
+          </div>
+
+          <div>
+            <label for="amount_major">Amount</label>
+            <input id="amount_major" name="amount_major" type="number" min="0" step="0.01" placeholder="299" required>
+          </div>
+
+          <div>
+            <label for="currency">Currency</label>
+            <input id="currency" name="currency" value="EUR" maxlength="3" required>
+          </div>
+
+          <div>
+            <label for="billing_mode">Billing mode</label>
+            <select id="billing_mode" name="billing_mode">
+              <option value="one_time">One time</option>
+              <option value="recurring">Recurring</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="billing_interval">Billing interval</label>
+            <select id="billing_interval" name="billing_interval">
+              <option value="">None</option>
+              <option value="day">Day</option>
+              <option value="week">Week</option>
+              <option value="month">Month</option>
+              <option value="year">Year</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="status">Status</label>
+            <select id="status" name="status">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="archived">Archived</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="sort_order">Sort order</label>
+            <input id="sort_order" name="sort_order" type="number" value="0">
+          </div>
+        </div>
+
+        <button type="submit">Add price option</button>
+      </form>
+    </section>
+
+    {% if product.prices %}
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Label</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Billing</th>
+            <th>Sort order</th>
+            <th>Admin</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for price in product.prices %}
+            <tr>
+              <td>{{ price.code }}</td>
+              <td>{{ price.label }}</td>
+              <td>{{ price.amount.currency }} {{ price.amount.major() }}</td>
+              <td><span class="badge">{{ price.status.value }}</span></td>
+              <td>{{ price.billing_mode.value }}{% if price.billing_interval %} / {{ price.billing_interval }}{% endif %}</td>
+              <td>{{ price.sort_order }}</td>
+              <td>
+                <a href="/commerce/admin/products/{{ product.slug }}/prices/{{ price.code }}/edit">Edit price</a>
+                <form method="post" action="/commerce/admin/products/{{ product.slug }}/prices/{{ price.code }}/delete" onsubmit="return confirm('Delete this price option? This is allowed only if no order references it.');">
+                  <button type="submit">Delete unused price</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <section class="panel">
+        <p class="muted">No price options have been created for this product yet.</p>
+      </section>
+    {% endif %}
+  </main>
+</body>
+</html>

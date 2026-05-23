@@ -1,0 +1,1 @@
+"""Default smx-commerce assets."""
