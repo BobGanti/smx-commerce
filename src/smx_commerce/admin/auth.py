@@ -7,36 +7,36 @@ from typing import Any
 from flask import Blueprint, current_app, jsonify, redirect, render_template, request, session, url_for
 
 
-ADMIN_KEY_HEADER = "X-SMX-Commerce-Admin-Key"
-ADMIN_SESSION_KEY = "smx_commerce_admin_authenticated"
+ADMIN_TOKEN_HEADER = "X-SMX-Commerce-Admin-Token"
+ADMIN_SESSION_TOKEN = "smx_commerce_admin_authenticated"
 
 
-def apply_admin_api_key_guard(bp: Blueprint, admin_api_key: str | None) -> None:
+def apply_admin_token_guard(bp: Blueprint, admin_token: str | None) -> None:
     """
-    Protect admin routes when admin_api_key is configured.
+    Protect admin routes when admin_token is configured.
 
     Accepted auth methods:
-    1. X-SMX-Commerce-Admin-Key header, useful for API clients/tests.
+    1. X-SMX-Commerce-Admin-Token header, useful for API clients/tests.
     2. Session login through /commerce/admin/login, useful for browser admin UX.
 
-    If no key is configured, the guard is inactive.
+    If no token is configured, the guard is inactive.
     """
-    if not admin_api_key:
+    if not admin_token:
         return
 
-    expected_key = admin_api_key.strip()
+    expected_token = admin_token.strip()
 
     @bp.before_request
     def require_admin_auth():
         if _is_auth_route():
             return None
 
-        supplied_key = request.headers.get(ADMIN_KEY_HEADER, "")
+        supplied_token = request.headers.get(ADMIN_TOKEN_HEADER, "")
 
-        if supplied_key and compare_digest(supplied_key, expected_key):
+        if supplied_token and compare_digest(supplied_token, expected_token):
             return None
 
-        if session.get(ADMIN_SESSION_KEY) is True:
+        if session.get(ADMIN_SESSION_TOKEN) is True:
             return None
 
         if _wants_html():
@@ -48,7 +48,7 @@ def apply_admin_api_key_guard(bp: Blueprint, admin_api_key: str | None) -> None:
 
 
 def create_admin_auth_blueprint(
-    admin_api_key: str | None,
+    admin_token: str | None,
     commerce_config: Any | None = None,
 ) -> Blueprint:
     bp = Blueprint(
@@ -61,7 +61,7 @@ def create_admin_auth_blueprint(
 
     @bp.get("/login")
     def login():
-        if not admin_api_key:
+        if not admin_token:
             return jsonify({"status": "ok", "message": "admin authentication is not configured"})
 
         if request.accept_mimetypes.best_match(["text/html", "application/json"]) == "text/html":
@@ -74,16 +74,16 @@ def create_admin_auth_blueprint(
 
     @bp.post("/login")
     def submit_login():
-        if not admin_api_key:
+        if not admin_token:
             return jsonify({"status": "ok", "message": "admin authentication is not configured"})
 
         if not current_app.secret_key:
             return jsonify({"error": "Flask secret_key is required for admin session login"}), 500
 
         payload = request.get_json(silent=True) or {}
-        supplied_key = request.form.get("admin_api_key") or payload.get("admin_api_key") or ""
+        supplied_token = request.form.get("admin_token") or payload.get("admin_token") or ""
 
-        if not compare_digest(supplied_key, admin_api_key):
+        if not compare_digest(supplied_token, admin_token):
             if _wants_html():
                 return render_template(
                     "admin/login.html",
@@ -93,7 +93,7 @@ def create_admin_auth_blueprint(
 
             return jsonify({"error": "invalid admin key"}), 401
 
-        session[ADMIN_SESSION_KEY] = True
+        session[ADMIN_SESSION_TOKEN] = True
 
         if _wants_html():
             return redirect("/commerce/admin/products", code=303)
@@ -102,7 +102,7 @@ def create_admin_auth_blueprint(
 
     @bp.post("/logout")
     def logout():
-        session.pop(ADMIN_SESSION_KEY, None)
+        session.pop(ADMIN_SESSION_TOKEN, None)
 
         if _wants_html():
             return redirect("/commerce/admin/login", code=303)

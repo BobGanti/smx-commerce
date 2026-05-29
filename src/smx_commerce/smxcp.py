@@ -10,8 +10,10 @@ SCAFFOLD_DIR_NAME = "smxcommerce"
 SETUP_FILE_NAME = "smx_commerce_setup.py"
 ENV_EXAMPLE_FILE_NAME = ".smx_commerce_example.env"
 ENV_FILE_NAME = ".smx_commerce.env"
+DEPLOY_ENV_EXAMPLE_FILE_NAME = ".smx_commerce.deploy_example.env"
 DATA_DIR_NAME = "data"
 ASSETS_DIR_NAME = "assets"
+RECEIPTS_DIR_NAME = "receipts"
 DEV_DB_FILE_NAME = "smx_commerce_dev.db"
 
 FALLBACK_PNG_BYTES = (
@@ -32,9 +34,11 @@ class SmxCommerceScaffold:
     scaffold_dir: Path
     data_dir: Path
     assets_dir: Path
+    receipts_dir: Path
     setup_file: Path
     env_example_file: Path
     env_file: Path
+    deploy_env_example_file: Path
     db_file: Path
     logo_file: Path
     favicon_file: Path
@@ -54,6 +58,7 @@ def ensure_smxcommerce_scaffold(
     scaffold_dir = root / SCAFFOLD_DIR_NAME
     data_dir = scaffold_dir / DATA_DIR_NAME
     assets_dir = scaffold_dir / ASSETS_DIR_NAME
+    receipts_dir = assets_dir / RECEIPTS_DIR_NAME
     db_file = data_dir / DEV_DB_FILE_NAME
     logo_file = assets_dir / "logo.png"
     favicon_file = assets_dir / "favicon.png"
@@ -62,10 +67,12 @@ def ensure_smxcommerce_scaffold(
     setup_file = scaffold_dir / SETUP_FILE_NAME
     env_example_file = scaffold_dir / ENV_EXAMPLE_FILE_NAME
     env_file = scaffold_dir / ENV_FILE_NAME
+    deploy_env_example_file = scaffold_dir / DEPLOY_ENV_EXAMPLE_FILE_NAME
 
     scaffold_dir.mkdir(parents=True, exist_ok=True)
     data_dir.mkdir(parents=True, exist_ok=True)
     assets_dir.mkdir(parents=True, exist_ok=True)
+    receipts_dir.mkdir(parents=True, exist_ok=True)
 
     _write_if_missing(init_file, "")
 
@@ -84,7 +91,13 @@ def ensure_smxcommerce_scaffold(
         _render_runtime_env_file(
             db_file=db_file,
             assets_dir=assets_dir,
+            receipts_dir=receipts_dir,
         ),
+    )
+
+    _write_if_missing(
+        deploy_env_example_file,
+        _render_deploy_env_example_file(),
     )
 
     _copy_default_asset_if_missing("logo.png", logo_file)
@@ -95,9 +108,11 @@ def ensure_smxcommerce_scaffold(
         scaffold_dir=scaffold_dir,
         data_dir=data_dir,
         assets_dir=assets_dir,
+        receipts_dir=receipts_dir,
         setup_file=setup_file,
         env_example_file=env_example_file,
         env_file=env_file,
+        deploy_env_example_file=deploy_env_example_file,
         db_file=db_file,
         logo_file=logo_file,
         favicon_file=favicon_file,
@@ -141,7 +156,6 @@ def _render_setup_file() -> str:
     return '''from __future__ import annotations
 
 from pathlib import Path
-
 from smx_commerce import setup_commerce as _setup_commerce
 
 
@@ -184,7 +198,7 @@ def _render_env_example_file() -> str:
 # - Admins enter through /commerce/admin and authenticate with the admin key.
 
 SMX_COMMERCE_DATABASE_URL=sqlite+pysqlite:///./smxcommerce/data/smx_commerce_dev.db
-SMX_COMMERCE_ADMIN_API_KEY=replace-with-a-strong-admin-token
+SMX_COMMERCE_ADMIN_TOKEN=replace-with-a-strong-admin-token
 SMX_COMMERCE_FLASK_SECRET_KEY=replace-with-a-strong-session-secret
 
 SMX_COMMERCE_PAYMENT_PROVIDER=none
@@ -195,12 +209,13 @@ SMX_COMMERCE_MODULE_TITLE=smxCommerce
 SMX_COMMERCE_PROJECT_HOME_URL=/
 
 SMX_COMMERCE_ASSETS_DIR=./smxcommerce/assets
+SMX_COMMERCE_RECEIPTS_DIR=./smxcommerce/assets/receipts
 SMX_COMMERCE_LOGO_URL=/commerce/assets/logo.png
 SMX_COMMERCE_FAVICON_URL=/commerce/assets/favicon.png
 '''
 
 
-def _render_runtime_env_file(*, db_file: Path, assets_dir: Path) -> str:
+def _render_runtime_env_file(*, db_file: Path, assets_dir: Path, receipts_dir: Path,) -> str:
     return f'''# smx-commerce local runtime environment
 #
 # This file is customer-owned after creation.
@@ -213,17 +228,109 @@ def _render_runtime_env_file(*, db_file: Path, assets_dir: Path) -> str:
 #   python -c "import secrets; print(secrets.token_urlsafe(32))"
 
 SMX_COMMERCE_DATABASE_URL={_sqlite_url_for(db_file)}
-SMX_COMMERCE_ADMIN_API_KEY=local-admin-key
+SMX_COMMERCE_ADMIN_TOKEN=local-admin-token
 SMX_COMMERCE_FLASK_SECRET_KEY=replace-with-a-strong-session-secret
 
 SMX_COMMERCE_PAYMENT_PROVIDER=none
 SMX_COMMERCE_EMAIL_PROVIDER=none
 
 SMX_COMMERCE_SITE_TITLE=SyntaxMatrix
-SMX_COMMERCE_MODULE_TITLE=smxCommerce
-SMX_COMMERCE_PROJECT_HOME_URL=/
+SMX_COMMERCE_SITE_DESCRIPTION=An example e-commerce site built with smx-commerce.
+SMX_COMMERCE_SITE_HOME_URL=/
+SMX_COMMERCE_PROJECT_HOME_URL=/commerce
 
 SMX_COMMERCE_ASSETS_DIR={_path_value(assets_dir)}
+SMX_COMMERCE_RECEIPTS_DIR={_path_value(receipts_dir)}
 SMX_COMMERCE_LOGO_URL=/commerce/assets/logo.png
 SMX_COMMERCE_FAVICON_URL=/commerce/assets/favicon.png
+'''
+
+def _render_deploy_env_example_file() -> str:
+    return '''# smx-commerce production deployment example
+#
+# Purpose:
+# - Copy these variable names into your Cloud Run deployment script.
+# - Replace placeholder values with your client/project values.
+# - Do not put raw secret values in this file.
+#
+# Local development runtime config:
+#   smxcommerce/.smx_commerce.env
+#
+# Production deployment example:
+#   smxcommerce/.smx_commerce.deploy_example.env
+#
+# smxCP rule:
+#   one Secret Manager vault -> one SMX_COMMERCE_* Cloud Run env var
+
+
+# ---------------------------------------------------------------------
+# Required production non-secret env vars
+# Use these with: gcloud run deploy/update --set-env-vars
+# ---------------------------------------------------------------------
+
+SMX_COMMERCE_PUBLIC_BASE_URL=https://your-domain.com
+SMX_COMMERCE_DB_USER=your_commerce_db_user
+SMX_COMMERCE_DB_NAME=your_commerce_db_name
+SMX_COMMERCE_INSTANCE_CONNECTION_NAME=your-project:your-region:your-cloudsql-instance
+
+SMX_COMMERCE_AUTO_INIT=1
+SMX_COMMERCE_PAYMENT_PROVIDER=stripe
+
+SMX_COMMERCE_ASSETS_DIR=/app/$LOCAL_DATA_SOURCE/commerce/assets
+SMX_COMMERCE_RECEIPTS_DIR=/app/$LOCAL_DATA_SOURCE/commerce/assets/receipts
+SMX_COMMERCE_LOGO_URL=/commerce/assets/logo.png
+SMX_COMMERCE_FAVICON_URL=/commerce/assets/favicon.png
+
+
+# ---------------------------------------------------------------------
+# Optional production email env vars
+# Use these with: gcloud run deploy/update --set-env-vars
+# ---------------------------------------------------------------------
+
+SMX_COMMERCE_EMAIL_PROVIDER=smtp
+SMX_COMMERCE_SMTP_HOST=smtp.gmail.com
+SMX_COMMERCE_SMTP_PORT=587
+SMX_COMMERCE_SMTP_USERNAME=your-smtp-username
+SMX_COMMERCE_DEFAULT_FROM_EMAIL=your-from-email
+SMX_COMMERCE_SMTP_USE_TLS=1
+
+
+# ---------------------------------------------------------------------
+# Required production secret mappings
+# Use these with: gcloud run deploy/update --set-secrets
+#
+# Format:
+#   CLOUD_RUN_ENV_VAR=secret-manager-vault-name:latest
+# ---------------------------------------------------------------------
+
+SMX_COMMERCE_DB_PASSWORD=commerce-db-password-secret-vault:latest
+SMX_COMMERCE_STRIPE_SECRET_KEY=stripe-secret-key-vault:latest
+SMX_COMMERCE_STRIPE_WEBHOOK_SECRET=stripe-webhook-secret-vault:latest
+SMX_COMMERCE_ADMIN_TOKEN=commerce-admin-token-vault:latest
+
+
+# ---------------------------------------------------------------------
+# Optional production secret mappings
+# Use these with: gcloud run deploy/update --set-secrets
+# ---------------------------------------------------------------------
+
+SMX_COMMERCE_SMTP_PASSWORD=smx-smtp-password-vault:latest
+
+
+# ---------------------------------------------------------------------
+# Required Stripe webhook setup
+# ---------------------------------------------------------------------
+
+STRIPE_WEBHOOK_ENDPOINT=https://your-domain.com/stripe/webhook
+STRIPE_WEBHOOK_EVENT=checkout.session.completed
+
+
+# ---------------------------------------------------------------------
+# Required Cloud Run storage mount
+# ---------------------------------------------------------------------
+
+SMX_CLIENT_DIR=/app/$LOCAL_DATA_SOURCE
+GCS_MOUNT_PATH=/app/$LOCAL_DATA_SOURCE
+COMMERCE_ASSETS_BUCKET_PREFIX=commerce/assets
+COMMERCE_RECEIPTS_BUCKET_PREFIX=commerce/assets/receipts
 '''

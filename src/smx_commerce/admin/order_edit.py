@@ -9,6 +9,7 @@ from smx_commerce.core import CommerceRuntime
 
 ADMIN_EDITABLE_ORDER_STATUSES = {
     "pending",
+    "paid",
     "cancelled",
     "failed",
     "refunded",
@@ -48,7 +49,7 @@ def create_order_edit_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
                 "admin/order_edit.html",
                 order=order,
                 editable_statuses=sorted(ADMIN_EDITABLE_ORDER_STATUSES),
-                error="status can only be changed to pending, cancelled, failed, or refunded from admin",
+                error="status can only be changed to pending, paid, cancelled, failed, or refunded from admin",
             ), 400
 
         with runtime.session_scope() as session:

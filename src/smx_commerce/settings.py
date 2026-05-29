@@ -8,7 +8,7 @@ SENSITIVE_SETTING_KEYS = {
     "stripe_secret_key",
     "stripe_webhook_secret",
     "smtp_password",
-    "admin_api_key",
+    "admin_token",
     "database_url",
 }
 

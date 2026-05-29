@@ -1,8 +1,8 @@
 from .home import create_admin_home_blueprint
 from .auth import (
-    ADMIN_KEY_HEADER,
-    ADMIN_SESSION_KEY,
-    apply_admin_api_key_guard,
+    ADMIN_TOKEN_HEADER,
+    ADMIN_SESSION_TOKEN,
+    apply_admin_token_guard,
     create_admin_auth_blueprint,
 )
 from .routes import create_settings_admin_blueprint
@@ -13,9 +13,9 @@ __all__ = [
     "create_safe_delete_admin_blueprint",
     "create_category_edit_admin_blueprint",
     "create_price_edit_admin_blueprint",
-    "ADMIN_KEY_HEADER",
-    "ADMIN_SESSION_KEY",
-    "apply_admin_api_key_guard",
+    "ADMIN_TOKEN_HEADER",
+    "ADMIN_SESSION_TOKEN",
+    "apply_admin_token_guard",
     "create_admin_auth_blueprint",
     "create_admin_home_blueprint",
     "create_settings_admin_blueprint",

@@ -8,6 +8,29 @@ from smx_commerce.payments.verifiers import (
 )
 
 
+def _stripe_to_plain_dict(value):
+    if value is None:
+        return None
+
+    if isinstance(value, dict):
+        return {
+            key: _stripe_to_plain_dict(item)
+            for key, item in value.items()
+        }
+
+    if isinstance(value, list):
+        return [_stripe_to_plain_dict(item) for item in value]
+
+    stripe_data = getattr(value, "_data", None)
+    if isinstance(stripe_data, dict):
+        return {
+            key: _stripe_to_plain_dict(item)
+            for key, item in stripe_data.items()
+        }
+
+    return value
+
+
 class StripeWebhookVerifier:
     def __init__(self, webhook_secret: str):
         if not webhook_secret or not webhook_secret.strip():
@@ -42,9 +65,11 @@ class StripeWebhookVerifier:
         except Exception as exc:
             raise WebhookVerificationError("invalid webhook signature") from exc
 
-        event_type = event.get("type", "")
-        event_id = event.get("id", "")
-        data_object = event.get("data", {}).get("object", {})
+        event_payload = _stripe_to_plain_dict(event)
+
+        event_type = event_payload.get("type", "")
+        event_id = event_payload.get("id", "")
+        data_object = event_payload.get("data", {}).get("object", {})
 
         order_public_id = (
             data_object.get("metadata", {}).get("order_public_id")
@@ -58,5 +83,5 @@ class StripeWebhookVerifier:
             event_type=event_type,
             order_public_id=order_public_id,
             payment_reference=payment_reference,
-            payload=dict(event),
+            payload=event_payload,
         )

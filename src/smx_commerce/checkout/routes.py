@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+from urllib.parse import urlencode
 from flask import Blueprint, jsonify, redirect, render_template, request
 
 from smx_commerce.checkout import CheckoutService, Order, OrderRepository, StartCheckoutRequest
@@ -63,6 +63,32 @@ def checkout_wants_html() -> bool:
     return request.accept_mimetypes.best_match(["text/html", "application/json"]) == "text/html"
 
 
+
+def _absolute_checkout_url(
+    runtime: CommerceRuntime,
+    path_or_url: str,
+    *,
+    order_public_id: str,
+) -> str:
+    value = (path_or_url or "").strip()
+
+    if value.startswith(("http://", "https://")):
+        return value
+
+    public_base_url = (runtime.config.public_base_url or "").strip().rstrip("/")
+
+    if not public_base_url:
+        return value
+
+    if not value.startswith("/"):
+        value = f"/{value}"
+
+    separator = "&" if "?" in value else "?"
+    query = urlencode({"order_public_id": order_public_id})
+
+    return f"{public_base_url}{value}{separator}{query}"
+
+
 def create_checkout_blueprint(
     runtime: CommerceRuntime,
     payment_checkout_provider: PaymentCheckoutProvider | None = None,
@@ -93,10 +119,19 @@ def create_checkout_blueprint(
                 order = service.start_checkout(checkout_request)
 
                 if payment_checkout_provider is not None:
+
                     checkout_session = payment_checkout_provider.create_checkout_session(
                         order=order,
-                        success_url=payload.get("success_url", "/checkout/success"),
-                        cancel_url=payload.get("cancel_url", "/checkout/cancel"),
+                        success_url=_absolute_checkout_url(
+                            runtime,
+                            payload.get("success_url", "/checkout/success"),
+                            order_public_id=order.public_id,
+                        ),
+                        cancel_url=_absolute_checkout_url(
+                            runtime,
+                            payload.get("cancel_url", "/checkout/cancel"),
+                            order_public_id=order.public_id,
+                        ),
                     )
 
             if _is_form_submission() and checkout_session is not None:

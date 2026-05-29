@@ -60,3 +60,4 @@ scripts/
 MANIFEST.in
 pyproject.toml
 pytest_fail.txt
+smx-commerce-cloud-run-deployment.md

@@ -71,7 +71,7 @@ $REPO_ID = "smx-commerce-repo"
 $SERVICE = "smx-commerce-demo"
 
 # Image tag
-$IMAGE_TAG = "v1"
+$IMAGE_TAG = "latest"
 
 # Full image URI
 $IMAGE_URI = "$REGION-docker.pkg.dev/$PROJECT_ID/$REPO_ID/$SERVICE`:$IMAGE_TAG"

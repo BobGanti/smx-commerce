@@ -37,11 +37,26 @@ class SMTPEmailSender:
         validate_required_text(message.to_email, "to_email")
         validate_required_text(message.subject, "subject")
 
+        ###
         email = StdlibEmailMessage()
         email["From"] = from_email
         email["To"] = message.to_email
         email["Subject"] = message.subject
         email.set_content(message.body_text or "")
+
+        for attachment in message.attachments:
+            maintype, _, subtype = attachment.mime_type.partition("/")
+
+            if not maintype or not subtype:
+                maintype = "application"
+                subtype = "octet-stream"
+
+            email.add_attachment(
+                attachment.content,
+                maintype=maintype,
+                subtype=subtype,
+                filename=attachment.filename,
+            )
 
         smtp_class = smtplib.SMTP_SSL if self.use_ssl else smtplib.SMTP
 

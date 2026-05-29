@@ -4,6 +4,14 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from smx_commerce.checkout import Order
+from smx_commerce.notifications.receipt_pdf import generate_order_receipt_pdf
+
+
+@dataclass(frozen=True)
+class EmailAttachment:
+    filename: str
+    content: bytes
+    mime_type: str = "application/octet-stream"
 
 
 @dataclass(frozen=True)
@@ -12,6 +20,7 @@ class EmailMessage:
     subject: str
     body_text: str
     from_email: str | None = None
+    attachments: tuple[EmailAttachment, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -32,10 +41,15 @@ class OrderConfirmationEmailService:
         *,
         from_email: str | None = None,
         brand_name: str = "smx-commerce",
+        receipts_dir: str | None = None,
+        logo_path: str | None = None,
     ):
         self.sender = sender
         self.from_email = from_email
         self.brand_name = brand_name
+        self.receipts_dir = receipts_dir
+        self.logo_path = logo_path
+
 
     def send_order_paid_confirmation(self, order: Order) -> NotificationResult:
         message = self.build_order_paid_message(order)
@@ -48,7 +62,31 @@ class OrderConfirmationEmailService:
             return NotificationResult(sent=False, error_message=str(exc))
 
     def build_order_paid_message(self, order: Order) -> EmailMessage:
-        subject = f"Your {self.brand_name} order is confirmed"
+        subject = f"Your {self.brand_name} receipt"
+
+        attachments: tuple[EmailAttachment, ...] = ()
+
+        if self.receipts_dir:
+            receipt = generate_order_receipt_pdf(
+                order,
+                receipts_dir=self.receipts_dir,
+                brand_name=self.brand_name,
+                logo_path=self.logo_path,
+            )
+
+            attachments = (
+                EmailAttachment(
+                    filename=receipt.filename,
+                    content=receipt.content,
+                    mime_type="application/pdf",
+                ),
+            )
+
+        receipt_note = (
+            "Your PDF receipt is attached to this email.\n\n"
+            if attachments
+            else ""
+        )
 
         body_text = (
             f"Hello {order.buyer.full_name},\n\n"
@@ -56,7 +94,8 @@ class OrderConfirmationEmailService:
             f"Order ID: {order.public_id}\n"
             f"Product: {order.product_slug}\n"
             f"Price option: {order.price_code}\n"
-            f"Amount paid: {order.amount.currency} {order.amount.major()}\n\n"
+            f"Amount paid: {order.amount.currency.upper()} {order.amount.major():.2f}\n\n"
+            f"{receipt_note}"
             "Thank you."
         )
 
@@ -65,4 +104,5 @@ class OrderConfirmationEmailService:
             from_email=self.from_email,
             subject=subject,
             body_text=body_text,
+            attachments=attachments,
         )

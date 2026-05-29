@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>{{ commerce_config.project_title }} · Checkout received</title>
+  {% if order.status == "paid" %}
+  <title>{{ commerce_config.project_title }} · Payment confirmed</title>
+  {% else %}
+    <title>{{ commerce_config.project_title }} · Checkout received</title>
+  {% endif %}
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {% if commerce_config.favicon_url %}
     <link rel="icon" href="{{ commerce_config.favicon_url }}">
@@ -12,7 +16,7 @@
     main { max-width: 760px; margin: 0 auto; padding: 60px 20px; }
     nav { display: flex; gap: 20px; margin-bottom: 26px; flex-wrap: wrap; }
     .panel { background: white; border: 1px solid #e6e8eb; border-radius: 18px; padding: 28px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); }
-    .notice { background: #fffaeb; border: 1px solid #fedf89; color: #93370d; border-radius: 12px; padding: 14px; }
+    .notice { background: #b7e5ff; border: 1px solid #fedf89; color: #93370d; border-radius: 12px; padding: 14px; }
     .muted { color: #667085; }
     a { color: #0f766e; text-decoration: none; font-weight: 650; }
     .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
@@ -36,13 +40,23 @@
         <span class="brand-title">{{ commerce_config.project_title }}</span>
       </div>
 
-      <h1>Checkout received</h1>
+      {% if order.status == "paid" %}
+        <h1>Payment confirmed</h1>
 
-      <p>{{ message }}</p>
+        <p>Your payment has been confirmed successfully.</p>
 
-      <div class="notice">
-        Payment is not confirmed by this page. Confirmation happens only after the verified payment webhook is processed.
-      </div>
+        <div class="notice success">
+          Thank you. Your order is paid and confirmed.
+        </div>
+      {% else %}
+        <h1>Checkout received</h1>
+
+        <p>Checkout redirect received. Payment is confirmed only by verified webhook.</p>
+
+        <div class="notice warning">
+          Payment is not confirmed yet. Confirmation happens after the verified payment webhook is processed.
+        </div>
+      {% endif %}
 
       {% if order %}
         <h2>Order</h2>

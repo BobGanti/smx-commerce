@@ -1,8 +1,9 @@
 from __future__ import annotations
+from pathlib import Path
 
 from flask import Blueprint, render_template, send_from_directory
 
-from smx_commerce.admin import apply_admin_api_key_guard, create_admin_auth_blueprint, create_admin_home_blueprint, create_settings_admin_blueprint, create_product_edit_admin_blueprint, create_price_edit_admin_blueprint, create_category_edit_admin_blueprint, create_safe_delete_admin_blueprint, create_order_edit_admin_blueprint, create_product_edit_admin_blueprint
+from smx_commerce.admin import apply_admin_token_guard, create_admin_auth_blueprint, create_admin_home_blueprint, create_settings_admin_blueprint, create_product_edit_admin_blueprint, create_price_edit_admin_blueprint, create_category_edit_admin_blueprint, create_safe_delete_admin_blueprint, create_order_edit_admin_blueprint, create_product_edit_admin_blueprint
 from smx_commerce.catalog.routes_admin import (
     create_category_admin_blueprint,
     create_price_admin_blueprint,
@@ -26,7 +27,7 @@ from smx_commerce.payments import (
 )
 from smx_commerce.payments.routes import create_payment_webhook_blueprint
 from smx_commerce.payments.verifiers import PaymentWebhookVerifier
-from smx_commerce.scaffold import ensure_smxcommerce_scaffold
+from smx_commerce.smxcp import ensure_smxcommerce_scaffold
 
 def create_commerce_blueprint(
     config=None,
@@ -35,16 +36,16 @@ def create_commerce_blueprint(
     payment_webhook_verifier: PaymentWebhookVerifier | None = None,
     payment_checkout_provider: PaymentCheckoutProvider | None = None,
     order_confirmation_service: OrderConfirmationEmailService | None = None,
-    admin_api_key: str | None = None,
+    admin_token: str | None = None,
 ):
     commerce_runtime = runtime or CommerceRuntime.from_mapping(config)
 
     if init_schema:
         commerce_runtime.init_schema()
 
-    resolved_admin_api_key = admin_api_key
-    if resolved_admin_api_key is None:
-        resolved_admin_api_key = commerce_runtime.config.admin_api_key
+    resolved_admin_token = admin_token
+    if resolved_admin_token is None:
+        resolved_admin_token = commerce_runtime.config.admin_token
 
     bp = Blueprint("smx_commerce", __name__)
 
@@ -86,11 +87,11 @@ def create_commerce_blueprint(
     )
 
     admin_bp = Blueprint("smx_commerce_admin", __name__)
-    apply_admin_api_key_guard(admin_bp, resolved_admin_api_key)
+    apply_admin_token_guard(admin_bp, resolved_admin_token)
 
     admin_bp.register_blueprint(
         create_admin_auth_blueprint(
-            resolved_admin_api_key,
+            resolved_admin_token,
             commerce_runtime.config,
         )
     )
@@ -230,10 +231,16 @@ def _build_order_confirmation_service(config: dict):
     else:
         raise ValueError(f"unsupported email_provider: {email_provider}")
 
+    assets_dir = Path(config.get("assets_dir") or "./smxcommerce/assets")
+    receipts_dir = config.get("receipts_dir") or str(assets_dir / "receipts")
+    logo_path = assets_dir / "logo.png"
+
     return OrderConfirmationEmailService(
         sender,
         from_email=config.get("default_from_email"),
         brand_name=config.get("site_title") or "SyntaxMatrix",
+        receipts_dir=receipts_dir,
+        logo_path=str(logo_path),
     )
 
 
