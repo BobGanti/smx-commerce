@@ -2,7 +2,18 @@ from __future__ import annotations
 
 from flask import Blueprint, jsonify, redirect, render_template, request
 
-from smx_commerce.catalog import CatalogService, Category, Money, Product, ProductPrice
+###
+from smx_commerce.catalog import (
+    CatalogService,
+    Category,
+    Money,
+    Product,
+    ProductMedia,
+    ProductMediaRole,
+    ProductPrice,
+)
+from smx_commerce.catalog.media_storage import store_product_image_upload
+
 from smx_commerce.core import CommerceRuntime
 from smx_commerce.admin.amounts import parse_admin_amount_to_cents, parse_admin_price_amount_from_payload
 
@@ -35,8 +46,24 @@ def price_to_dict(price: ProductPrice) -> dict:
     }
 
 
+def media_to_dict(media: ProductMedia) -> dict:
+    return {
+        "url": media.url,
+        "media_role": media.media_role.value,
+        "storage_path": media.storage_path,
+        "filename": media.filename,
+        "content_type": media.content_type,
+        "alt_text": media.alt_text,
+        "sort_order": media.sort_order,
+        "metadata": media.metadata,
+        "is_main": media.is_main,
+        "is_gallery": media.is_gallery,
+    }
+
+
 def product_to_dict(product: Product) -> dict:
     return {
+        "product_public_id": product.product_public_id,
         "slug": product.slug,
         "name": product.name,
         "kind": product.kind.value,
@@ -48,6 +75,9 @@ def product_to_dict(product: Product) -> dict:
         "metadata": product.metadata,
         "is_public": product.is_public,
         "is_purchasable": product.is_purchasable,
+        "main_image_url": product.main_image_url,
+        "gallery_images": [media_to_dict(media) for media in product.gallery_images],
+        "media": [media_to_dict(media) for media in product.media],
         "prices": [price_to_dict(price) for price in product.prices],
     }
 
@@ -235,9 +265,25 @@ def create_product_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
                 metadata=payload.get("metadata") or {},
             )
 
+            ##
             with runtime.session_scope() as session:
                 catalog = CatalogService(session)
                 created = catalog.create_product(product)
+
+                main_image = store_product_image_upload(
+                    upload_file=request.files.get("main_image"),
+                    products_assets_dir=runtime.config.products_assets_dir,
+                    product_public_id=created.product_public_id,
+                    media_role=ProductMediaRole.MAIN,
+                    alt_text=created.name,
+                    sort_order=0,
+                )
+
+                if main_image is not None:
+                    catalog.add_product_media(created.product_public_id, main_image)
+                    refreshed = catalog.get_product(created.slug)
+                    if refreshed is not None:
+                        created = refreshed
 
             if admin_is_form_submission():
                 return redirect("/commerce/admin/products", code=303)

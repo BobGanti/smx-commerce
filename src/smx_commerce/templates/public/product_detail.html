@@ -21,6 +21,9 @@
     .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
     .brand img { max-height: 48px; max-width: 180px; object-fit: contain; }
     .brand-title { font-size: 1.05rem; font-weight: 800; }
+    .gallery-grid { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+    .gallery-image { width: 150px; height: 110px; border-radius: 14px; object-fit: cover; border: 1px solid #e6e8eb; background: #f1f5f9; }
+    .gallery-grid { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
   </style>
 </head>
 <body>
@@ -46,6 +49,16 @@
       {% endif %}
       {% if product.description %}
         <p class="muted">{{ product.description }}</p>
+      {% endif %}
+      {% if product.gallery_images %}
+        <div>
+          <h2>Gallery</h2>
+          <div class="gallery-grid">
+            {% for image in product.gallery_images %}
+              <img class="gallery-image" src="{{ image.url }}" alt="{{ image.alt_text or product.name }}">
+            {% endfor %}
+          </div>
+        </div>
       {% endif %}
     </section>
 

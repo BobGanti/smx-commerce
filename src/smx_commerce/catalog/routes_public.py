@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from flask import Blueprint, jsonify, render_template, request
 
-from smx_commerce.catalog import CatalogService, Product, ProductStatus
+from smx_commerce.catalog import CatalogService, Product, ProductMedia, ProductStatus
 from smx_commerce.core import CommerceRuntime
 
 
@@ -18,8 +18,18 @@ def public_price_to_dict(price) -> dict:
     }
 
 
+def public_media_to_dict(media: ProductMedia) -> dict:
+    return {
+        "url": media.url,
+        "media_role": media.media_role.value,
+        "alt_text": media.alt_text,
+        "sort_order": media.sort_order,
+    }
+
+
 def public_product_to_dict(product: Product) -> dict:
     return {
+        "product_public_id": product.product_public_id,
         "slug": product.slug,
         "name": product.name,
         "kind": product.kind.value,
@@ -29,6 +39,11 @@ def public_product_to_dict(product: Product) -> dict:
         "category_slugs": product.category_slugs,
         "is_public": product.is_public,
         "is_purchasable": product.is_purchasable,
+        "main_image_url": product.main_image_url,
+        "gallery_images": [
+            public_media_to_dict(media)
+            for media in product.gallery_images
+        ],
         "prices": [
             public_price_to_dict(price)
             for price in product.active_prices

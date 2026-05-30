@@ -37,6 +37,11 @@ class ProductKind(str, Enum):
     PHYSICAL = "physical"
 
 
+class ProductMediaRole(str, Enum):
+    MAIN = "main"
+    GALLERY = "gallery"
+
+
 class BillingMode(str, Enum):
     ONE_TIME = "one_time"
     RECURRING = "recurring"
@@ -152,6 +157,42 @@ class ProductPrice:
 
 
 @dataclass
+class ProductMedia:
+    url: str
+    media_role: ProductMediaRole = ProductMediaRole.GALLERY
+    storage_path: str = ""
+    filename: str = ""
+    content_type: str = ""
+    alt_text: str = ""
+    sort_order: int = 0
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        self.url = validate_required_text(self.url, "url")
+
+        if not isinstance(self.media_role, ProductMediaRole):
+            self.media_role = ProductMediaRole(self.media_role)
+
+        self.storage_path = (self.storage_path or "").strip()
+        self.filename = (self.filename or "").strip()
+        self.content_type = (self.content_type or "").strip()
+        self.alt_text = (self.alt_text or "").strip()
+
+        if not isinstance(self.sort_order, int):
+            self.sort_order = int(self.sort_order)
+
+        self.metadata = dict(self.metadata or {})
+
+    @property
+    def is_main(self) -> bool:
+        return self.media_role == ProductMediaRole.MAIN
+
+    @property
+    def is_gallery(self) -> bool:
+        return self.media_role == ProductMediaRole.GALLERY
+    
+
+@dataclass
 class Product:
     slug: str
     name: str
@@ -162,7 +203,9 @@ class Product:
     category_slugs: list[str] = field(default_factory=list)
     sort_order: int = 0
     prices: list[ProductPrice] = field(default_factory=list)
+    media: list[ProductMedia] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
+    product_public_id: str | None = None
 
     def __post_init__(self) -> None:
         self.slug = validate_slug(self.slug)
@@ -186,6 +229,11 @@ class Product:
             if not isinstance(price, ProductPrice):
                 raise TypeError("prices must contain ProductPrice instances")
 
+        for media_item in self.media:
+            if not isinstance(media_item, ProductMedia):
+                raise TypeError("media must contain ProductMedia instances")
+
+
     @property
     def is_public(self) -> bool:
         return self.status == ProductStatus.ACTIVE
@@ -205,6 +253,26 @@ class Product:
     def primary_price(self) -> ProductPrice | None:
         active_prices = self.active_prices
         return active_prices[0] if active_prices else None
+
+    @property
+    def main_image(self) -> ProductMedia | None:
+        main_images = [
+            media_item for media_item in self.media
+            if media_item.is_main
+        ]
+        return sorted(main_images, key=lambda item: item.sort_order)[0] if main_images else None
+
+    @property
+    def main_image_url(self) -> str | None:
+        main_image = self.main_image
+        return main_image.url if main_image else None
+
+    @property
+    def gallery_images(self) -> list[ProductMedia]:
+        return sorted(
+            [media_item for media_item in self.media if media_item.is_gallery],
+            key=lambda item: item.sort_order,
+        )
 
     def add_price(self, price: ProductPrice) -> None:
         if not isinstance(price, ProductPrice):

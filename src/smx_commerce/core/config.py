@@ -17,6 +17,7 @@ class CommerceConfig:
     public_base_url: str | None = None
 
     assets_dir: str = "./smxcommerce/assets"
+    products_assets_dir: str = "./smxcommerce/assets/products"
     receipts_dir: str = "./smxcommerce/assets/receipts"
     logo_url: str | None = "/commerce/assets/logo.png"
     favicon_url: str | None = "/commerce/assets/favicon.png"
@@ -39,6 +40,7 @@ class CommerceConfig:
             project_home_url=os.getenv("SMX_COMMERCE_PROJECT_HOME_URL", "/"),
             public_base_url=os.getenv("SMX_COMMERCE_PUBLIC_BASE_URL") or os.getenv("PUBLIC_BASE_URL") or None,
             assets_dir=os.getenv("SMX_COMMERCE_ASSETS_DIR", "./smxcommerce/assets"),
+            products_assets_dir=os.getenv("SMX_COMMERCE_PRODUCTS_ASSETS_DIR", "./smxcommerce/assets/products"),
             receipts_dir=os.getenv("SMX_COMMERCE_RECEIPTS_DIR", "./smxcommerce/assets/receipts"),
             logo_url=os.getenv("SMX_COMMERCE_LOGO_URL") or "/commerce/assets/logo.png",
 
@@ -72,6 +74,7 @@ class CommerceConfig:
             project_home_url=values.get("project_home_url") or os.getenv("SMX_COMMERCE_PROJECT_HOME_URL") or "/",
             public_base_url=values.get("public_base_url") or os.getenv("SMX_COMMERCE_PUBLIC_BASE_URL") or os.getenv("PUBLIC_BASE_URL") or None,
             assets_dir=values.get("assets_dir") or os.getenv("SMX_COMMERCE_ASSETS_DIR") or "./smxcommerce/assets",
+            products_assets_dir=values.get("products_assets_dir") or os.getenv("SMX_COMMERCE_PRODUCTS_ASSETS_DIR") or "./smxcommerce/assets/products",
             receipts_dir=values.get("receipts_dir") or os.getenv("SMX_COMMERCE_RECEIPTS_DIR") or "./smxcommerce/assets/receipts",
             logo_url=values.get("logo_url") or os.getenv("SMX_COMMERCE_LOGO_URL") or "/commerce/assets/logo.png",
             favicon_url=values.get("favicon_url") or os.getenv("SMX_COMMERCE_FAVICON_URL") or "/commerce/assets/favicon.png",

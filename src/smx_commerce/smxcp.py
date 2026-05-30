@@ -13,6 +13,7 @@ ENV_FILE_NAME = ".smx_commerce.env"
 DEPLOY_ENV_EXAMPLE_FILE_NAME = ".smx_commerce.deploy_example.env"
 DATA_DIR_NAME = "data"
 ASSETS_DIR_NAME = "assets"
+PRODUCTS_ASSETS_DIR_NAME = "products"
 RECEIPTS_DIR_NAME = "receipts"
 DEV_DB_FILE_NAME = "smx_commerce_dev.db"
 
@@ -34,6 +35,7 @@ class SmxCommerceScaffold:
     scaffold_dir: Path
     data_dir: Path
     assets_dir: Path
+    products_assets_dir: Path
     receipts_dir: Path
     setup_file: Path
     env_example_file: Path
@@ -58,6 +60,7 @@ def ensure_smxcommerce_scaffold(
     scaffold_dir = root / SCAFFOLD_DIR_NAME
     data_dir = scaffold_dir / DATA_DIR_NAME
     assets_dir = scaffold_dir / ASSETS_DIR_NAME
+    products_assets_dir = assets_dir / PRODUCTS_ASSETS_DIR_NAME
     receipts_dir = assets_dir / RECEIPTS_DIR_NAME
     db_file = data_dir / DEV_DB_FILE_NAME
     logo_file = assets_dir / "logo.png"
@@ -72,6 +75,7 @@ def ensure_smxcommerce_scaffold(
     scaffold_dir.mkdir(parents=True, exist_ok=True)
     data_dir.mkdir(parents=True, exist_ok=True)
     assets_dir.mkdir(parents=True, exist_ok=True)
+    products_assets_dir.mkdir(parents=True, exist_ok=True)
     receipts_dir.mkdir(parents=True, exist_ok=True)
 
     _write_if_missing(init_file, "")
@@ -91,6 +95,7 @@ def ensure_smxcommerce_scaffold(
         _render_runtime_env_file(
             db_file=db_file,
             assets_dir=assets_dir,
+            products_assets_dir=products_assets_dir,
             receipts_dir=receipts_dir,
         ),
     )
@@ -108,6 +113,7 @@ def ensure_smxcommerce_scaffold(
         scaffold_dir=scaffold_dir,
         data_dir=data_dir,
         assets_dir=assets_dir,
+        products_assets_dir=products_assets_dir,
         receipts_dir=receipts_dir,
         setup_file=setup_file,
         env_example_file=env_example_file,
@@ -209,13 +215,20 @@ SMX_COMMERCE_MODULE_TITLE=smxCommerce
 SMX_COMMERCE_PROJECT_HOME_URL=/
 
 SMX_COMMERCE_ASSETS_DIR=./smxcommerce/assets
+SMX_COMMERCE_PRODUCTS_ASSETS_DIR=./smxcommerce/assets/products
 SMX_COMMERCE_RECEIPTS_DIR=./smxcommerce/assets/receipts
 SMX_COMMERCE_LOGO_URL=/commerce/assets/logo.png
 SMX_COMMERCE_FAVICON_URL=/commerce/assets/favicon.png
 '''
 
 
-def _render_runtime_env_file(*, db_file: Path, assets_dir: Path, receipts_dir: Path,) -> str:
+def _render_runtime_env_file(
+    *,
+    db_file: Path,
+    assets_dir: Path,
+    products_assets_dir: Path,
+    receipts_dir: Path,
+) -> str:
     return f'''# smx-commerce local runtime environment
 #
 # This file is customer-owned after creation.
@@ -240,6 +253,7 @@ SMX_COMMERCE_SITE_HOME_URL=/
 SMX_COMMERCE_PROJECT_HOME_URL=/commerce
 
 SMX_COMMERCE_ASSETS_DIR={_path_value(assets_dir)}
+SMX_COMMERCE_PRODUCTS_ASSETS_DIR={_path_value(products_assets_dir)}
 SMX_COMMERCE_RECEIPTS_DIR={_path_value(receipts_dir)}
 SMX_COMMERCE_LOGO_URL=/commerce/assets/logo.png
 SMX_COMMERCE_FAVICON_URL=/commerce/assets/favicon.png
@@ -277,6 +291,7 @@ SMX_COMMERCE_AUTO_INIT=1
 SMX_COMMERCE_PAYMENT_PROVIDER=stripe
 
 SMX_COMMERCE_ASSETS_DIR=/app/$LOCAL_DATA_SOURCE/commerce/assets
+SMX_COMMERCE_PRODUCTS_ASSETS_DIR=/app/$LOCAL_DATA_SOURCE/commerce/assets/products
 SMX_COMMERCE_RECEIPTS_DIR=/app/$LOCAL_DATA_SOURCE/commerce/assets/receipts
 SMX_COMMERCE_LOGO_URL=/commerce/assets/logo.png
 SMX_COMMERCE_FAVICON_URL=/commerce/assets/favicon.png
@@ -323,6 +338,22 @@ SMX_COMMERCE_SMTP_PASSWORD=smx-smtp-password-vault:latest
 
 STRIPE_WEBHOOK_ENDPOINT=https://your-domain.com/stripe/webhook
 STRIPE_WEBHOOK_EVENT=checkout.session.completed
+
+
+# ---------------------------------------------------------------------
+# Required production migration before deploying v0.2 product media/cart features
+# ---------------------------------------------------------------------
+#
+# Existing production databases must be migrated explicitly.
+# create_all() does not alter/backfill existing production tables.
+
+# Run this from a trusted deployment environment with SMX_COMMERCE_DATABASE_URL
+# or pass --database-url explicitly:
+# smx-commerce migrate-product-public-ids
+# smx-commerce migrate-product-media-table
+
+# Then verify:
+# smx-commerce check-schema
 
 
 # ---------------------------------------------------------------------

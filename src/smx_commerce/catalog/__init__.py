@@ -6,10 +6,18 @@ from .objects import (
     PriceStatus,
     Product,
     ProductKind,
+    ProductMedia,
+    ProductMediaRole,
     ProductPrice,
     ProductStatus,
 )
-from .repository import CategoryRepository, ProductPriceRepository, ProductRepository
+
+from .repository import (
+    CategoryRepository,
+    ProductMediaRepository,
+    ProductPriceRepository,
+    ProductRepository,
+)
 from .services import CatalogService
 
 __all__ = [
@@ -26,4 +34,7 @@ __all__ = [
     "ProductPriceRepository",
     "ProductRepository",
     "ProductStatus",
+    "ProductMedia",
+    "ProductMediaRepository",
+    "ProductMediaRole",
 ]

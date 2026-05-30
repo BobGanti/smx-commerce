@@ -4,7 +4,10 @@ import argparse
 import sys
 
 from smx_commerce.core import CommerceConfig, CommerceRuntime, SchemaNotReadyError
-
+from smx_commerce.core.migrations import (
+    migrate_product_media_table,
+    migrate_product_public_ids,
+)
 
 def is_sqlite_url(database_url: str) -> bool:
     return database_url.startswith("sqlite")
@@ -32,6 +35,27 @@ def build_parser() -> argparse.ArgumentParser:
         "init-schema",
         help="Create smx-commerce tables. Intended for local/dev SQLite by default.",
     )
+
+    migrate_product_ids_parser = subparsers.add_parser(
+        "migrate-product-public-ids",
+        help="Add/backfill immutable product_public_id values for existing products.",
+    )
+    migrate_product_ids_parser.add_argument(
+        "--database-url",
+        default=None,
+        help="SQLAlchemy database URL. Defaults to SMX_COMMERCE_DATABASE_URL or local SQLite.",
+    )
+
+    migrate_product_media_parser = subparsers.add_parser(
+        "migrate-product-media-table",
+        help="Create/verify the smx_product_media table for product images and galleries.",
+    )
+    migrate_product_media_parser.add_argument(
+        "--database-url",
+        default=None,
+        help="SQLAlchemy database URL. Defaults to SMX_COMMERCE_DATABASE_URL or local SQLite.",
+    )
+
     init_parser.add_argument(
         "--database-url",
         default=None,
@@ -61,11 +85,12 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "check-schema":
         runtime = CommerceRuntime.from_mapping({"database_url": database_url})
-        missing_tables = runtime.get_missing_tables()
 
-        if missing_tables:
+        try:
+            runtime.assert_schema_ready()
+        except SchemaNotReadyError as exc:
             print("Schema is not ready.")
-            print("Missing table(s): " + ", ".join(missing_tables))
+            print(str(exc))
             return 2
 
         print("Schema is ready.")
@@ -96,6 +121,24 @@ def main(argv: list[str] | None = None) -> int:
         print("Schema initialized.")
         return 0
 
+    if args.command == "migrate-product-public-ids":
+        runtime = CommerceRuntime.from_mapping({"database_url": database_url})
+        result = migrate_product_public_ids(runtime.engine)
+
+        print("Product public ID migration complete.")
+        print(f"Column added: {result.column_added}")
+        print(f"Index created/ensured: {result.index_created}")
+        print(f"Products backfilled: {result.products_backfilled}")
+        return 0
+    
+    if args.command == "migrate-product-media-table":
+        runtime = CommerceRuntime.from_mapping({"database_url": database_url})
+        result = migrate_product_media_table(runtime.engine)
+
+        print("Product media table migration complete.")
+        print(f"Table created/verified: {result.table_created_or_verified}")
+        return 0
+    
     parser.print_help()
     return 1
 

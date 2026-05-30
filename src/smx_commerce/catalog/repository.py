@@ -5,7 +5,14 @@ from typing import Any
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from smx_commerce.catalog.models import CategoryRow, ProductCategoryRow, ProductPriceRow, ProductRow
+from smx_commerce.catalog.models import (
+    CategoryRow,
+    ProductCategoryRow,
+    ProductMediaRow,
+    ProductPriceRow,
+    ProductRow,
+)
+from smx_commerce.core.ids import generate_public_id
 from smx_commerce.catalog.objects import (
     BillingMode,
     Category,
@@ -14,6 +21,8 @@ from smx_commerce.catalog.objects import (
     PriceStatus,
     Product,
     ProductKind,
+    ProductMedia,
+    ProductMediaRole,
     ProductPrice,
     ProductStatus,
     validate_required_text,
@@ -153,6 +162,7 @@ class ProductRepository:
         self._validate_category_slugs(product.category_slugs)
 
         row = ProductRow(
+            product_public_id=product.product_public_id or self._generate_unique_product_public_id(),
             slug=product.slug,
             name=product.name,
             kind=product.kind.value,
@@ -186,6 +196,17 @@ class ProductRepository:
         ).scalar_one_or_none()
 
         return self._to_domain(row) if row is not None else None
+
+
+    def get_by_public_id(self, product_public_id: str) -> Product | None:
+        value = validate_required_text(product_public_id, "product_public_id")
+
+        row = self.session.execute(
+            select(ProductRow).where(ProductRow.product_public_id == value)
+        ).scalar_one_or_none()
+
+        return self._to_domain(row) if row is not None else None
+
 
     def list(
         self,
@@ -272,6 +293,21 @@ class ProductRepository:
     def archive(self, slug: str) -> Product:
         return self.update(slug, status=ProductStatus.ARCHIVED)
 
+
+    def _generate_unique_product_public_id(self) -> str:
+        for _ in range(10):
+            value = generate_public_id("prod")
+
+            exists = self.session.execute(
+                select(ProductRow.id).where(ProductRow.product_public_id == value)
+            ).scalar_one_or_none()
+
+            if exists is None:
+                return value
+
+        raise RuntimeError("could not generate unique product_public_id")
+
+
     def _get_row_or_raise(self, slug: str) -> ProductRow:
         normalized_slug = validate_slug(slug)
 
@@ -317,11 +353,36 @@ class ProductRepository:
 
     def _prices_for_product(self, product_slug: str) -> list[ProductPrice]:
         return ProductPriceRepository(self.session).list(product_slug, include_archived=True)
+    
+    def _media_for_product(self, product_public_id: str | None) -> list[ProductMedia]:
+        if not product_public_id:
+            return []
+
+        rows = self.session.execute(
+            select(ProductMediaRow)
+            .where(ProductMediaRow.product_public_id == product_public_id)
+            .order_by(ProductMediaRow.media_role.asc(), ProductMediaRow.sort_order.asc(), ProductMediaRow.id.asc())
+        ).scalars().all()
+
+        return [
+            ProductMedia(
+                url=row.url,
+                media_role=ProductMediaRole(row.media_role),
+                storage_path=row.storage_path or "",
+                filename=row.filename or "",
+                content_type=row.content_type or "",
+                alt_text=row.alt_text or "",
+                sort_order=row.sort_order,
+                metadata=dict(row.metadata_json or {}),
+            )
+            for row in rows
+        ]
 
     def _to_domain(self, row: ProductRow) -> Product:
         return Product(
             slug=row.slug,
             name=row.name,
+            product_public_id=row.product_public_id,
             kind=ProductKind(row.kind),
             summary=row.summary or "",
             description=row.description or "",
@@ -329,9 +390,109 @@ class ProductRepository:
             category_slugs=self._category_slugs_for_product(row.slug),
             sort_order=row.sort_order,
             prices=self._prices_for_product(row.slug),
+            media=self._media_for_product(row.product_public_id),
             metadata=dict(row.metadata_json or {}),
         )
 
+
+class ProductMediaRepository:
+    def __init__(self, session: Session):
+        self.session = session
+
+    def create(self, product_public_id: str, media: ProductMedia) -> ProductMedia:
+        normalized_product_public_id = validate_required_text(
+            product_public_id,
+            "product_public_id",
+        )
+
+        self._ensure_product_exists(normalized_product_public_id)
+
+        if media.is_main:
+            self.delete_main(normalized_product_public_id)
+
+        row = ProductMediaRow(
+            product_public_id=normalized_product_public_id,
+            media_role=media.media_role.value,
+            url=media.url,
+            storage_path=media.storage_path or "",
+            filename=media.filename or "",
+            content_type=media.content_type or "",
+            alt_text=media.alt_text or "",
+            sort_order=media.sort_order,
+            metadata_json=dict(media.metadata or {}),
+        )
+
+        self.session.add(row)
+        self.session.flush()
+
+        return self._to_domain(row)
+
+    def list(self, product_public_id: str) -> list[ProductMedia]:
+        normalized_product_public_id = validate_required_text(
+            product_public_id,
+            "product_public_id",
+        )
+
+        rows = self.session.execute(
+            select(ProductMediaRow)
+            .where(ProductMediaRow.product_public_id == normalized_product_public_id)
+            .order_by(
+                ProductMediaRow.media_role.asc(),
+                ProductMediaRow.sort_order.asc(),
+                ProductMediaRow.id.asc(),
+            )
+        ).scalars().all()
+
+        return [self._to_domain(row) for row in rows]
+
+    def delete_main(self, product_public_id: str) -> None:
+        normalized_product_public_id = validate_required_text(
+            product_public_id,
+            "product_public_id",
+        )
+
+        self.session.execute(
+            delete(ProductMediaRow).where(
+                ProductMediaRow.product_public_id == normalized_product_public_id,
+                ProductMediaRow.media_role == ProductMediaRole.MAIN.value,
+            )
+        )
+
+    def delete_by_url(self, product_public_id: str, url: str) -> None:
+        normalized_product_public_id = validate_required_text(
+            product_public_id,
+            "product_public_id",
+        )
+        normalized_url = validate_required_text(url, "url")
+
+        self.session.execute(
+            delete(ProductMediaRow).where(
+                ProductMediaRow.product_public_id == normalized_product_public_id,
+                ProductMediaRow.url == normalized_url,
+            )
+        )
+
+    def _ensure_product_exists(self, product_public_id: str) -> None:
+        exists = self.session.execute(
+            select(ProductRow.id).where(ProductRow.product_public_id == product_public_id)
+        ).scalar_one_or_none()
+
+        if exists is None:
+            raise ValueError(f"product does not exist: {product_public_id}")
+
+    @staticmethod
+    def _to_domain(row: ProductMediaRow) -> ProductMedia:
+        return ProductMedia(
+            url=row.url,
+            media_role=ProductMediaRole(row.media_role),
+            storage_path=row.storage_path or "",
+            filename=row.filename or "",
+            content_type=row.content_type or "",
+            alt_text=row.alt_text or "",
+            sort_order=row.sort_order,
+            metadata=dict(row.metadata_json or {}),
+        )
+    
 
 class ProductPriceRepository:
     def __init__(self, session: Session):

@@ -26,6 +26,7 @@ ENV_TO_CONFIG = {
     "PROJECT_HOME_URL": "project_home_url",
     "PUBLIC_BASE_URL": "public_base_url",
     "ASSETS_DIR": "assets_dir",
+    "PRODUCTS_ASSETS_DIR": "products_assets_dir",
     "RECEIPTS_DIR": "receipts_dir",
     "LOGO_URL": "logo_url",
     "FAVICON_URL": "favicon_url",

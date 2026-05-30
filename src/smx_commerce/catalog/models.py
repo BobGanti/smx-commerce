@@ -17,7 +17,7 @@ class CategoryRow(Base):
     __tablename__ = "smx_categories"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-
+    
     slug: Mapped[str] = mapped_column(String(140), unique=True, index=True, nullable=False)
     name: Mapped[str] = mapped_column(String(180), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
@@ -41,7 +41,7 @@ class ProductRow(Base):
     __tablename__ = "smx_products"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-
+    product_public_id: Mapped[str | None] = mapped_column(String(80), unique=True, index=True, nullable=True)
     slug: Mapped[str] = mapped_column(String(140), unique=True, index=True, nullable=False)
     name: Mapped[str] = mapped_column(String(220), nullable=False)
     kind: Mapped[str] = mapped_column(String(40), nullable=False, index=True, default="generic")
@@ -82,6 +82,36 @@ class ProductCategoryRow(Base):
         index=True,
     )
 
+
+class ProductMediaRow(Base):
+    __tablename__ = "smx_product_media"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    product_public_id: Mapped[str] = mapped_column(
+        String(80),
+        ForeignKey("smx_products.product_public_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    media_role: Mapped[str] = mapped_column(String(32), nullable=False, index=True, default="gallery")
+    url: Mapped[str] = mapped_column(String(500), nullable=False)
+    storage_path: Mapped[str] = mapped_column(String(700), nullable=False, default="")
+    filename: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    content_type: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    alt_text: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    metadata_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=utc_now,
+        onupdate=utc_now,
+    )
 
 class ProductPriceRow(Base):
     __tablename__ = "smx_product_prices"

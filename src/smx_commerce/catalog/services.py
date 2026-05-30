@@ -4,9 +4,10 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from smx_commerce.catalog.objects import Category, Product, ProductPrice
+from smx_commerce.catalog.objects import Category, Product, ProductMedia, ProductPrice
 from smx_commerce.catalog.repository import (
     CategoryRepository,
+    ProductMediaRepository,
     ProductPriceRepository,
     ProductRepository,
 )
@@ -18,6 +19,7 @@ class CatalogService:
         self.categories = CategoryRepository(session)
         self.products = ProductRepository(session)
         self.prices = ProductPriceRepository(session)
+        self.media = ProductMediaRepository(session)
 
     def create_category(self, category: Category) -> Category:
         return self.categories.create(category)
@@ -48,6 +50,18 @@ class CatalogService:
 
     def archive_product(self, slug: str) -> Product:
         return self.products.archive(slug)
+    ###
+    def add_product_media(self, product_public_id: str, media: ProductMedia) -> ProductMedia:
+        return self.media.create(product_public_id, media)
+
+    def list_product_media(self, product_public_id: str) -> list[ProductMedia]:
+        return self.media.list(product_public_id)
+
+    def delete_product_main_image(self, product_public_id: str) -> None:
+        self.media.delete_main(product_public_id)
+
+    def delete_product_media_by_url(self, product_public_id: str, url: str) -> None:
+        self.media.delete_by_url(product_public_id, url)
 
     def create_price(self, product_slug: str, price: ProductPrice) -> ProductPrice:
         return self.prices.create(product_slug, price)

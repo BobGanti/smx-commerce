@@ -47,12 +47,29 @@
 
       <h1>Edit product</h1>
       <p class="muted">Slug: {{ product.slug }}</p>
+      {% if product.main_image_url %}
+        <div style="margin: 16px 0;">
+          <p class="muted">Current main image</p>
+          <img src="{{ product.main_image_url }}" alt="{{ product.name }}" style="max-width: 260px; max-height: 180px; border-radius: 14px; border: 1px solid #e6e8eb; object-fit: cover;">
+        </div>
+      {% endif %}
+
+      {% if product.gallery_images %}
+        <div style="margin: 16px 0;">
+          <p class="muted">Gallery images</p>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            {% for image in product.gallery_images %}
+              <img src="{{ image.url }}" alt="{{ image.alt_text or product.name }}" style="width: 120px; height: 90px; border-radius: 12px; border: 1px solid #e6e8eb; object-fit: cover;">
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
 
       {% if error %}
         <p class="error">{{ error }}</p>
       {% endif %}
 
-      <form method="post" action="/commerce/admin/products/{{ product.slug }}/update">
+      <form method="post" enctype="multipart/form-data" action="/commerce/admin/products/{{ product.slug }}/update">
         <div class="grid">
           <div>
             <label for="name">Name</label>
@@ -100,7 +117,12 @@
 
         <label for="description">Description</label>
         <textarea id="description" name="description">{{ product.description }}</textarea>
-
+        <label for="main_image">Main product image</label>
+        <input id="main_image" name="main_image" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+        <p class="muted">Optional. Uploading a new main image replaces the current main image record.</p>
+        <label for="gallery_images">Gallery images</label>
+        <input id="gallery_images" name="gallery_images" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple>
+        <p class="muted">Optional. You can upload multiple gallery images at once.</p>
         <button type="submit">Save product changes</button>
       </form>
     </section>

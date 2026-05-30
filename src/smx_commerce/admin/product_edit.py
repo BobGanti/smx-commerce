@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from flask import Blueprint, jsonify, redirect, render_template, request
 
-from smx_commerce.catalog import CatalogService
+from smx_commerce.catalog import CatalogService, ProductMediaRole
+from smx_commerce.catalog.media_storage import store_product_image_upload
 from smx_commerce.core import CommerceRuntime
 
 
@@ -52,6 +53,34 @@ def create_product_edit_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
                 catalog = CatalogService(session)
                 updated = catalog.update_product(slug, **changes)
 
+                main_image = store_product_image_upload(
+                    upload_file=request.files.get("main_image"),
+                    products_assets_dir=runtime.config.products_assets_dir,
+                    product_public_id=updated.product_public_id,
+                    media_role=ProductMediaRole.MAIN,
+                    alt_text=updated.name,
+                    sort_order=0,
+                )
+
+                if main_image is not None:
+                    catalog.add_product_media(updated.product_public_id, main_image)
+
+                gallery_uploads = request.files.getlist("gallery_images")
+                next_gallery_sort_order = len(updated.gallery_images) + 1
+
+                for index, gallery_upload in enumerate(gallery_uploads):
+                    gallery_image = store_product_image_upload(
+                        upload_file=gallery_upload,
+                        products_assets_dir=runtime.config.products_assets_dir,
+                        product_public_id=updated.product_public_id,
+                        media_role=ProductMediaRole.GALLERY,
+                        alt_text=updated.name,
+                        sort_order=next_gallery_sort_order + index,
+                    )
+
+                    if gallery_image is not None:
+                        catalog.add_product_media(updated.product_public_id, gallery_image)
+                        
             return redirect(f"/commerce/admin/products/{updated.slug}", code=303)
 
         except (TypeError, ValueError) as exc:
