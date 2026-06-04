@@ -2,65 +2,43 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>{{ commerce_config.store_title }} · Edit {{ product.name }} · Commerce Admin</title>
+  <title>{{ commerce_config.store_title }} ? Edit {{ product.name }} ? Commerce Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {% if commerce_config.favicon_url %}
     <link rel="icon" href="{{ commerce_config.favicon_url }}">
   {% endif %}
+  <link rel="stylesheet" href="/commerce/static/smx-commerce.css">
   <style>
-    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f7f8fa; color: #18202a; }
-    main { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
-    nav { display: flex; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
-    .panel { background: white; border: 1px solid #e6e8eb; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); }
-    label { display: block; font-weight: 650; margin-top: 12px; }
-    input, select, textarea { width: 100%; box-sizing: border-box; padding: 11px; border: 1px solid #ccd2da; border-radius: 10px; margin-top: 6px; font: inherit; }
-    textarea { min-height: 100px; }
-    select[multiple] { min-height: 110px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
-    .muted { color: #667085; }
-    .error { color: #b42318; font-weight: 650; }
-    a { color: #0f766e; text-decoration: none; font-weight: 700; }
-    button { margin-top: 18px; padding: 12px 16px; border: 0; border-radius: 12px; font-weight: 750; cursor: pointer; background: #0f766e; color: white; }
-    .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
-    .brand img { max-height: 48px; max-width: 180px; object-fit: contain; }
-    .brand-title { font-size: 1.05rem; font-weight: 800; }
-    .gallery-admin-grid {
+    .smx-product-edit-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    .smx-product-edit-actions {
       display: flex;
-      gap: 12px;
       flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
     }
 
-    .gallery-admin-item {
-      width: 132px;
+    .smx-product-current-image {
+      margin: 16px 0;
     }
 
-    .gallery-admin-item img {
-      width: 132px;
-      height: 96px;
-      border-radius: 12px;
-      border: 1px solid #e6e8eb;
+    .smx-product-current-image img {
+      max-width: 260px;
+      max-height: 180px;
+      border-radius: 14px;
+      border: 1px solid var(--smx-border);
       object-fit: cover;
-      display: block;
-      background: #f1f5f9;
     }
 
-    .gallery-delete-form {
-      margin: 8px 0 0;
-    }
-
-    .gallery-delete-button {
-      width: 100%;
-      margin-top: 0;
-      padding: 8px 10px;
-      border-radius: 10px;
-      background: #b42318;
-      color: white;
-      font-size: 0.88rem;
-    }
     .gallery-admin-grid {
       display: flex;
       gap: 12px;
       flex-wrap: wrap;
+      margin: 16px 0;
     }
 
     .gallery-admin-item {
@@ -69,7 +47,7 @@
       height: 96px;
       border-radius: 12px;
       overflow: hidden;
-      border: 1px solid #e6e8eb;
+      border: 1px solid var(--smx-border);
       background: #f1f5f9;
     }
 
@@ -109,35 +87,67 @@
 </head>
 <body>
   <main>
-    <nav>
-      <a href="{{ commerce_config.host_home_url }}">Back to {{ commerce_config.store_title }}</a>
-      <a href="/commerce/admin">Admin home</a>
-      <a href="/commerce/admin/products">Products</a>
-      <a href="/commerce/admin/categories">Categories</a>
-      <a href="/commerce/admin/orders">Orders</a>
-        <a href="/commerce/admin/branding">Settings</a>
-      <a href="/commerce/admin/products/{{ product.slug }}">Back to product</a>
-    </nav>
-
-    <section class="panel">
-      <div class="brand">
+    <header class="smx-site-header">
+      <a class="smx-site-brand" href="/commerce/admin">
         {% if commerce_config.logo_url %}
           <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.store_title }} logo">
         {% endif %}
-        <span class="brand-title">{{ commerce_config.store_title }}</span>
-      </div>
+        <span class="smx-site-brand-title">{{ commerce_config.store_title }} Admin</span>
+      </a>
 
+      <nav class="smx-nav" aria-label="Commerce admin navigation">
+        <a href="{{ commerce_config.host_home_url }}">Home</a>
+        <a href="/commerce/admin">Admin</a>
+        <a href="/commerce/admin/products">Products</a>
+        <a href="/commerce/admin/categories">Categories</a>
+        <a href="/commerce/admin/orders">Orders</a>
+        <a href="/commerce/admin/branding">Settings</a>
+      </nav>
+
+      <form method="post" action="/commerce/admin/logout" class="smx-inline-form">
+        <button type="submit">Sign out</button>
+      </form>
+
+      <details class="smx-mobile-menu">
+        <summary aria-label="Open menu"><span class="smx-mobile-menu-icon" aria-hidden="true"></span></summary>
+        <div class="smx-mobile-menu-panel">
+          <nav class="smx-mobile-menu-links" aria-label="Mobile navigation">
+            <a href="{{ commerce_config.host_home_url }}">Home</a>
+            <a href="/commerce/admin">Admin</a>
+            <a href="/commerce/admin/products">Products</a>
+            <a href="/commerce/admin/categories">Categories</a>
+            <a href="/commerce/admin/orders">Orders</a>
+            <a href="/commerce/admin/branding">Settings</a>
+          </nav>
+
+          <form method="post" action="/commerce/admin/logout" class="smx-mobile-menu-form">
+            <button type="submit">Sign out</button>
+          </form>
+        </div>
+      </details>
+    </header>
+
+    <section class="smx-panel">
       <h1>Edit product</h1>
-      <p class="muted">Slug: {{ product.slug }}</p>
+      <p class="smx-muted">Slug: {{ product.slug }}</p>
+
+      <div class="smx-product-edit-actions">
+        <a href="/commerce/admin/products">Back to products</a>
+        <a href="/commerce/admin/products/{{ product.slug }}">Back to product</a>
+      </div>
+    </section>
+
+    <section class="smx-panel">
       {% if product.main_image_url %}
-        <div style="margin: 16px 0;">
-          <p class="muted">Current main image</p>
-          <img src="{{ product.main_image_url }}" alt="{{ product.name }}" style="max-width: 260px; max-height: 180px; border-radius: 14px; border: 1px solid #e6e8eb; object-fit: cover;">
+        <div class="smx-product-current-image">
+          <p class="smx-muted">Current main image</p>
+          <img src="{{ product.main_image_url }}" alt="{{ product.name }}">
         </div>
       {% endif %}
+
       {% if product.gallery_images %}
-        <div style="margin: 16px 0;">
-          <p class="muted">Gallery images</p>
+        <div>
+          <p class="smx-muted">Gallery images</p>
 
           <div class="gallery-admin-grid">
             {% for image in product.gallery_images %}
@@ -151,7 +161,7 @@
                   onsubmit="return confirm('Remove this gallery image?');"
                 >
                   <input type="hidden" name="media_url" value="{{ image.url }}">
-                  <button class="gallery-delete-button" type="submit" aria-label="Remove gallery image">🗑</button>
+                  <button class="gallery-delete-button" type="submit" aria-label="Remove gallery image">?</button>
                 </form>
               </div>
             {% endfor %}
@@ -164,7 +174,7 @@
       {% endif %}
 
       <form method="post" enctype="multipart/form-data" action="/commerce/admin/products/{{ product.slug }}/update">
-        <div class="grid">
+        <div class="smx-product-edit-grid">
           <div>
             <label for="name">Name</label>
             <input id="name" name="name" value="{{ product.name }}" required>
@@ -203,7 +213,7 @@
           {% endfor %}
         </select>
         {% if not categories %}
-          <p class="muted">No categories have been created yet.</p>
+          <p class="smx-muted">No categories have been created yet.</p>
         {% endif %}
 
         <label for="summary">Summary</label>
@@ -211,12 +221,15 @@
 
         <label for="description">Description</label>
         <textarea id="description" name="description">{{ product.description }}</textarea>
+
         <label for="main_image">Main product image</label>
         <input id="main_image" name="main_image" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
-        <p class="muted">Optional. Uploading a new main image replaces the current main image record.</p>
+        <p class="smx-muted">Optional. Uploading a new main image replaces the current main image record.</p>
+
         <label for="gallery_images">Gallery images</label>
         <input id="gallery_images" name="gallery_images" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple>
-        <p class="muted">Optional. You can upload multiple gallery images at once.</p>
+        <p class="smx-muted">Optional. You can upload multiple gallery images at once.</p>
+
         <button type="submit">Save product changes</button>
       </form>
     </section>

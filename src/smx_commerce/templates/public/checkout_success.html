@@ -3,57 +3,88 @@
 <head>
   <meta charset="utf-8">
   {% if order.status == "paid" %}
-  <title>{{ commerce_config.store_title }} · Payment confirmed</title>
+    <title>{{ commerce_config.store_title }} ? Payment confirmed</title>
   {% else %}
-    <title>{{ commerce_config.store_title }} · Checkout received</title>
+    <title>{{ commerce_config.store_title }} ? Checkout received</title>
   {% endif %}
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {% if commerce_config.favicon_url %}
     <link rel="icon" href="{{ commerce_config.favicon_url }}">
   {% endif %}
+  <link rel="stylesheet" href="/commerce/static/smx-commerce.css">
   <style>
-    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f7f8fa; color: #18202a; }
-    main { max-width: 760px; margin: 0 auto; padding: 60px 20px; }
-    nav { display: flex; gap: 20px; margin-bottom: 26px; flex-wrap: wrap; }
-    .panel { background: white; border: 1px solid #e6e8eb; border-radius: 18px; padding: 28px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); }
-    .notice { background: #b7e5ff; border: 1px solid #fedf89; color: #93370d; border-radius: 12px; padding: 14px; }
-    .muted { color: #667085; }
-    a { color: #0f766e; text-decoration: none; font-weight: 650; }
-    .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
-    .brand img { max-height: 48px; max-width: 180px; object-fit: contain; }
-    .brand-title { font-size: 1.05rem; font-weight: 800; }
+    .smx-checkout-notice {
+      margin: 18px 0;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid var(--smx-border);
+      background: #f8fafc;
+      font-weight: 750;
+    }
+
+    .smx-checkout-notice.is-success {
+      background: #ecfdf3;
+      color: #027a48;
+      border-color: #abefc6;
+    }
+
+    .smx-checkout-notice.is-warning {
+      background: #fff7ed;
+      color: #b54708;
+      border-color: #fed7aa;
+    }
+
+    .smx-checkout-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 22px;
+    }
   </style>
 </head>
 <body>
   <main>
-    <nav>
-      <a href="{{ commerce_config.host_home_url }}">Back to {{ commerce_config.store_title }}</a>
-      <a href="/commerce">Commerce home</a>
-      <a href="/products">Back to products</a>
-    </nav>
-
-    <section class="panel">
-      <div class="brand">
+    <header class="smx-site-header">
+      <a class="smx-site-brand" href="/commerce">
         {% if commerce_config.logo_url %}
           <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.store_title }} logo">
         {% endif %}
-        <span class="brand-title">{{ commerce_config.store_title }}</span>
-      </div>
+        <span class="smx-site-brand-title">{{ commerce_config.store_title }}</span>
+      </a>
 
+      <nav class="smx-nav" aria-label="Commerce navigation">
+        <a href="{{ commerce_config.host_home_url }}">Back to host</a>
+        <a href="/commerce">Commerce home</a>
+        <a href="/products">Products</a>
+        <a href="/cart">Cart</a>
+      </nav>
+
+      <details class="smx-mobile-menu">
+        <summary aria-label="Open menu"><span class="smx-mobile-menu-icon" aria-hidden="true"></span></summary>
+        <div class="smx-mobile-menu-panel">
+          <nav class="smx-mobile-menu-links" aria-label="Mobile navigation">
+            <a href="{{ commerce_config.host_home_url }}">Back to host</a>
+            <a href="/commerce">Commerce home</a>
+            <a href="/products">Products</a>
+            <a href="/cart">Cart</a>
+          </nav>
+        </div>
+      </details>
+    </header>
+
+    <section class="smx-panel">
       {% if order.status == "paid" %}
         <h1>Payment confirmed</h1>
-
         <p>Your payment has been confirmed successfully.</p>
 
-        <div class="notice success">
+        <div class="smx-checkout-notice is-success">
           Thank you. Your order is paid and confirmed.
         </div>
       {% else %}
         <h1>Checkout received</h1>
-
         <p>Checkout redirect received. Payment is confirmed only by verified webhook.</p>
 
-        <div class="notice warning">
+        <div class="smx-checkout-notice is-warning">
           Payment is not confirmed yet. Confirmation happens after the verified payment webhook is processed.
         </div>
       {% endif %}
@@ -68,28 +99,30 @@
         {% if cart_items %}
           <h3>Items purchased</h3>
 
-          <table>
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Price option</th>
-                <th>Quantity</th>
-                <th>Unit price</th>
-                <th>Line total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for item in cart_items %}
+          <div class="smx-table-wrap">
+            <table class="smx-table">
+              <thead>
                 <tr>
-                  <td>{{ item.product_name }}</td>
-                  <td>{{ item.price_label }}</td>
-                  <td>{{ item.quantity }}</td>
-                  <td>{{ item.currency }} {{ "%.2f"|format(item.amount_cents / 100) }}</td>
-                  <td>{{ item.currency }} {{ "%.2f"|format((item.amount_cents * item.quantity) / 100) }}</td>
+                  <th>Product</th>
+                  <th>Price option</th>
+                  <th>Quantity</th>
+                  <th>Unit price</th>
+                  <th>Line total</th>
                 </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {% for item in cart_items %}
+                  <tr>
+                    <td>{{ item.product_name }}</td>
+                    <td>{{ item.price_label }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.currency }} {{ "%.2f"|format(item.amount_cents / 100) }}</td>
+                    <td>{{ item.currency }} {{ "%.2f"|format((item.amount_cents * item.quantity) / 100) }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
         {% else %}
           <p><strong>Product:</strong> {{ order.product_slug }}</p>
           <p><strong>Price option:</strong> {{ order.price_code }}</p>
@@ -97,10 +130,13 @@
 
         <p><strong>Amount:</strong> {{ order.currency }} {{ "%.2f"|format(order.amount_cents / 100) }}</p>
       {% else %}
-        <p class="muted">No order ID was supplied in the redirect URL.</p>
+        <p class="smx-muted">No order ID was supplied in the redirect URL.</p>
       {% endif %}
 
-      <p><a href="/products">Back to products</a></p>
+      <div class="smx-checkout-actions">
+        <a href="/products">Back to products</a>
+        <a href="/commerce">Commerce home</a>
+      </div>
     </section>
   </main>
 </body>

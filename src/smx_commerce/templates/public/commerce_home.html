@@ -2,46 +2,74 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>{{ commerce_config.store_title }} · Commerce</title>
+  <title>{{ commerce_config.store_title }} ? Commerce</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {% if commerce_config.favicon_url %}
     <link rel="icon" href="{{ commerce_config.favicon_url }}">
   {% endif %}
+  <link rel="stylesheet" href="/commerce/static/smx-commerce.css">
   <style>
-    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f7f8fa; color: #18202a; }
-    main { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
-    nav { display: flex; gap: 20px; margin-bottom: 26px; flex-wrap: wrap; }
-    .panel { background: white; border: 1px solid #e6e8eb; border-radius: 18px; padding: 28px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); }
-    .muted { color: #667085; }
-    .actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 22px; }
-    a { color: #0f766e; text-decoration: none; font-weight: 750; }
-    .button-link { display: inline-block; padding: 12px 18px; border-radius: 12px; background: #0f766e; color: white; }
-    .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
-    .brand img { max-height: 48px; max-width: 180px; object-fit: contain; }
-    .brand-title { font-size: 1.05rem; font-weight: 800; }
+    .smx-commerce-home-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+    .smx-commerce-home-actions a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 18px;
+      border-radius: 12px;
+      background: var(--smx-primary);
+      color: white;
+      font-weight: 850;
+      text-decoration: none;
+    }
+
+    .smx-commerce-home-actions a:hover {
+      text-decoration: none;
+    }
   </style>
 </head>
 <body>
   <main>
-    <nav>
-      <a href="{{ commerce_config.host_home_url }}">Back to {{ commerce_config.store_title }}</a>
-      <a href="/commerce">Commerce home</a>
-      <a href="/products">Products</a>
-    </nav>
-
-    <section class="panel">
-      <div class="brand">
+    <header class="smx-site-header">
+      <a class="smx-site-brand" href="/commerce">
         {% if commerce_config.logo_url %}
           <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.store_title }} logo">
         {% endif %}
-        <span class="brand-title">{{ commerce_config.store_title }}</span>
-      </div>
+        <span class="smx-site-brand-title">{{ commerce_config.store_title }}</span>
+      </a>
 
+      <nav class="smx-nav" aria-label="Commerce navigation">
+        <a href="{{ commerce_config.host_home_url }}">Back to host</a>
+        <a href="/commerce">Commerce home</a>
+        <a href="/products">Products</a>
+        <a href="/cart">Cart</a>
+      </nav>
+
+      <details class="smx-mobile-menu">
+        <summary aria-label="Open menu"><span class="smx-mobile-menu-icon" aria-hidden="true"></span></summary>
+        <div class="smx-mobile-menu-panel">
+          <nav class="smx-mobile-menu-links" aria-label="Mobile navigation">
+            <a href="{{ commerce_config.host_home_url }}">Back to host</a>
+            <a href="/commerce">Commerce home</a>
+            <a href="/products">Products</a>
+            <a href="/cart">Cart</a>
+          </nav>
+        </div>
+      </details>
+    </header>
+
+    <section class="smx-panel">
       <h1>Commerce</h1>
-      <p class="muted">Browse available products from {{ commerce_config.store_title }}.</p>
+      <p class="smx-muted">Browse available products and services from {{ commerce_config.store_title }}.</p>
 
-      <div class="actions">
-        <a class="button-link" href="/products">Browse products</a>
+      <div class="smx-commerce-home-actions">
+        <a href="/products">Browse products</a>
+        <a href="/cart">View cart</a>
       </div>
     </section>
   </main>

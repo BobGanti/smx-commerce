@@ -2,99 +2,240 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>{{ commerce_config.store_title }} · {{ product.name }} · Commerce Admin</title>
+  <title>{{ commerce_config.store_title }} ? {{ product.name }} ? Commerce Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {% if commerce_config.favicon_url %}
     <link rel="icon" href="{{ commerce_config.favicon_url }}">
   {% endif %}
+  <link rel="stylesheet" href="/commerce/static/smx-commerce.css">
   <style>
-    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f7f8fa; color: #18202a; }
-    main { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
-    nav { display: flex; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
-    .panel, table { background: white; border: 1px solid #e6e8eb; border-radius: 16px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); }
-    .panel { padding: 22px; margin-bottom: 24px; }
-    table { width: 100%; border-collapse: collapse; overflow: hidden; }
-    th, td { padding: 14px 16px; border-bottom: 1px solid #e6e8eb; text-align: left; vertical-align: top; }
-    th { background: #f1f5f9; font-size: 0.9rem; color: #475467; }
-    tr:last-child td { border-bottom: 0; }
-    label { display: block; font-weight: 650; margin-top: 12px; }
-    input, select { width: 100%; box-sizing: border-box; padding: 11px; border: 1px solid #ccd2da; border-radius: 10px; margin-top: 6px; font: inherit; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
-    .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #ecfdf3; color: #027a48; font-weight: 700; font-size: 0.82rem; }
-    .muted { color: #667085; }
-    .error { color: #b42318; font-weight: 650; }
-    a { color: #0f766e; text-decoration: none; font-weight: 650; }
-    button { margin-top: 16px; padding: 10px 14px; border: 0; border-radius: 10px; font-weight: 750; cursor: pointer; background: #0f766e; color: white; }
-    .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
-    .brand img { max-height: 48px; max-width: 180px; object-fit: contain; }
-    .brand-title { font-size: 1.05rem; font-weight: 800; }
-    .inline-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-    .product-hero-image { width: 100%; max-height: 360px; border-radius: 18px; object-fit: cover; border: 1px solid #e6e8eb; margin: 16px 0; background: #f1f5f9; }
-    .gallery-button { margin: 0; padding: 0; border: 0; background: transparent; cursor: pointer; }
-    .gallery-button:focus { outline: 3px solid #0f766e; outline-offset: 3px; }
+    .smx-product-detail-actions,
+    .smx-product-price-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 18px;
+    }
 
-    .lightbox { display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(15, 23, 42, 0.92); align-items: center; justify-content: center; padding: 24px; }
-    .lightbox.is-open { display: flex; }
-    .lightbox-content { max-width: min(1000px, 96vw); max-height: 86vh; text-align: center; }
-    .lightbox-image { max-width: 100%; max-height: 78vh; border-radius: 18px; object-fit: contain; background: white; }
-    .lightbox-caption { color: white; margin-top: 12px; font-weight: 650; }
-    .lightbox-close, .lightbox-prev, .lightbox-next { position: absolute; border: 0; border-radius: 999px; background: white; color: #18202a; cursor: pointer; font-weight: 900; }
-    .lightbox-close { top: 20px; right: 20px; width: 44px; height: 44px; font-size: 1.2rem; }
-    .lightbox-prev, .lightbox-next { top: 50%; transform: translateY(-50%); width: 48px; height: 48px; font-size: 1.6rem; }
-    .lightbox-prev { left: 20px; }
-    .lightbox-next { right: 20px; }
-    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 150px)); gap: 12px; margin-top: 14px; align-items: start; }
-    .gallery-button { width: 150px; height: 110px; margin: 0; padding: 0; border: 0; background: transparent; cursor: pointer; border-radius: 14px; overflow: hidden; }
-    .gallery-button img,
-    .gallery-image { width: 150px; height: 110px; max-width: 150px; max-height: 110px; border-radius: 14px; object-fit: cover; border: 1px solid #e6e8eb; background: #f1f5f9; display: block; }
-    .product-admin-summary {
+    .smx-product-admin-summary {
       display: flex;
       gap: 14px;
       align-items: center;
       margin: 16px 0;
       padding: 12px;
-      border: 1px solid #e6e8eb;
+      border: 1px solid var(--smx-border);
       border-radius: 14px;
       background: #f8fafc;
     }
 
-    .product-admin-thumb {
+    .smx-product-admin-thumb {
       width: 96px;
       height: 72px;
       border-radius: 12px;
       object-fit: cover;
-      border: 1px solid #e6e8eb;
+      border: 1px solid var(--smx-border);
       background: #f1f5f9;
+    }
+
+    .smx-product-hero-image {
+      width: 100%;
+      max-height: 360px;
+      border-radius: 18px;
+      object-fit: cover;
+      border: 1px solid var(--smx-border);
+      margin: 16px 0;
+      background: #f1f5f9;
+    }
+
+    .smx-product-price-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+    }
+
+    .smx-product-danger-zone {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid var(--smx-border);
+    }
+
+    .smx-product-danger-zone button,
+    .smx-price-delete-form button {
+      background: var(--smx-danger);
+    }
+
+    .smx-price-delete-form {
+      margin-top: 8px;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 150px));
+      gap: 12px;
+      margin-top: 14px;
+      align-items: start;
+    }
+
+    .gallery-button {
+      width: 150px;
+      height: 110px;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .gallery-button:focus {
+      outline: 3px solid var(--smx-primary);
+      outline-offset: 3px;
+    }
+
+    .gallery-button img,
+    .gallery-image {
+      width: 150px;
+      height: 110px;
+      max-width: 150px;
+      max-height: 110px;
+      border-radius: 14px;
+      object-fit: cover;
+      border: 1px solid var(--smx-border);
+      background: #f1f5f9;
+      display: block;
+    }
+
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(15, 23, 42, 0.92);
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .lightbox.is-open {
+      display: flex;
+    }
+
+    .lightbox-content {
+      max-width: min(1000px, 96vw);
+      max-height: 86vh;
+      text-align: center;
+    }
+
+    .lightbox-image {
+      max-width: 100%;
+      max-height: 78vh;
+      border-radius: 18px;
+      object-fit: contain;
+      background: white;
+    }
+
+    .lightbox-caption {
+      color: white;
+      margin-top: 12px;
+      font-weight: 650;
+    }
+
+    .lightbox-close,
+    .lightbox-prev,
+    .lightbox-next {
+      position: absolute;
+      border: 0;
+      border-radius: 999px;
+      background: white;
+      color: #18202a;
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .lightbox-close {
+      top: 20px;
+      right: 20px;
+      width: 44px;
+      height: 44px;
+      font-size: 1.2rem;
+    }
+
+    .lightbox-prev,
+    .lightbox-next {
+      top: 50%;
+      transform: translateY(-50%);
+      width: 48px;
+      height: 48px;
+      font-size: 1.6rem;
+    }
+
+    .lightbox-prev {
+      left: 20px;
+    }
+
+    .lightbox-next {
+      right: 20px;
     }
   </style>
 </head>
 <body>
   <main>
-    <nav>
-      <div class="brand">
+    <header class="smx-site-header">
+      <a class="smx-site-brand" href="/commerce/admin">
         {% if commerce_config.logo_url %}
-          <a href="{{ commerce_config.host_home_url }}">
-            <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.store_title }} logo">
-          </a>
+          <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.store_title }} logo">
         {% endif %}
-      </div>
-      <a href="{{ commerce_config.host_home_url }}">Back to {{ commerce_config.store_title }}</a>
-      <a href="/commerce/admin">Admin</a>
-      <a href="/commerce/admin/products">Products</a>
-      <a href="/commerce/admin/categories">Categories</a>
-      <a href="/commerce/admin/orders">Orders</a>
-    </nav>
+        <span class="smx-site-brand-title">{{ commerce_config.store_title }} Admin</span>
+      </a>
 
-    <section class="panel">
+      <nav class="smx-nav" aria-label="Commerce admin navigation">
+        <a href="{{ commerce_config.host_home_url }}">Home</a>
+        <a href="/commerce/admin">Admin</a>
+        <a href="/commerce/admin/products">Products</a>
+        <a href="/commerce/admin/categories">Categories</a>
+        <a href="/commerce/admin/orders">Orders</a>
+        <a href="/commerce/admin/branding">Settings</a>
+      </nav>
+
+      <form method="post" action="/commerce/admin/logout" class="smx-inline-form">
+        <button type="submit">Sign out</button>
+      </form>
+
+      <details class="smx-mobile-menu">
+        <summary aria-label="Open menu"><span class="smx-mobile-menu-icon" aria-hidden="true"></span></summary>
+        <div class="smx-mobile-menu-panel">
+          <nav class="smx-mobile-menu-links" aria-label="Mobile navigation">
+            <a href="{{ commerce_config.host_home_url }}">Home</a>
+            <a href="/commerce/admin">Admin</a>
+            <a href="/commerce/admin/products">Products</a>
+            <a href="/commerce/admin/categories">Categories</a>
+            <a href="/commerce/admin/orders">Orders</a>
+            <a href="/commerce/admin/branding">Settings</a>
+          </nav>
+
+          <form method="post" action="/commerce/admin/logout" class="smx-mobile-menu-form">
+            <button type="submit">Sign out</button>
+          </form>
+        </div>
+      </details>
+    </header>
+
+    <section class="smx-panel">
       <h1>{{ product.name }}</h1>
-      <p class="muted">{{ product.slug }} · {{ product.kind.value }} · {{ product.status.value }}</p>
+      <p class="smx-muted">{{ product.slug }} ? {{ product.kind.value }} ? {{ product.status.value }}</p>
+
       {% if product.main_image_url %}
-        <div style="margin: 16px 0;">
-          <p class="muted">Current main image</p>
-          <img src="{{ product.main_image_url }}" alt="{{ product.name }}" style="max-width: 260px; max-height: 180px; border-radius: 14px; border: 1px solid #e6e8eb; object-fit: cover;">
+        <div class="smx-product-admin-summary">
+          <img class="smx-product-admin-thumb" src="{{ product.main_image_url }}" alt="{{ product.name }}">
+          <div>
+            <p class="smx-muted">Current main image</p>
+            <strong>{{ product.name }}</strong>
+          </div>
         </div>
       {% endif %}
-      
+
       {% if error %}
         <p id="safe-delete-product-detail-error" class="error">{{ error }}</p>
       {% endif %}
@@ -104,18 +245,41 @@
       {% endif %}
 
       {% if product.description %}
-        <p class="muted">{{ product.description }}</p>
+        <p class="smx-muted">{{ product.description }}</p>
       {% endif %}
-      <div class="inline-actions">
-        <p><a href="/commerce/admin/products/{{ product.slug }}/edit">Edit product</a></p>
+
+      <div class="smx-product-detail-actions">
+        <a href="/commerce/admin/products">Back to products</a>
+        <a href="/commerce/admin/products/{{ product.slug }}/edit">Edit product</a>
       </div>
 
-      <form method="post" action="/commerce/admin/products/{{ product.slug }}/delete" onsubmit="return confirm('Delete this product? This is allowed only if no order references it.');">
-        <button type="submit">Delete unused product</button>
-      </form>
+      <div class="smx-product-danger-zone">
+        <form method="post" action="/commerce/admin/products/{{ product.slug }}/delete" onsubmit="return confirm('Delete this product? This is allowed only if no order references it.');">
+          <button type="submit">Delete unused product</button>
+        </form>
+      </div>
     </section>
 
-    <section class="panel">
+    {% if product.gallery_images %}
+      <section class="smx-panel">
+        <h2>Gallery images</h2>
+
+        <div class="gallery-grid">
+          {% for image in product.gallery_images %}
+            <button
+              type="button"
+              class="gallery-button"
+              data-gallery-url="{{ image.url }}"
+              data-gallery-alt="{{ image.alt_text or product.name }}"
+            >
+              <img src="{{ image.url }}" alt="{{ image.alt_text or product.name }}">
+            </button>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    <section class="smx-panel">
       <h2>Add price option</h2>
 
       {% if error %}
@@ -123,7 +287,7 @@
       {% endif %}
 
       <form method="post" action="/commerce/admin/products/{{ product.slug }}/prices">
-        <div class="grid">
+        <div class="smx-product-price-grid">
           <div>
             <label for="code">Code</label>
             <input id="code" name="code" placeholder="standard" required>
@@ -183,43 +347,51 @@
     </section>
 
     {% if product.prices %}
-      <table>
-        <thead>
-          <tr>
-            <th>Code</th>
-            <th>Label</th>
-            <th>Amount</th>
-            <th>Status</th>
-            <th>Billing</th>
-            <th>Sort order</th>
-            <th>Admin</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for price in product.prices %}
-            <tr>
-              <td>{{ price.code }}</td>
-              <td>{{ price.label }}</td>
-              <td>{{ price.amount.currency }} {{ price.amount.major() }}</td>
-              <td><span class="badge">{{ price.status.value }}</span></td>
-              <td>{{ price.billing_mode.value }}{% if price.billing_interval %} / {{ price.billing_interval }}{% endif %}</td>
-              <td>{{ price.sort_order }}</td>
-              <td>
-                <a href="/commerce/admin/products/{{ product.slug }}/prices/{{ price.code }}/edit">Edit price</a>
-                <form method="post" action="/commerce/admin/products/{{ product.slug }}/prices/{{ price.code }}/delete" onsubmit="return confirm('Delete this price option? This is allowed only if no order references it.');">
-                  <button type="submit">Delete unused price</button>
-                </form>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <section class="smx-panel">
+        <h2>Price options</h2>
+
+        <div class="smx-table-wrap">
+          <table class="smx-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Label</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Billing</th>
+                <th>Sort order</th>
+                <th>Admin</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for price in product.prices %}
+                <tr>
+                  <td>{{ price.code }}</td>
+                  <td>{{ price.label }}</td>
+                  <td>{{ price.amount.currency }} {{ price.amount.major() }}</td>
+                  <td><span class="badge">{{ price.status.value }}</span></td>
+                  <td>{{ price.billing_mode.value }}{% if price.billing_interval %} / {{ price.billing_interval }}{% endif %}</td>
+                  <td>{{ price.sort_order }}</td>
+                  <td>
+                    <a href="/commerce/admin/products/{{ product.slug }}/prices/{{ price.code }}/edit">Edit price</a>
+
+                    <form class="smx-price-delete-form" method="post" action="/commerce/admin/products/{{ product.slug }}/prices/{{ price.code }}/delete" onsubmit="return confirm('Delete this price option? This is allowed only if no order references it.');">
+                      <button type="submit">Delete unused price</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
     {% else %}
-      <section class="panel">
-        <p class="muted">No price options have been created for this product yet.</p>
+      <section class="smx-panel">
+        <p class="smx-muted">No price options have been created for this product yet.</p>
       </section>
     {% endif %}
-  <div id="admin-product-gallery-lightbox" class="lightbox" aria-hidden="true">
+
+    <div id="admin-product-gallery-lightbox" class="lightbox" aria-hidden="true">
       <button type="button" class="lightbox-close" aria-label="Close gallery">&times;</button>
       <button type="button" class="lightbox-prev" aria-label="Previous image">&lsaquo;</button>
 

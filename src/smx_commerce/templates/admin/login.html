@@ -2,57 +2,77 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>{{ commerce_config.store_title }} · Admin Login</title>
+  <title>{{ commerce_config.store_title }} ? Admin Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {% if commerce_config.favicon_url %}
     <link rel="icon" href="{{ commerce_config.favicon_url }}">
   {% endif %}
+  <link rel="stylesheet" href="/commerce/static/smx-commerce.css">
   <style>
-    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f7f8fa; color: #18202a; }
-    main { max-width: 520px; margin: 0 auto; padding: 60px 20px; }
-    .panel { background: white; border: 1px solid #e6e8eb; border-radius: 18px; padding: 28px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); }
-    label { display: block; font-weight: 650; margin-top: 14px; }
-    input { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #ccd2da; border-radius: 10px; margin-top: 6px; font: inherit; }
-    button { margin-top: 18px; padding: 12px 18px; border: 0; border-radius: 12px; font-weight: 750; cursor: pointer; background: #0f766e; color: white; }
-    .error { color: #b42318; font-weight: 650; }
-    .links { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 22px; }
-    a { color: #0f766e; text-decoration: none; font-weight: 750; }
-    .muted { color: #667085; }
-    .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
-    .brand img { max-height: 48px; max-width: 180px; object-fit: contain; }
-    .brand-title { font-size: 1.05rem; font-weight: 800; }
+    .smx-admin-login-shell {
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    .smx-admin-login-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 22px;
+    }
   </style>
 </head>
 <body>
   <main>
-    <section class="panel">
-      <div class="brand">
+    <header class="smx-site-header">
+      <a class="smx-site-brand" href="/commerce">
         {% if commerce_config.logo_url %}
           <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.store_title }} logo">
         {% endif %}
-        <span class="brand-title">{{ commerce_config.store_title }}</span>
-      </div>
+        <span class="smx-site-brand-title">{{ commerce_config.store_title }} Admin</span>
+      </a>
 
-      <form method="post" action="/commerce/admin/login">
-        <h1>{{ commerce_config.store_title }} Admin</h1>
-        <p class="muted">Sign in to manage products, prices, categories, and orders.</p>
-
-        {% if error %}
-          <p class="error">{{ error }}</p>
-        {% endif %}
-
-        <label for="admin_token">Admin token</label>
-        <input id="admin_token" name="admin_token" type="password" autocomplete="current-password" required>
-
-        <button type="submit">Sign in</button>
-      </form>
-
-      <nav class="links" aria-label="Exit admin login">
-        <a href="{{ commerce_config.host_home_url }}">Back to {{ commerce_config.store_title }}</a>
-        <a href="/commerce">Cancel and return to commerce home</a>
-        <a href="/products">Browse public products</a>
+      <nav class="smx-nav" aria-label="Commerce admin login navigation">
+        <a href="{{ commerce_config.host_home_url }}">Home</a>
+        <a href="/commerce">Storefront</a>
+        <a href="/products">Products</a>
       </nav>
-    </section>
+
+      <details class="smx-mobile-menu">
+        <summary aria-label="Open menu"><span class="smx-mobile-menu-icon" aria-hidden="true"></span></summary>
+        <div class="smx-mobile-menu-panel">
+          <nav class="smx-mobile-menu-links" aria-label="Mobile navigation">
+            <a href="{{ commerce_config.host_home_url }}">Home</a>
+            <a href="/commerce">Storefront</a>
+            <a href="/products">Products</a>
+          </nav>
+        </div>
+      </details>
+    </header>
+
+    <div class="smx-admin-login-shell">
+      <section class="smx-panel">
+        <form method="post" action="/commerce/admin/login">
+          <h1>{{ commerce_config.store_title }} Admin</h1>
+          <p class="smx-muted">Sign in to manage products, prices, categories, orders, and store settings.</p>
+
+          {% if error %}
+            <p class="error">{{ error }}</p>
+          {% endif %}
+
+          <label for="admin_token">Admin token</label>
+          <input id="admin_token" name="admin_token" type="password" autocomplete="current-password" required>
+
+          <button type="submit">Sign in</button>
+        </form>
+
+        <nav class="smx-admin-login-links" aria-label="Exit admin login">
+          <a href="{{ commerce_config.host_home_url }}">Back to host</a>
+          <a href="/commerce">Cancel and return to commerce home</a>
+          <a href="/products">Browse public products</a>
+        </nav>
+      </section>
+    </div>
   </main>
 </body>
 </html>

@@ -36,6 +36,7 @@ def create_schema(engine: Engine) -> None:
     # Import models so SQLAlchemy registers their tables before create_all().
     import smx_commerce.catalog.models  # noqa: F401
     import smx_commerce.checkout.models  # noqa: F401
+    import smx_commerce.customers.models  # noqa: F401
     import smx_commerce.payments.models  # noqa: F401
     import smx_commerce.core.settings_models  # noqa: F401
 

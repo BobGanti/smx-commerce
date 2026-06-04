@@ -11,6 +11,10 @@ REQUIRED_TABLES = [
     "smx_product_media",
     "smx_product_prices",
     "smx_orders",
+    "smx_customer_entitlements",
+    "smx_customer_sessions",
+    "smx_customer_auth_tokens",
+    "smx_customers",
     "smx_payment_events",
     "smx_commerce_settings",
 ]

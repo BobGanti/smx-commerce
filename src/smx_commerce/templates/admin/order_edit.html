@@ -2,63 +2,135 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Edit Order · Commerce Admin</title>
+  <title>{{ commerce_config.store_title }} ? Edit Order ? Commerce Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% if commerce_config.favicon_url %}
+    <link rel="icon" href="{{ commerce_config.favicon_url }}">
+  {% endif %}
+  <link rel="stylesheet" href="/commerce/static/smx-commerce.css">
   <style>
-    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f7f8fa; color: #18202a; }
-    main { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
-    nav { display: flex; gap: 14px; margin-bottom: 20px; }
-    .panel { background: white; border: 1px solid #e6e8eb; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); }
-    label { display: block; font-weight: 650; margin-top: 12px; }
-    input, select, textarea { width: 100%; box-sizing: border-box; padding: 11px; border: 1px solid #ccd2da; border-radius: 10px; margin-top: 6px; font: inherit; }
-    textarea { min-height: 100px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
-    .muted { color: #667085; }
-    .error { color: #b42318; font-weight: 650; }
-    a { color: #0f766e; text-decoration: none; font-weight: 700; }
-    button { margin-top: 18px; padding: 12px 16px; border: 0; border-radius: 12px; font-weight: 750; cursor: pointer; background: #0f766e; color: white; }
+    .smx-order-edit-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    .smx-order-edit-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .smx-order-summary {
+      display: grid;
+      gap: 10px;
+      margin: 16px 0;
+      padding: 14px;
+      border: 1px solid var(--smx-border);
+      border-radius: 14px;
+      background: #f8fafc;
+    }
+
+    .smx-order-delete-zone {
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid var(--smx-border);
+    }
+
+    .smx-order-delete-zone button {
+      background: var(--smx-danger);
+    }
   </style>
 </head>
 <body>
   <main>
-    <nav>
-      <a href="/commerce/admin/orders">Orders</a>
-        <a href="/commerce/admin/branding">Settings</a>
-      <a href="/commerce/admin/products">Products</a>
-      <a href="/commerce/admin/categories">Categories</a>
-    </nav>
+    <header class="smx-site-header">
+      <a class="smx-site-brand" href="/commerce/admin">
+        {% if commerce_config.logo_url %}
+          <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.store_title }} logo">
+        {% endif %}
+        <span class="smx-site-brand-title">{{ commerce_config.store_title }} Admin</span>
+      </a>
 
-    <section class="panel">
+      <nav class="smx-nav" aria-label="Commerce admin navigation">
+        <a href="{{ commerce_config.host_home_url }}">Home</a>
+        <a href="/commerce/admin">Admin</a>
+        <a href="/commerce/admin/products">Products</a>
+        <a href="/commerce/admin/categories">Categories</a>
+        <a href="/commerce/admin/orders">Orders</a>
+        <a href="/commerce/admin/branding">Settings</a>
+      </nav>
+
+      <form method="post" action="/commerce/admin/logout" class="smx-inline-form">
+        <button type="submit">Sign out</button>
+      </form>
+
+      <details class="smx-mobile-menu">
+        <summary aria-label="Open menu"><span class="smx-mobile-menu-icon" aria-hidden="true"></span></summary>
+        <div class="smx-mobile-menu-panel">
+          <nav class="smx-mobile-menu-links" aria-label="Mobile navigation">
+            <a href="{{ commerce_config.host_home_url }}">Home</a>
+            <a href="/commerce/admin">Admin</a>
+            <a href="/commerce/admin/products">Products</a>
+            <a href="/commerce/admin/categories">Categories</a>
+            <a href="/commerce/admin/orders">Orders</a>
+            <a href="/commerce/admin/branding">Settings</a>
+          </nav>
+
+          <form method="post" action="/commerce/admin/logout" class="smx-mobile-menu-form">
+            <button type="submit">Sign out</button>
+          </form>
+        </div>
+      </details>
+    </header>
+
+    <section class="smx-panel">
       <h1>Edit order</h1>
-      <p class="muted">Order ID: {{ order.public_id }}</p>
+      <p class="smx-muted">Order ID: {{ order.public_id }}</p>
+
+      <div class="smx-order-edit-actions">
+        <a href="/commerce/admin/orders">Back to orders</a>
+      </div>
+    </section>
+
+    <section class="smx-panel">
       {% set cart_items = order.metadata.cart_items if order.metadata and order.metadata.cart_items else [] %}
 
+      <div class="smx-order-summary">
         {% if cart_items %}
-          <div class="muted">
+          <div>
             <p><strong>Cart order items:</strong></p>
             <ul class="smx-compact-list">
               {% for item in cart_items %}
-                <li>{{ item.product_name }} <span>x {{ item.quantity }}</span> <span>· {{ item.price_label }}</span> <span>· {{ item.currency }} {{ "%.2f"|format(item.amount_cents / 100) }}</span></li>
+                <li>
+                  {{ item.product_name }}
+                  <span>x {{ item.quantity }}</span>
+                  <span>? {{ item.price_label }}</span>
+                  <span>? {{ item.currency }} {{ "%.2f"|format(item.amount_cents / 100) }}</span>
+                </li>
               {% endfor %}
             </ul>
-            <p><strong>Amount:</strong> {{ order.amount.currency }} {{ order.amount.major() }}</p>
           </div>
+          <p><strong>Amount:</strong> {{ order.amount.currency }} {{ order.amount.major() }}</p>
         {% else %}
-          <p class="muted">Product: {{ order.product_slug }} · Price: {{ order.price_code }} · Amount: {{ order.amount.currency }} {{ order.amount.major() }}</p>
+          <p>
+            <strong>Product:</strong> {{ order.product_slug }}
+            ? <strong>Price:</strong> {{ order.price_code }}
+            ? <strong>Amount:</strong> {{ order.amount.currency }} {{ order.amount.major() }}
+          </p>
         {% endif %}
-      <p class="muted">Payment reference: {{ order.payment_reference or "not set" }}</p>
 
-          {% set page_error = error or request.args.get("error") %}
-          {% if page_error %}
-            <p id="order-delete-error" class="error">{{ page_error }}</p>
-          {% endif %}
+        <p><strong>Payment reference:</strong> {{ order.payment_reference or "not set" }}</p>
+      </div>
 
-      {% if error %}
-        <p class="error">{{ error }}</p>
+      {% set page_error = error or request.args.get("error") %}
+      {% if page_error %}
+        <p id="order-delete-error" class="error">{{ page_error }}</p>
       {% endif %}
 
       <form method="post" action="/commerce/admin/orders/{{ order.public_id }}/update">
-        <div class="grid">
+        <div class="smx-order-edit-grid">
           <div>
             <label for="buyer_full_name">Buyer full name</label>
             <input id="buyer_full_name" name="buyer_full_name" value="{{ order.buyer.full_name }}" required>
@@ -95,10 +167,11 @@
         <button type="submit">Save order changes</button>
       </form>
 
-          <form method="post" action="/commerce/admin/orders/{{ order.public_id }}/delete" onsubmit="return confirm('Delete this practice order? This is blocked for paid/refunded orders or orders with payment events.');">
-            <button type="submit">Delete practice order</button>
-          </form>
-
+      <div class="smx-order-delete-zone">
+        <form method="post" action="/commerce/admin/orders/{{ order.public_id }}/delete" onsubmit="return confirm('Delete this practice order? This is blocked for paid/refunded orders or orders with payment events.');">
+          <button type="submit">Delete practice order</button>
+        </form>
+      </div>
     </section>
   </main>
 </body>
