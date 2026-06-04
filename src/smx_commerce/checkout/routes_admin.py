@@ -43,11 +43,45 @@ def order_to_dict(order: Order) -> dict:
     }
 
 
+def order_cart_items(order: Order) -> list[dict]:
+    cart_items = (order.metadata or {}).get("cart_items")
+
+    if not isinstance(cart_items, list):
+        return []
+
+    return [item for item in cart_items if isinstance(item, dict)]
+
+
+def order_cart_summary(order: Order) -> str:
+    cart_items = order_cart_items(order)
+
+    if not cart_items:
+        return ""
+
+    parts = []
+
+    for item in cart_items:
+        product_name = str(item.get("product_name", "")).strip() or "Product"
+        price_label = str(item.get("price_label", "")).strip() or "Price option"
+        quantity = int(item.get("quantity", 1))
+        currency = str(item.get("currency", order.amount.currency)).upper()
+        amount_cents = int(item.get("amount_cents", 0))
+        line_total = amount_cents * quantity / 100
+
+        parts.append(
+            f"{product_name} x {quantity} - {price_label} - {currency} {line_total:.2f}"
+        )
+
+    return " | ".join(parts)
+
+
 def order_to_csv_row(order: Order) -> dict:
     return {
         "public_id": order.public_id,
         "product_slug": order.product_slug,
         "price_code": order.price_code,
+        "order_kind": "cart" if order_cart_items(order) else "single",
+        "cart_items": order_cart_summary(order),
         "amount_cents": order.amount.amount_cents,
         "currency": order.amount.currency,
         "status": order.status.value,
@@ -74,6 +108,8 @@ def orders_to_csv(orders: list[Order]) -> str:
         "buyer_email",
         "buyer_phone",
         "buyer_company",
+        "order_kind",
+        "cart_items",
     ]
 
     output = StringIO()

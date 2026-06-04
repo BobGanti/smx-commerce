@@ -18,6 +18,9 @@ class LocalCheckoutProvider:
             checkout_url=f"{self.checkout_base_url}/{order.public_id}",
             metadata={
                 "order_public_id": order.public_id,
+                "product_slug": order.product_slug,
+                "price_code": order.price_code,
+                "cart_items": (order.metadata or {}).get("cart_items", []),
                 "success_url": success_url,
                 "cancel_url": cancel_url,
             },

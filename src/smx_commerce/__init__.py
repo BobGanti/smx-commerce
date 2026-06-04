@@ -64,6 +64,14 @@ def create_commerce_blueprint(
         )
     
 
+    @bp.get("/commerce/static/<path:filename>")
+    def commerce_static(filename: str):
+        return send_from_directory(
+            Path(__file__).resolve().parent / "static",
+            filename,
+        )
+
+
     @bp.get("/commerce")
     def commerce_home():
         return render_template(

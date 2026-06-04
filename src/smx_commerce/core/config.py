@@ -9,11 +9,11 @@ class CommerceConfig:
     database_url: str
     echo_sql: bool = False
     admin_token: str | None = None
-    site_title: str = "SyntaxMatrix"
-    module_title: str = "smxCommerce"
+    host_site_title: str = "SyntaxMatrix"
+    host_home_url: str = "/"
 
-    project_title: str = "SyntaxMatrix"
-    project_home_url: str = "/"
+    store_title: str = "smxCommerce"
+    store_home_url: str = "/commerce"
     public_base_url: str | None = None
 
     assets_dir: str = "./smxcommerce/assets"
@@ -24,8 +24,8 @@ class CommerceConfig:
 
     @classmethod
     def from_env(cls) -> "CommerceConfig":
-        site_title = os.getenv("SMX_COMMERCE_SITE_TITLE") or "SyntaxMatrix"
-        module_title = os.getenv("SMX_COMMERCE_MODULE_TITLE") or "smxCommerce"
+        host_site_title = os.getenv("SMX_COMMERCE_HOST_SITE_TITLE") or "SyntaxMatrix"
+        store_title = os.getenv("SMX_COMMERCE_STORE_TITLE") or "smxCommerce"
 
         return cls(
             database_url=os.getenv(
@@ -34,10 +34,10 @@ class CommerceConfig:
             ),
             echo_sql=os.getenv("SMX_COMMERCE_ECHO_SQL", "").lower() in {"1", "true", "yes"},
             admin_token=os.getenv("SMX_COMMERCE_ADMIN_TOKEN") or None,
-            site_title=site_title,
-            module_title=module_title,
-            project_title=module_title,
-            project_home_url=os.getenv("SMX_COMMERCE_PROJECT_HOME_URL", "/"),
+            host_site_title=host_site_title,
+            store_title=store_title,
+            host_home_url=os.getenv("SMX_COMMERCE_HOST_HOME_URL", "/"),
+            store_home_url=os.getenv("SMX_COMMERCE_STORE_HOME_URL", "/commerce"),
             public_base_url=os.getenv("SMX_COMMERCE_PUBLIC_BASE_URL") or os.getenv("PUBLIC_BASE_URL") or None,
             assets_dir=os.getenv("SMX_COMMERCE_ASSETS_DIR", "./smxcommerce/assets"),
             products_assets_dir=os.getenv("SMX_COMMERCE_PRODUCTS_ASSETS_DIR", "./smxcommerce/assets/products"),
@@ -51,12 +51,12 @@ class CommerceConfig:
     def from_mapping(cls, values: dict | None) -> "CommerceConfig":
         values = values or {}
 
-        site_title = (
-            values.get("site_title")
-            or os.getenv("SMX_COMMERCE_SITE_TITLE")
+        host_site_title = (
+            values.get("host_site_title")
+            or os.getenv("SMX_COMMERCE_HOST_SITE_TITLE")
             or "SyntaxMatrix"
         )
-        module_title = values.get("module_title") or os.getenv("SMX_COMMERCE_MODULE_TITLE") or "smxCommerce"
+        store_title = values.get("store_title") or os.getenv("SMX_COMMERCE_STORE_TITLE") or "smxCommerce"
 
         return cls(
             database_url=values.get(
@@ -68,10 +68,10 @@ class CommerceConfig:
             ),
             echo_sql=bool(values.get("echo_sql", False)),
             admin_token=values.get("admin_token") or os.getenv("SMX_COMMERCE_ADMIN_TOKEN") or None,
-            site_title=site_title,
-            module_title=module_title,
-            project_title=module_title,
-            project_home_url=values.get("project_home_url") or os.getenv("SMX_COMMERCE_PROJECT_HOME_URL") or "/",
+            host_site_title=host_site_title,
+            store_title=store_title,
+            host_home_url=values.get("host_home_url") or os.getenv("SMX_COMMERCE_HOST_HOME_URL") or "/",
+            store_home_url=values.get("store_home_url") or os.getenv("SMX_COMMERCE_STORE_HOME_URL") or "/commerce",
             public_base_url=values.get("public_base_url") or os.getenv("SMX_COMMERCE_PUBLIC_BASE_URL") or os.getenv("PUBLIC_BASE_URL") or None,
             assets_dir=values.get("assets_dir") or os.getenv("SMX_COMMERCE_ASSETS_DIR") or "./smxcommerce/assets",
             products_assets_dir=values.get("products_assets_dir") or os.getenv("SMX_COMMERCE_PRODUCTS_ASSETS_DIR") or "./smxcommerce/assets/products",

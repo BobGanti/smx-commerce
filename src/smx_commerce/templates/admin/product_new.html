@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="/commerce/static/smx-commerce.css">
+  <title>{{ commerce_config.store_title }} - Create Product</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% if commerce_config.favicon_url %}
+    <link rel="icon" href="{{ commerce_config.favicon_url }}">
+  {% endif %}
+</head>
+<body>
+  <main>
+    <header class="smx-site-header">
+      <a class="smx-site-brand" href="/commerce/admin">
+        {% if commerce_config.logo_url %}
+          <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.store_title }} logo">
+        {% endif %}
+        <span class="smx-site-brand-title">{{ commerce_config.store_title }} Admin</span>
+      </a>
+
+      <nav class="smx-nav" aria-label="Admin navigation">
+        <a href="/">Home</a>
+        <a href="/commerce/admin">Admin</a>
+        <a href="/commerce/admin/products">Products</a>
+        <a href="/commerce/admin/categories">Categories</a>
+        <a href="/commerce/admin/orders">Orders</a>
+        <a href="/commerce/admin/branding">Settings</a>
+      </nav>
+
+      <form method="post" action="/commerce/admin/logout" class="smx-inline-form">
+        <button type="submit">Sign out</button>
+      </form>
+      <details class="smx-mobile-menu">
+        <summary aria-label="Open menu"><span class="smx-mobile-menu-icon" aria-hidden="true"></span></summary>
+        <div class="smx-mobile-menu-panel">
+          <nav class="smx-mobile-menu-links" aria-label="Mobile navigation">
+              <a href="/">Home</a>
+              <a href="/commerce/admin">Admin</a>
+              <a href="/commerce/admin/products">Products</a>
+              <a href="/commerce/admin/categories">Categories</a>
+              <a href="/commerce/admin/orders">Orders</a>
+              <a href="/commerce/admin/branding">Settings</a>
+          </nav>
+          <form method="post" action="/commerce/admin/logout" class="smx-mobile-menu-form">
+                  <button type="submit">Sign out</button>
+                </form>
+        </div>
+      </details>
+    </header>
+
+    <section class="smx-panel">
+      <h1>Create product</h1>
+      <p class="smx-muted">Add a new product to {{ commerce_config.store_title }}.</p>
+      <p><a href="/commerce/admin/products">Back to products</a></p>
+    </section>
+
+    {% if error %}
+      <section class="smx-panel">
+        <p class="error">{{ error }}</p>
+      </section>
+    {% endif %}
+
+    <section class="smx-panel">
+      <form method="post" enctype="multipart/form-data" action="/commerce/admin/products">
+        <div class="smx-form-grid">
+          <div>
+            <label for="slug">Slug</label>
+            <input id="slug" name="slug" placeholder="agentic-ai-bootcamp" required>
+          </div>
+
+          <div>
+            <label for="name">Name</label>
+            <input id="name" name="name" required>
+          </div>
+
+          <div>
+            <label for="kind">Kind</label>
+            <select id="kind" name="kind">
+              <option value="generic">Generic</option>
+              <option value="digital">Digital</option>
+              <option value="service">Service</option>
+              <option value="event">Event</option>
+              <option value="physical">Physical</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="status">Status</label>
+            <select id="status" name="status">
+              <option value="draft">Draft</option>
+              <option value="active">Active</option>
+              <option value="paused">Paused</option>
+              <option value="archived">Archived</option>
+            </select>
+          </div>
+        </div>
+
+        <label for="category_slugs">Categories</label>
+        <select id="category_slugs" name="category_slugs" multiple>
+          {% for category in categories or [] %}
+            <option value="{{ category.slug }}">{{ category.name }}</option>
+          {% endfor %}
+        </select>
+
+        {% if not categories %}
+          <p class="smx-muted">No categories yet. Create categories from the Categories page.</p>
+        {% endif %}
+
+        <label for="summary">Summary</label>
+        <input id="summary" name="summary">
+
+        <label for="description">Description</label>
+        <textarea id="description" name="description"></textarea>
+
+        <label for="main_image">Main product image</label>
+        <input id="main_image" name="main_image" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+        <p class="smx-muted">Optional. You can also add or replace the image later from the product edit page.</p>
+
+        <div class="smx-admin-form-actions">
+          <button type="submit">Create product</button>
+        </div>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

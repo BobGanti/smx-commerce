@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>{{ commerce_config.project_title }} · Edit {{ product.name }} · Commerce Admin</title>
+  <title>{{ commerce_config.store_title }} · Edit {{ product.name }} · Commerce Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {% if commerce_config.favicon_url %}
     <link rel="icon" href="{{ commerce_config.favicon_url }}">
@@ -24,25 +24,107 @@
     .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
     .brand img { max-height: 48px; max-width: 180px; object-fit: contain; }
     .brand-title { font-size: 1.05rem; font-weight: 800; }
+    .gallery-admin-grid {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .gallery-admin-item {
+      width: 132px;
+    }
+
+    .gallery-admin-item img {
+      width: 132px;
+      height: 96px;
+      border-radius: 12px;
+      border: 1px solid #e6e8eb;
+      object-fit: cover;
+      display: block;
+      background: #f1f5f9;
+    }
+
+    .gallery-delete-form {
+      margin: 8px 0 0;
+    }
+
+    .gallery-delete-button {
+      width: 100%;
+      margin-top: 0;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: #b42318;
+      color: white;
+      font-size: 0.88rem;
+    }
+    .gallery-admin-grid {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .gallery-admin-item {
+      position: relative;
+      width: 132px;
+      height: 96px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #e6e8eb;
+      background: #f1f5f9;
+    }
+
+    .gallery-admin-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .gallery-delete-form {
+      position: absolute;
+      right: 6px;
+      bottom: 6px;
+      margin: 0;
+    }
+
+    .gallery-delete-button {
+      width: 32px;
+      height: 32px;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(180, 35, 24, 0.92);
+      color: white;
+      font-size: 1rem;
+      line-height: 32px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .gallery-delete-button:hover {
+      background: #912018;
+    }
   </style>
 </head>
 <body>
   <main>
     <nav>
-      <a href="{{ commerce_config.project_home_url }}">Back to {{ commerce_config.project_title }}</a>
+      <a href="{{ commerce_config.host_home_url }}">Back to {{ commerce_config.store_title }}</a>
       <a href="/commerce/admin">Admin home</a>
       <a href="/commerce/admin/products">Products</a>
       <a href="/commerce/admin/categories">Categories</a>
       <a href="/commerce/admin/orders">Orders</a>
+        <a href="/commerce/admin/branding">Settings</a>
       <a href="/commerce/admin/products/{{ product.slug }}">Back to product</a>
     </nav>
 
     <section class="panel">
       <div class="brand">
         {% if commerce_config.logo_url %}
-          <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.project_title }} logo">
+          <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.store_title }} logo">
         {% endif %}
-        <span class="brand-title">{{ commerce_config.project_title }}</span>
+        <span class="brand-title">{{ commerce_config.store_title }}</span>
       </div>
 
       <h1>Edit product</h1>
@@ -53,13 +135,25 @@
           <img src="{{ product.main_image_url }}" alt="{{ product.name }}" style="max-width: 260px; max-height: 180px; border-radius: 14px; border: 1px solid #e6e8eb; object-fit: cover;">
         </div>
       {% endif %}
-
       {% if product.gallery_images %}
         <div style="margin: 16px 0;">
           <p class="muted">Gallery images</p>
-          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+
+          <div class="gallery-admin-grid">
             {% for image in product.gallery_images %}
-              <img src="{{ image.url }}" alt="{{ image.alt_text or product.name }}" style="width: 120px; height: 90px; border-radius: 12px; border: 1px solid #e6e8eb; object-fit: cover;">
+              <div class="gallery-admin-item">
+                <img src="{{ image.url }}" alt="{{ image.alt_text or product.name }}">
+
+                <form
+                  class="gallery-delete-form"
+                  method="post"
+                  action="/commerce/admin/products/{{ product.slug }}/media/delete"
+                  onsubmit="return confirm('Remove this gallery image?');"
+                >
+                  <input type="hidden" name="media_url" value="{{ image.url }}">
+                  <button class="gallery-delete-button" type="submit" aria-label="Remove gallery image">🗑</button>
+                </form>
+              </div>
             {% endfor %}
           </div>
         </div>

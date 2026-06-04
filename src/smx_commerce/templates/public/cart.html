@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="/commerce/static/smx-commerce.css">
+  <title>{{ commerce_config.store_title }} · Cart</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% if commerce_config.favicon_url %}
+    <link rel="icon" href="{{ commerce_config.favicon_url }}">
+  {% endif %}
+</head>
+<body>
+  <main>
+    <header class="smx-site-header">
+      <a class="smx-site-brand" href="/commerce">
+        {% if commerce_config.logo_url %}
+          <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.store_title }} logo">
+        {% endif %}
+        <span class="smx-site-brand-title">{{ commerce_config.store_title }}</span>
+      </a>
+
+      <nav class="smx-nav" aria-label="Store navigation">
+        <a href="{{ commerce_config.host_home_url }}">Main site</a>
+        <a href="/commerce">Store home</a>
+        <a href="/products">Products</a>
+        <a href="/cart">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
+      </nav>
+      <details class="smx-mobile-menu">
+        <summary aria-label="Open menu"><span class="smx-mobile-menu-icon" aria-hidden="true"></span></summary>
+        <div class="smx-mobile-menu-panel">
+          <nav class="smx-mobile-menu-links" aria-label="Mobile navigation">
+              <a href="{{ commerce_config.host_home_url }}">Main site</a>
+              <a href="/commerce">Store home</a>
+              <a href="/products">Products</a>
+              <a href="/cart">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
+          </nav>
+        </div>
+      </details>
+    </header>
+
+    <section class="smx-panel">
+      <h1>Your cart</h1>
+
+      {% if cart_items %}
+        <div class="smx-table-wrap">
+          <table class="smx-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Price option</th>
+                <th>Quantity</th>
+                <th>Unit price</th>
+                <th>Line total</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in cart_items %}
+                <tr>
+                    <td>
+                    <div class="smx-cart-product-cell">
+                        {% if item.main_image_url %}
+                        <img class="smx-admin-product-thumb" src="{{ item.main_image_url }}" alt="{{ item.product_name }}">
+                        {% endif %}
+                        <div>
+                        <strong>{{ item.product_name }}</strong><br>
+                        <a href="/products/{{ item.product_slug }}">View product</a>
+                        </div>
+                    </div>
+                    </td>
+
+                    <td>{{ item.price_label }}</td>
+
+                    <td>
+                    <form class="smx-inline-form" method="post" action="/cart/update">
+                        <input type="hidden" name="product_slug" value="{{ item.product_slug }}">
+                        <input type="hidden" name="price_code" value="{{ item.price_code }}">
+                        <input
+                        name="quantity"
+                        type="number"
+                        min="1"
+                        step="1"
+                        value="{{ item.quantity }}"
+                        aria-label="Quantity for {{ item.product_name }}"
+                        required
+                        >
+                        <button type="submit">Update</button>
+                    </form>
+                    </td>
+
+                    <td>{{ item.currency }} {{ "%.2f"|format(item.amount_cents / 100) }}</td>
+                    <td>{{ item.currency }} {{ "%.2f"|format(item.line_total_cents / 100) }}</td>
+
+                    <td>
+                    <form method="post" action="/cart/remove">
+                        <input type="hidden" name="product_slug" value="{{ item.product_slug }}">
+                        <input type="hidden" name="price_code" value="{{ item.price_code }}">
+                        <button type="submit">Remove</button>
+                    </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="smx-cart-summary">
+            <p>
+                <strong>Total:</strong>
+                {{ cart_currency }} {{ "%.2f"|format(cart_total_cents / 100) }}
+            </p>
+
+            <form class="smx-checkout-form" method="post" action="/checkout/cart/start">
+                <h2>Checkout details</h2>
+
+                <div class="smx-form-grid">
+                <div>
+                    <label for="buyer_full_name">Full name</label>
+                    <input id="buyer_full_name" name="buyer_full_name" autocomplete="name" required>
+                </div>
+
+                <div>
+                    <label for="buyer_email">Email</label>
+                    <input id="buyer_email" name="buyer_email" type="email" autocomplete="email" required>
+                </div>
+
+                <div>
+                    <label for="buyer_phone">Phone</label>
+                    <input id="buyer_phone" name="buyer_phone" autocomplete="tel">
+                </div>
+
+                <div>
+                    <label for="buyer_company">Company</label>
+                    <input id="buyer_company" name="buyer_company" autocomplete="organization">
+                </div>
+                </div>
+
+                <button type="submit">Continue to checkout</button>
+            </form>
+        </div>
+      {% else %}
+        <p class="smx-muted">Your cart is empty.</p>
+        <p><a href="/products">Browse products</a></p>
+      {% endif %}
+    </section>
+  </main>
+</body>
+</html>

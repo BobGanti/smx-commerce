@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>{{ commerce_config.project_title }} · {{ product.name }} · Commerce Admin</title>
+  <title>{{ commerce_config.store_title }} · {{ product.name }} · Commerce Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {% if commerce_config.favicon_url %}
     <link rel="icon" href="{{ commerce_config.favicon_url }}">
@@ -30,32 +30,71 @@
     .brand-title { font-size: 1.05rem; font-weight: 800; }
     .inline-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
     .product-hero-image { width: 100%; max-height: 360px; border-radius: 18px; object-fit: cover; border: 1px solid #e6e8eb; margin: 16px 0; background: #f1f5f9; }
+    .gallery-button { margin: 0; padding: 0; border: 0; background: transparent; cursor: pointer; }
+    .gallery-button:focus { outline: 3px solid #0f766e; outline-offset: 3px; }
+
+    .lightbox { display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(15, 23, 42, 0.92); align-items: center; justify-content: center; padding: 24px; }
+    .lightbox.is-open { display: flex; }
+    .lightbox-content { max-width: min(1000px, 96vw); max-height: 86vh; text-align: center; }
+    .lightbox-image { max-width: 100%; max-height: 78vh; border-radius: 18px; object-fit: contain; background: white; }
+    .lightbox-caption { color: white; margin-top: 12px; font-weight: 650; }
+    .lightbox-close, .lightbox-prev, .lightbox-next { position: absolute; border: 0; border-radius: 999px; background: white; color: #18202a; cursor: pointer; font-weight: 900; }
+    .lightbox-close { top: 20px; right: 20px; width: 44px; height: 44px; font-size: 1.2rem; }
+    .lightbox-prev, .lightbox-next { top: 50%; transform: translateY(-50%); width: 48px; height: 48px; font-size: 1.6rem; }
+    .lightbox-prev { left: 20px; }
+    .lightbox-next { right: 20px; }
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 150px)); gap: 12px; margin-top: 14px; align-items: start; }
+    .gallery-button { width: 150px; height: 110px; margin: 0; padding: 0; border: 0; background: transparent; cursor: pointer; border-radius: 14px; overflow: hidden; }
+    .gallery-button img,
+    .gallery-image { width: 150px; height: 110px; max-width: 150px; max-height: 110px; border-radius: 14px; object-fit: cover; border: 1px solid #e6e8eb; background: #f1f5f9; display: block; }
+    .product-admin-summary {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      margin: 16px 0;
+      padding: 12px;
+      border: 1px solid #e6e8eb;
+      border-radius: 14px;
+      background: #f8fafc;
+    }
+
+    .product-admin-thumb {
+      width: 96px;
+      height: 72px;
+      border-radius: 12px;
+      object-fit: cover;
+      border: 1px solid #e6e8eb;
+      background: #f1f5f9;
+    }
   </style>
 </head>
 <body>
   <main>
     <nav>
-      <a href="{{ commerce_config.project_home_url }}">Back to {{ commerce_config.project_title }}</a>
-      <a href="/commerce/admin">Admin home</a>
+      <div class="brand">
+        {% if commerce_config.logo_url %}
+          <a href="{{ commerce_config.host_home_url }}">
+            <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.store_title }} logo">
+          </a>
+        {% endif %}
+      </div>
+      <a href="{{ commerce_config.host_home_url }}">Back to {{ commerce_config.store_title }}</a>
+      <a href="/commerce/admin">Admin</a>
       <a href="/commerce/admin/products">Products</a>
       <a href="/commerce/admin/categories">Categories</a>
       <a href="/commerce/admin/orders">Orders</a>
     </nav>
 
     <section class="panel">
-      <div class="brand">
-        {% if commerce_config.logo_url %}
-          <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.project_title }} logo">
-        {% endif %}
-        <span class="brand-title">{{ commerce_config.project_title }}</span>
-      </div>
-
       <h1>{{ product.name }}</h1>
       <p class="muted">{{ product.slug }} · {{ product.kind.value }} · {{ product.status.value }}</p>
       {% if product.main_image_url %}
-        <img class="product-hero-image" src="{{ product.main_image_url }}" alt="{{ product.name }}">
+        <div style="margin: 16px 0;">
+          <p class="muted">Current main image</p>
+          <img src="{{ product.main_image_url }}" alt="{{ product.name }}" style="max-width: 260px; max-height: 180px; border-radius: 14px; border: 1px solid #e6e8eb; object-fit: cover;">
+        </div>
       {% endif %}
-
+      
       {% if error %}
         <p id="safe-delete-product-detail-error" class="error">{{ error }}</p>
       {% endif %}
@@ -67,19 +106,7 @@
       {% if product.description %}
         <p class="muted">{{ product.description }}</p>
       {% endif %}
-      ##
-      {% if product.gallery_images %}
-        <div>
-          <h2>Gallery</h2>
-          <div class="gallery-grid">
-            {% for image in product.gallery_images %}
-              <img class="gallery-image" src="{{ image.url }}" alt="{{ image.alt_text or product.name }}">
-            {% endfor %}
-          </div>
-        </div>
-      {% endif %}
       <div class="inline-actions">
-        <p><a href="/products/{{ product.slug }}">View public product page</a></p>
         <p><a href="/commerce/admin/products/{{ product.slug }}/edit">Edit product</a></p>
       </div>
 
@@ -192,6 +219,87 @@
         <p class="muted">No price options have been created for this product yet.</p>
       </section>
     {% endif %}
+  <div id="admin-product-gallery-lightbox" class="lightbox" aria-hidden="true">
+      <button type="button" class="lightbox-close" aria-label="Close gallery">&times;</button>
+      <button type="button" class="lightbox-prev" aria-label="Previous image">&lsaquo;</button>
+
+      <div class="lightbox-content">
+        <img id="admin-product-gallery-lightbox-image" class="lightbox-image" src="" alt="">
+        <div id="admin-product-gallery-lightbox-caption" class="lightbox-caption"></div>
+      </div>
+
+      <button type="button" class="lightbox-next" aria-label="Next image">&rsaquo;</button>
+    </div>
   </main>
+
+  <script>
+    (function () {
+      const buttons = Array.from(document.querySelectorAll("[data-gallery-url]"));
+      const lightbox = document.getElementById("admin-product-gallery-lightbox");
+      const image = document.getElementById("admin-product-gallery-lightbox-image");
+      const caption = document.getElementById("admin-product-gallery-lightbox-caption");
+      const closeButton = lightbox ? lightbox.querySelector(".lightbox-close") : null;
+      const prevButton = lightbox ? lightbox.querySelector(".lightbox-prev") : null;
+      const nextButton = lightbox ? lightbox.querySelector(".lightbox-next") : null;
+
+      if (!buttons.length || !lightbox || !image || !caption || !closeButton || !prevButton || !nextButton) {
+        return;
+      }
+
+      let currentIndex = 0;
+
+      function showImage(index) {
+        currentIndex = (index + buttons.length) % buttons.length;
+        const selected = buttons[currentIndex];
+
+        image.src = selected.dataset.galleryUrl || "";
+        image.alt = selected.dataset.galleryAlt || "Product gallery image";
+        caption.textContent = selected.dataset.galleryAlt || "";
+      }
+
+      function openLightbox(index) {
+        showImage(index);
+        lightbox.classList.add("is-open");
+        lightbox.setAttribute("aria-hidden", "false");
+        closeButton.focus();
+      }
+
+      function closeLightbox() {
+        lightbox.classList.remove("is-open");
+        lightbox.setAttribute("aria-hidden", "true");
+        image.src = "";
+      }
+
+      buttons.forEach(function (button, index) {
+        button.addEventListener("click", function () {
+          openLightbox(index);
+        });
+      });
+
+      closeButton.addEventListener("click", closeLightbox);
+      prevButton.addEventListener("click", function () { showImage(currentIndex - 1); });
+      nextButton.addEventListener("click", function () { showImage(currentIndex + 1); });
+
+      lightbox.addEventListener("click", function (event) {
+        if (event.target === lightbox) {
+          closeLightbox();
+        }
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (!lightbox.classList.contains("is-open")) {
+          return;
+        }
+
+        if (event.key === "Escape") {
+          closeLightbox();
+        } else if (event.key === "ArrowLeft") {
+          showImage(currentIndex - 1);
+        } else if (event.key === "ArrowRight") {
+          showImage(currentIndex + 1);
+        }
+      });
+    })();
+  </script>
 </body>
 </html>

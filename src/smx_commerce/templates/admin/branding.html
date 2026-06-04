@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ commerce_config.host_site_title }} ? Branding Settings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% if commerce_config.favicon_url %}
+    <link rel="icon" href="{{ commerce_config.favicon_url }}">
+  {% endif %}
+  <link rel="stylesheet" href="/commerce/static/smx-commerce.css">
+  <style>
+    .smx-branding-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 0.42fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .smx-branding-preview {
+      display: grid;
+      gap: 16px;
+    }
+
+    .smx-branding-preview-card {
+      padding: 18px;
+      border: 1px solid var(--smx-border);
+      border-radius: 16px;
+      background: var(--smx-surface);
+    }
+
+    .smx-branding-logo {
+      max-width: 280px;
+      max-height: 110px;
+      object-fit: contain;
+      border: 1px solid var(--smx-border);
+      border-radius: 14px;
+      padding: 10px;
+      background: white;
+    }
+
+    .smx-branding-favicon {
+      width: 56px;
+      height: 56px;
+      object-fit: contain;
+      border: 1px solid var(--smx-border);
+      border-radius: 14px;
+      padding: 8px;
+      background: white;
+    }
+
+    .smx-branding-assets-card {
+      display: grid;
+      gap: 14px;
+    }
+
+    .smx-branding-assets-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .smx-branding-asset-block {
+      min-width: 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    .smx-branding-asset-label {
+      margin: 0;
+      color: var(--smx-muted);
+      font-size: 0.86rem;
+      font-weight: 850;
+    }
+
+    .smx-branding-assets-card .smx-branding-logo {
+      max-width: 220px;
+      max-height: 86px;
+    }
+
+    .smx-branding-assets-card .smx-branding-favicon {
+      width: 54px;
+      height: 54px;
+    }
+
+    @media (max-width: 620px) {
+      .smx-branding-assets-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .smx-settings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .smx-branding-upload-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      align-items: end;
+    }
+
+    .smx-branding-upload-field {
+      min-width: 0;
+    }
+
+    .smx-branding-upload-field input[type="file"] {
+      width: 100%;
+    }
+
+    .smx-branding-upload-actions {
+      display: flex;
+      justify-content: flex-start;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 720px) {
+      .smx-branding-upload-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .success {
+      color: #027a48;
+      font-weight: 700;
+    }
+
+    @media (max-width: 920px) {
+      .smx-branding-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="smx-site-header">
+      <a class="smx-site-brand" href="/commerce/admin">
+        {% if commerce_config.logo_url %}
+          <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.store_title }} logo">
+        {% endif %}
+        <span class="smx-site-brand-title">{{ commerce_config.store_title }} Admin</span>
+      </a>
+
+      <nav class="smx-nav" aria-label="Commerce admin navigation">
+        <a href="{{ commerce_config.host_home_url }}">Home</a>
+        <a href="/commerce/admin">Admin</a>
+        <a href="/commerce/admin/products">Products</a>
+        <a href="/commerce/admin/categories">Categories</a>
+        <a href="/commerce/admin/orders">Orders</a>
+        <a href="/commerce/admin/branding">Settings</a>
+      </nav>
+
+      <form method="post" action="/commerce/admin/logout" class="smx-inline-form">
+        <button type="submit">Sign out</button>
+      </form>
+      <details class="smx-mobile-menu">
+        <summary aria-label="Open menu"><span class="smx-mobile-menu-icon" aria-hidden="true"></span></summary>
+        <div class="smx-mobile-menu-panel">
+          <nav class="smx-mobile-menu-links" aria-label="Mobile navigation">
+              <a href="{{ commerce_config.host_home_url }}">Home</a>
+              <a href="/commerce/admin">Admin</a>
+              <a href="/commerce/admin/products">Products</a>
+              <a href="/commerce/admin/categories">Categories</a>
+              <a href="/commerce/admin/orders">Orders</a>
+              <a href="/commerce/admin/branding">Settings</a>
+          </nav>
+          <form method="post" action="/commerce/admin/logout" class="smx-mobile-menu-form">
+                  <button type="submit">Sign out</button>
+                </form>
+        </div>
+      </details>
+    </header>
+
+    <section class="smx-panel">
+      <h1>Branding & Store Settings</h1>
+      <p class="smx-muted">
+        Manage the host identity, commerce store identity, public URLs, logo, and favicon.
+        Blank fields fall back to the runtime defaults.
+      </p>
+    </section>
+
+    {% if message %}
+      <section class="smx-panel">
+        <p class="success">{{ message }}</p>
+      </section>
+    {% endif %}
+
+    {% if error %}
+      <section class="smx-panel">
+        <p class="error">{{ error }}</p>
+      </section>
+    {% endif %}
+
+    <div class="smx-branding-layout">
+      <div>
+        <section class="smx-panel">
+          <h2>Display settings</h2>
+          <p class="smx-muted">
+            These settings control how the commerce package presents itself inside the host project.
+            The default host site title is <strong>SyntaxMatrix</strong>.
+          </p>
+
+          <form method="post" action="/commerce/admin/branding/settings">
+            <div class="smx-settings-grid">
+              <div>
+                <label for="host_site_title">Host site title</label>
+                <input id="host_site_title" name="host_site_title" value="{{ branding_settings.host_site_title }}" placeholder="SyntaxMatrix">
+              </div>
+
+              <div>
+                <label for="host_home_url">Host home URL</label>
+                <input id="host_home_url" name="host_home_url" value="{{ branding_settings.host_home_url }}" placeholder="/">
+              </div>
+
+              <div>
+                <label for="store_title">Store title</label>
+                <input id="store_title" name="store_title" value="{{ branding_settings.store_title }}" placeholder="smxCommerce">
+              </div>
+
+              <div>
+                <label for="store_home_url">Store home URL</label>
+                <input id="store_home_url" name="store_home_url" value="{{ branding_settings.store_home_url }}" placeholder="/commerce">
+              </div>
+
+              <div>
+                <label for="public_base_url">Public base URL</label>
+                <input id="public_base_url" name="public_base_url" value="{{ branding_settings.public_base_url }}" placeholder="https://example.com">
+              </div>
+
+              <div>
+                <label for="logo_url">Logo URL</label>
+                <input id="logo_url" name="logo_url" value="{{ branding_settings.logo_url }}" placeholder="/commerce/assets/logo.png">
+              </div>
+
+              <div>
+                <label for="favicon_url">Favicon URL</label>
+                <input id="favicon_url" name="favicon_url" value="{{ branding_settings.favicon_url }}" placeholder="/commerce/assets/favicon.png">
+              </div>
+            </div>
+
+            <button type="submit">Save branding settings</button>
+          </form>
+        </section>
+
+        <section class="smx-panel">
+          <h2>Branding assets</h2>
+          <p class="smx-muted">
+            Upload a logo and favicon for this client project. Images are stored in
+            <code>smxcommerce/assets/</code>. Existing assets are replaced only when you upload new files.
+          </p>
+
+          <form method="post" action="/commerce/admin/branding/assets" enctype="multipart/form-data">
+            <div class="smx-branding-upload-grid">
+              <div class="smx-branding-upload-field">
+                <label for="logo">Upload logo</label>
+                <input id="logo" name="logo" type="file" accept=".png,.jpg,.jpeg,.webp,.gif,image/png,image/jpeg,image/webp,image/gif">
+              </div>
+
+              <div class="smx-branding-upload-field">
+                <label for="favicon">Upload favicon</label>
+                <input id="favicon" name="favicon" type="file" accept=".png,.ico,image/png,image/x-icon">
+              </div>
+            </div>
+
+            <div class="smx-branding-upload-actions">
+              <button type="submit">Upload branding assets</button>
+            </div>
+          </form>
+        </section>
+      </div>
+
+      <aside>
+        <section class="smx-panel">
+          <h2>Current preview</h2>
+
+          <div class="smx-branding-preview">
+            <div class="smx-branding-preview-card">
+              <p class="smx-muted">Host site</p>
+              <h3>{{ commerce_config.host_site_title }}</h3>
+              <p><a href="{{ commerce_config.host_home_url }}">{{ commerce_config.host_home_url }}</a></p>
+            </div>
+
+            <div class="smx-branding-preview-card">
+              <p class="smx-muted">Commerce store</p>
+              <h3>{{ commerce_config.store_title }}</h3>
+              <p><a href="{{ commerce_config.store_home_url }}">{{ commerce_config.store_home_url }}</a></p>
+            </div>
+
+            <div class="smx-branding-preview-card smx-branding-assets-card">
+              <div>
+                <p class="smx-muted">Current uploaded assets</p>
+                <h3>Logo & favicon</h3>
+              </div>
+
+              <div class="smx-branding-assets-row">
+                {% if commerce_config.logo_url %}
+                  <div class="smx-branding-asset-block">
+                    <p class="smx-branding-asset-label">Logo</p>
+                    <img class="smx-branding-logo" src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.store_title }} logo preview">
+                  </div>
+                {% endif %}
+
+                {% if commerce_config.favicon_url %}
+                  <div class="smx-branding-asset-block">
+                    <p class="smx-branding-asset-label">Favicon</p>
+                    <img class="smx-branding-favicon" src="{{ commerce_config.favicon_url }}" alt="{{ commerce_config.store_title }} favicon preview">
+                  </div>
+                {% endif %}
+
+                {% if not commerce_config.logo_url and not commerce_config.favicon_url %}
+                  <p class="smx-muted">No logo or favicon has been uploaded yet.</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </main>
+</body>
+</html>

@@ -50,6 +50,42 @@ class OrderRepository:
         self.session.flush()
 
         return self._to_domain(row)
+    
+    
+    def create_pending_cart(
+        self,
+        *,
+        amount: Money,
+        buyer: BuyerDetails,
+        payment_provider: str = "stripe",
+        payment_reference: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> Order:
+        if not isinstance(amount, Money):
+            raise TypeError("amount must be a Money instance")
+
+        row = OrderRow(
+            public_id=self._new_public_id(),
+            product_slug="cart",
+            price_code="cart",
+            amount_cents=amount.amount_cents,
+            currency=amount.currency,
+            status=OrderStatus.PENDING.value,
+            buyer_full_name=buyer.full_name,
+            buyer_email=buyer.email,
+            buyer_phone=buyer.phone,
+            buyer_company=buyer.company,
+            buyer_metadata_json=dict(buyer.metadata or {}),
+            payment_provider=validate_required_text(payment_provider, "payment_provider"),
+            payment_reference=payment_reference,
+            metadata_json=dict(metadata or {}),
+        )
+
+        self.session.add(row)
+        self.session.flush()
+
+        return self._to_domain(row)
+    
 
     def get_by_public_id(self, public_id: str) -> Order | None:
         normalized_public_id = validate_required_text(public_id, "public_id")

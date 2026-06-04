@@ -10,11 +10,13 @@ ENV_TO_CONFIG = {
     "DATABASE_URL": "database_url",
     "ECHO_SQL": "echo_sql",
     "ADMIN_TOKEN": "admin_token",
+
     "PAYMENT_PROVIDER": "payment_provider",
     "LOCAL_CHECKOUT_BASE_URL": "local_checkout_base_url",
     "LOCAL_WEBHOOK_SIGNATURE": "local_webhook_signature",
     "STRIPE_SECRET_KEY": "stripe_secret_key",
     "STRIPE_WEBHOOK_SECRET": "stripe_webhook_secret",
+    
     "EMAIL_PROVIDER": "email_provider",
     "SMTP_HOST": "smtp_host",
     "SMTP_PORT": "smtp_port",
@@ -23,15 +25,17 @@ ENV_TO_CONFIG = {
     "SMTP_USE_TLS": "smtp_use_tls",
     "SMTP_USE_SSL": "smtp_use_ssl",
     "DEFAULT_FROM_EMAIL": "default_from_email",
-    "PROJECT_HOME_URL": "project_home_url",
+    
+    "HOST_SITE_TITLE": "host_site_title",
+    "HOST_HOME_URL": "host_home_url",
+    "STORE_TITLE": "store_title",
+    "STORE_HOME_URL": "store_home_url",
     "PUBLIC_BASE_URL": "public_base_url",
     "ASSETS_DIR": "assets_dir",
     "PRODUCTS_ASSETS_DIR": "products_assets_dir",
     "RECEIPTS_DIR": "receipts_dir",
     "LOGO_URL": "logo_url",
     "FAVICON_URL": "favicon_url",
-    "SITE_TITLE": "site_title",
-    "MODULE_TITLE": "module_title",
     "FLASK_SECRET_KEY": "flask_secret_key",
 }
 

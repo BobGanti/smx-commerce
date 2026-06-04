@@ -1,8 +1,16 @@
 from __future__ import annotations
 from urllib.parse import urlencode
-from flask import Blueprint, jsonify, redirect, render_template, request
+from flask import Blueprint, jsonify, redirect, render_template, request, session as flask_session
 
-from smx_commerce.checkout import CheckoutService, Order, OrderRepository, StartCheckoutRequest
+from smx_commerce.catalog.objects import Money
+from smx_commerce.cart import clear_cart, list_cart_items
+from smx_commerce.checkout import (
+    CheckoutService,
+    Order,
+    OrderRepository,
+    StartCartCheckoutRequest,
+    StartCheckoutRequest,
+)
 from smx_commerce.core import CommerceRuntime
 from smx_commerce.payments import PaymentCheckoutProvider, PaymentCheckoutSession
 
@@ -151,6 +159,78 @@ def create_checkout_blueprint(
             return jsonify({"error": str(exc)}), 400
 
 
+    @bp.post("/checkout/cart/start")
+    def start_cart_checkout():
+        payload = _checkout_payload()
+        cart_items = list_cart_items(flask_session)
+
+        if not cart_items:
+            return jsonify({"error": "cart is empty"}), 400
+
+        currencies = {item.currency for item in cart_items}
+        if len(currencies) != 1:
+            return jsonify({"error": "cart contains multiple currencies"}), 400
+
+        cart_total_cents = sum(item.line_total_cents for item in cart_items)
+        if cart_total_cents <= 0:
+            return jsonify({"error": "cart total must be greater than zero"}), 400
+
+        try:
+            checkout_request = StartCartCheckoutRequest(
+                amount=Money(
+                    amount_cents=cart_total_cents,
+                    currency=next(iter(currencies)),
+                ),
+                buyer_full_name=payload.get("buyer_full_name", ""),
+                buyer_email=payload.get("buyer_email", ""),
+                buyer_phone=payload.get("buyer_phone", ""),
+                buyer_company=payload.get("buyer_company", ""),
+                buyer_metadata=payload.get("buyer_metadata") or {},
+                order_metadata={
+                    **(payload.get("order_metadata") or {}),
+                    "cart_items": [item.to_session_dict() for item in cart_items],
+                },
+                payment_provider=payload.get("payment_provider", "stripe"),
+            )
+
+            checkout_session = None
+
+            with runtime.session_scope() as session:
+                service = CheckoutService(session)
+                order = service.start_cart_checkout(checkout_request)
+
+                if payment_checkout_provider is not None:
+                    checkout_session = payment_checkout_provider.create_checkout_session(
+                        order=order,
+                        success_url=_absolute_checkout_url(
+                            runtime,
+                            payload.get("success_url", "/checkout/success"),
+                            order_public_id=order.public_id,
+                        ),
+                        cancel_url=_absolute_checkout_url(
+                            runtime,
+                            payload.get("cancel_url", "/checkout/cancel"),
+                            order_public_id=order.public_id,
+                        ),
+                    )
+
+            if _is_form_submission() and checkout_session is not None:
+                return redirect(checkout_session.checkout_url, code=303)
+
+            order_payload = order_to_dict(order)
+
+            response_payload = {
+                **order_payload,
+                "order": order_payload,
+                "checkout_session": checkout_session_to_dict(checkout_session),
+            }
+
+            return jsonify(response_payload), 201
+
+        except (TypeError, ValueError) as exc:
+            return jsonify({"error": str(exc)}), 400
+        
+    
     @bp.get("/checkout/success")
     def checkout_success():
         order_public_id = request.args.get("order_id") or request.args.get("order_public_id")
@@ -165,6 +245,8 @@ def create_checkout_blueprint(
                 return jsonify({"error": f"order not found: {order_public_id}"}), 404
 
             order_payload = order_to_dict(order)
+            if order_payload.get("product_slug") == "cart":
+                clear_cart(flask_session)
 
         payload = {
             "status": "ok",

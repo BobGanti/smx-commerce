@@ -131,6 +131,19 @@ def create_category_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
 
         return jsonify([category_to_dict(category) for category in categories])
 
+    @bp.get("/categories/new")
+    def new_category_form():
+        with runtime.session_scope() as session:
+            catalog = CatalogService(session)
+            categories = catalog.list_categories(include_archived=False)
+
+        return render_template(
+            "admin/category_new.html",
+            categories=categories,
+            commerce_config=runtime.config,
+        )
+
+
     @bp.post("/categories")
     def create_category():
         payload = admin_payload()
@@ -162,7 +175,7 @@ def create_category_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
                     categories = catalog.list_categories(include_archived=False)
 
                 return render_template(
-                    "admin/categories_list.html",
+                    "admin/category_new.html",
                     categories=categories,
                     error=str(exc),
                     commerce_config=runtime.config,
@@ -248,6 +261,19 @@ def create_product_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
         except ValueError as exc:
             return jsonify({"error": str(exc)}), 400
 
+    @bp.get("/products/new")
+    def new_product_form():
+        with runtime.session_scope() as session:
+            catalog = CatalogService(session)
+            categories = catalog.list_categories(include_archived=False)
+
+        return render_template(
+            "admin/product_new.html",
+            categories=categories,
+            commerce_config=runtime.config,
+        )
+
+
     @bp.post("/products")
     def create_product():
         payload = admin_payload()
@@ -294,18 +320,17 @@ def create_product_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
             if admin_is_form_submission():
                 with runtime.session_scope() as session:
                     catalog = CatalogService(session)
-                    products = catalog.list_products(include_archived=False)
                     categories = catalog.list_categories(include_archived=False)
 
                 return render_template(
-                    "admin/products_list.html",
-                    products=products,
+                    "admin/product_new.html",
                     categories=categories,
                     error=str(exc),
                     commerce_config=runtime.config,
                 ), 400
 
             return jsonify({"error": str(exc)}), 400
+        
 
     @bp.get("/products/<slug>")
     def get_product(slug: str):

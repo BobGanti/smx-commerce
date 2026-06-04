@@ -24,6 +24,26 @@ def _safe_filename(value: str) -> str:
     cleaned = re.sub(r"[^a-zA-Z0-9_.-]+", "-", value.strip())
     return cleaned.strip("-") or "receipt"
 
+def _cart_items(order: Order) -> list[dict]:
+    cart_items = (order.metadata or {}).get("cart_items")
+
+    if not isinstance(cart_items, list):
+        return []
+
+    return [item for item in cart_items if isinstance(item, dict)]
+
+
+def _cart_item_text(item: dict, key: str, fallback: str = "") -> str:
+    value = item.get(key, fallback)
+
+    return str(value or fallback).strip()
+
+
+def _cart_item_int(item: dict, key: str, fallback: int = 0) -> int:
+    try:
+        return int(item.get(key, fallback))
+    except (TypeError, ValueError):
+        return fallback
 
 def generate_order_receipt_pdf(
     order: Order,
@@ -138,15 +158,39 @@ def generate_order_receipt_pdf(
 
     y = table_top - 16 * mm
     pdf.setFont("Helvetica", 9)
-    pdf.drawString(left + 3 * mm, y, order.product_slug)
-    pdf.drawString(left + 90 * mm, y, order.price_code)
-    pdf.drawRightString(
-        width - left - 3 * mm,
-        y,
-        f"{order.amount.currency.upper()} {order.amount.major():.2f}",
-    )
 
-    y -= 12 * mm
+    cart_items = _cart_items(order)
+
+    if cart_items:
+        for item in cart_items:
+            product_name = _cart_item_text(item, "product_name", "Product")
+            price_label = _cart_item_text(item, "price_label", "Price option")
+            currency = _cart_item_text(item, "currency", order.amount.currency).upper()
+            amount_cents = _cart_item_int(item, "amount_cents", 0)
+            quantity = _cart_item_int(item, "quantity", 1)
+            line_total = amount_cents * quantity / 100
+
+            pdf.drawString(left + 3 * mm, y, f"{product_name} x {quantity}")
+            pdf.drawString(left + 90 * mm, y, price_label)
+            pdf.drawRightString(
+                width - left - 3 * mm,
+                y,
+                f"{currency} {line_total:.2f}",
+            )
+
+            y -= 8 * mm
+    else:
+        pdf.drawString(left + 3 * mm, y, order.product_slug)
+        pdf.drawString(left + 90 * mm, y, order.price_code)
+        pdf.drawRightString(
+            width - left - 3 * mm,
+            y,
+            f"{order.amount.currency.upper()} {order.amount.major():.2f}",
+        )
+
+        y -= 8 * mm
+
+    y -= 4 * mm
     pdf.setStrokeColor(colors.HexColor("#d0d5dd"))
     pdf.line(left, y, width - left, y)
 

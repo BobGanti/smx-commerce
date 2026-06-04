@@ -49,22 +49,7 @@ class StripeCheckoutProvider:
                 "product_slug": order.product_slug,
                 "price_code": order.price_code,
             },
-            line_items=[
-                {
-                    "quantity": 1,
-                    "price_data": {
-                        "currency": order.amount.currency.lower(),
-                        "unit_amount": order.amount.amount_cents,
-                        "product_data": {
-                            "name": self.product_name_resolver(order),
-                            "metadata": {
-                                "product_slug": order.product_slug,
-                                "price_code": order.price_code,
-                            },
-                        },
-                    },
-                }
-            ],
+            line_items=self._build_line_items(order),
         )
 
         session_id = self._read_field(session, "id")
@@ -86,6 +71,82 @@ class StripeCheckoutProvider:
                 "price_code": order.price_code,
             },
         )
+
+
+    def _build_line_items(self, order: Order) -> list[dict[str, Any]]:
+        cart_items = self._cart_items(order)
+
+        if cart_items:
+            return [
+                {
+                    "quantity": self._clean_quantity(item.get("quantity", 1)),
+                    "price_data": {
+                        "currency": validate_required_text(item.get("currency", ""), "currency").lower(),
+                        "unit_amount": self._clean_amount_cents(item.get("amount_cents", 0)),
+                        "product_data": {
+                            "name": validate_required_text(item.get("product_name", ""), "product_name"),
+                            "metadata": {
+                                "product_slug": validate_required_text(item.get("product_slug", ""), "product_slug"),
+                                "price_code": validate_required_text(item.get("price_code", ""), "price_code"),
+                                "price_label": validate_required_text(item.get("price_label", ""), "price_label"),
+                            },
+                        },
+                    },
+                }
+                for item in cart_items
+            ]
+
+        return [
+            {
+                "quantity": 1,
+                "price_data": {
+                    "currency": order.amount.currency.lower(),
+                    "unit_amount": order.amount.amount_cents,
+                    "product_data": {
+                        "name": self.product_name_resolver(order),
+                        "metadata": {
+                            "product_slug": order.product_slug,
+                            "price_code": order.price_code,
+                        },
+                    },
+                },
+            }
+        ]
+
+    @staticmethod
+    def _cart_items(order: Order) -> list[dict[str, Any]]:
+        metadata = order.metadata or {}
+        cart_items = metadata.get("cart_items")
+
+        if not isinstance(cart_items, list):
+            return []
+
+        return [item for item in cart_items if isinstance(item, dict)]
+
+    @staticmethod
+    def _clean_quantity(value: Any) -> int:
+        try:
+            quantity = int(value)
+        except (TypeError, ValueError):
+            raise PaymentCheckoutError("cart item quantity must be a whole number") from None
+
+        if quantity < 1:
+            raise PaymentCheckoutError("cart item quantity must be at least 1")
+
+        return quantity
+
+    @staticmethod
+    def _clean_amount_cents(value: Any) -> int:
+        try:
+            amount_cents = int(value)
+        except (TypeError, ValueError):
+            raise PaymentCheckoutError("cart item amount_cents must be a whole number") from None
+
+        if amount_cents < 0:
+            raise PaymentCheckoutError("cart item amount_cents cannot be negative")
+
+        return amount_cents
+    
 
     @staticmethod
     def _default_product_name(order: Order) -> str:

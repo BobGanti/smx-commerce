@@ -2,128 +2,1754 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>{{ commerce_config.site_title }} · {{ commerce_config.module_title }} Admin</title>
+  <title>{{ commerce_config.host_site_title }} · {{ commerce_config.store_title }} Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {% if commerce_config.favicon_url %}
     <link rel="icon" href="{{ commerce_config.favicon_url }}">
   {% endif %}
+  <link rel="stylesheet" href="/commerce/static/smx-commerce.css">
   <style>
-    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f7f8fa; color: #18202a; }
-    main { max-width: 1100px; margin: 0 auto; padding: 40px 20px; }
-    header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 24px; }
-    nav { display: flex; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
-    .panel { background: white; border: 1px solid #e6e8eb; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); margin-bottom: 24px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
-    label { display: block; font-weight: 650; margin-top: 12px; }
-    input { width: 100%; box-sizing: border-box; padding: 11px; border: 1px solid #ccd2da; border-radius: 10px; margin-top: 6px; font: inherit; }
-    button { margin-top: 18px; padding: 12px 16px; border: 0; border-radius: 12px; font-weight: 750; cursor: pointer; background: #0f766e; color: white; }
-    a { color: #0f766e; text-decoration: none; font-weight: 700; }
-    .muted { color: #667085; }
-    .success { color: #027a48; font-weight: 700; }
-    .error { color: #b42318; font-weight: 700; }
-    .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
-    .brand img { max-height: 56px; max-width: 220px; object-fit: contain; }
-    .brand-title { font-size: 1.05rem; font-weight: 800; }
-    .preview { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
-    .preview-logo { max-height: 80px; max-width: 260px; object-fit: contain; border: 1px solid #e6e8eb; border-radius: 12px; padding: 8px; background: white; }
-    .preview-favicon { width: 48px; height: 48px; object-fit: contain; border: 1px solid #e6e8eb; border-radius: 12px; padding: 8px; background: white; }
-    .card-link { display: block; padding: 18px; border: 1px solid #e6e8eb; border-radius: 14px; background: #ffffff; }
+    .smx-admin-command-strip {
+      display: grid;
+      grid-template-columns: minmax(220px, 1.1fr) minmax(180px, 0.75fr) minmax(180px, 0.75fr) minmax(260px, 1fr);
+      gap: 14px;
+      margin: 18px 0 20px;
+    }
+
+    .smx-admin-command-card {
+      min-width: 0;
+      padding: 16px;
+      border: 1px solid var(--smx-border);
+      border-radius: 16px;
+      background: var(--smx-surface);
+      box-shadow: var(--smx-shadow);
+    }
+
+    .smx-admin-command-label {
+      margin: 0 0 7px;
+      color: var(--smx-muted);
+      font-size: 0.83rem;
+      font-weight: 800;
+    }
+
+    .smx-admin-command-value {
+      margin: 0;
+      color: var(--smx-text);
+      font-size: clamp(1.1rem, 1.8vw, 1.45rem);
+      line-height: 1.2;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .smx-admin-command-note {
+      margin: 8px 0 0;
+      color: var(--smx-muted);
+      font-size: 0.9rem;
+    }
+
+    .smx-admin-meter {
+      height: 9px;
+      margin-top: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #edf2f7;
+    }
+
+    .smx-admin-meter-bar {
+      height: 100%;
+      border-radius: inherit;
+      background: var(--smx-primary);
+    }
+
+    .smx-admin-command-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .smx-admin-command-actions a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 11px;
+      border: 1px solid var(--smx-border);
+      border-radius: 999px;
+      background: white;
+      font-size: 0.88rem;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .smx-admin-command-actions a:hover {
+      border-color: var(--smx-primary);
+      text-decoration: none;
+    }
+
+    .smx-admin-today-panel {
+      margin: 0 0 20px;
+      padding: 18px;
+      border: 1px solid var(--smx-border);
+      border-radius: 18px;
+      background: var(--smx-surface);
+      box-shadow: var(--smx-shadow);
+    }
+
+    .smx-admin-today-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .smx-admin-today-header h2 {
+      margin: 0 0 6px;
+      font-size: 1.12rem;
+    }
+
+    .smx-admin-today-header p {
+      margin: 0;
+      color: var(--smx-muted);
+      font-size: 0.93rem;
+    }
+
+    .smx-admin-today-badge {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #ecfdf3;
+      color: #027a48;
+      font-size: 0.84rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .smx-admin-today-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      gap: 12px;
+    }
+
+    .smx-admin-today-card {
+      min-width: 0;
+      padding: 14px;
+      border: 1px solid var(--smx-border);
+      border-radius: 14px;
+      background: #f8fafc;
+    }
+
+    .smx-admin-today-label {
+      margin: 0 0 7px;
+      color: var(--smx-muted);
+      font-size: 0.8rem;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    .smx-admin-today-value {
+      margin: 0;
+      color: var(--smx-text);
+      font-size: clamp(1.05rem, 1.7vw, 1.38rem);
+      line-height: 1.18;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+
+    .smx-admin-today-value.is-money {
+      font-size: clamp(0.98rem, 1.45vw, 1.2rem);
+    }
+
+    @media (max-width: 720px) {
+      .smx-admin-today-header {
+        display: grid;
+      }
+
+      .smx-admin-today-badge {
+        justify-self: start;
+      }
+    }
+
+    .smx-admin-catalog-panel {
+      margin: 0 0 20px;
+      padding: 18px;
+      border: 1px solid var(--smx-border);
+      border-radius: 18px;
+      background: var(--smx-surface);
+      box-shadow: var(--smx-shadow);
+    }
+
+    .smx-admin-catalog-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .smx-admin-catalog-header h2 {
+      margin: 0 0 6px;
+      font-size: 1.12rem;
+    }
+
+    .smx-admin-catalog-header p {
+      margin: 0;
+      color: var(--smx-muted);
+      font-size: 0.93rem;
+    }
+
+    .smx-admin-catalog-score {
+      flex: 0 0 auto;
+      min-width: 120px;
+      padding: 12px;
+      border: 1px solid var(--smx-border);
+      border-radius: 14px;
+      background: #f8fafc;
+      text-align: center;
+    }
+
+    .smx-admin-catalog-score-value {
+      display: block;
+      color: var(--smx-text);
+      font-size: clamp(1.25rem, 2vw, 1.7rem);
+      font-weight: 900;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .smx-admin-catalog-score-label {
+      display: block;
+      margin-top: 6px;
+      color: var(--smx-muted);
+      font-size: 0.78rem;
+      font-weight: 850;
+    }
+
+    .smx-admin-catalog-meter {
+      height: 9px;
+      margin: 0 0 16px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #edf2f7;
+    }
+
+    .smx-admin-catalog-meter-bar {
+      height: 100%;
+      border-radius: inherit;
+      background: var(--smx-primary);
+    }
+
+    .smx-admin-catalog-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+      gap: 12px;
+    }
+
+    .smx-admin-catalog-item {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid var(--smx-border);
+      border-radius: 14px;
+      background: #f8fafc;
+    }
+
+    .smx-admin-catalog-status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: #fef3f2;
+      color: var(--smx-danger);
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .smx-admin-catalog-status.is-ok {
+      background: #ecfdf3;
+      color: #027a48;
+    }
+
+    .smx-admin-catalog-title {
+      margin: 0 0 4px;
+      color: var(--smx-text);
+      font-weight: 850;
+    }
+
+    .smx-admin-catalog-metric {
+      margin: 0 0 6px;
+      color: var(--smx-primary);
+      font-size: 0.88rem;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .smx-admin-catalog-detail {
+      margin: 0 0 8px;
+      color: var(--smx-muted);
+      font-size: 0.9rem;
+    }
+
+    .smx-admin-catalog-action {
+      font-size: 0.88rem;
+      font-weight: 850;
+    }
+
+    @media (max-width: 720px) {
+      .smx-admin-catalog-header {
+        display: grid;
+      }
+
+      .smx-admin-catalog-score {
+        justify-self: start;
+      }
+    }
+
+    .smx-admin-kpi-panel {
+      margin: 0 0 20px;
+      padding: 18px;
+      border: 1px solid var(--smx-border);
+      border-radius: 18px;
+      background: var(--smx-surface);
+      box-shadow: var(--smx-shadow);
+    }
+
+    .smx-admin-kpi-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .smx-admin-kpi-header h2 {
+      margin: 0 0 6px;
+      font-size: 1.12rem;
+    }
+
+    .smx-admin-kpi-header p {
+      margin: 0;
+      color: var(--smx-muted);
+      font-size: 0.93rem;
+    }
+
+    .smx-admin-kpi-badge {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #eef4ff;
+      color: #3538cd;
+      font-size: 0.84rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .smx-admin-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 12px;
+    }
+
+    .smx-admin-kpi-card {
+      min-width: 0;
+      padding: 15px;
+      border: 1px solid var(--smx-border);
+      border-radius: 14px;
+      background: #f8fafc;
+    }
+
+    .smx-admin-kpi-label {
+      margin: 0 0 8px;
+      color: var(--smx-muted);
+      font-size: 0.82rem;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    .smx-admin-kpi-value {
+      margin: 0;
+      color: var(--smx-text);
+      font-size: clamp(1.1rem, 1.7vw, 1.45rem);
+      line-height: 1.18;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+
+    .smx-admin-kpi-value.is-money {
+      font-size: clamp(0.98rem, 1.45vw, 1.2rem);
+    }
+
+    .smx-admin-kpi-meter {
+      height: 8px;
+      margin-top: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #edf2f7;
+    }
+
+    .smx-admin-kpi-meter-bar {
+      height: 100%;
+      border-radius: inherit;
+      background: var(--smx-primary);
+    }
+
+    .smx-admin-kpi-note {
+      margin: 9px 0 0;
+      color: var(--smx-muted);
+      font-size: 0.86rem;
+    }
+
+    @media (max-width: 720px) {
+      .smx-admin-kpi-header {
+        display: grid;
+      }
+
+      .smx-admin-kpi-badge {
+        justify-self: start;
+      }
+    }
+
+    .smx-admin-dashboard-shell {
+      display: grid;
+      grid-template-columns: 172px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .smx-admin-dashboard-content {
+      min-width: 0;
+    }
+
+    .smx-admin-section-nav {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      overflow-y: auto;
+      padding: 10px;
+      border: 1px solid var(--smx-border);
+      border-radius: 16px;
+      background: var(--smx-surface);
+      box-shadow: var(--smx-shadow);
+    }
+
+    .smx-admin-section-nav-title {
+      margin: 0 0 8px;
+      padding: 0 4px;
+      color: var(--smx-muted);
+      font-size: 0.74rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .smx-admin-section-nav-links {
+      display: grid;
+      gap: 4px;
+    }
+
+    .smx-admin-section-nav a {
+      display: block;
+      padding: 8px 9px;
+      border-radius: 10px;
+      color: var(--smx-text);
+      font-size: 0.82rem;
+      font-weight: 800;
+      line-height: 1.18;
+      text-decoration: none;
+    }
+
+    .smx-admin-section-nav a:hover {
+      background: #f8fafc;
+      color: var(--smx-primary);
+      text-decoration: none;
+    }
+
+    #dashboard-overview,
+    #dashboard-command,
+    #dashboard-today,
+    #dashboard-kpis,
+    #dashboard-summary,
+    #dashboard-trend,
+    #dashboard-charts,
+    #dashboard-feed,
+    #dashboard-recent-orders,
+    #dashboard-health {
+      scroll-margin-top: 20px;
+    }
+
+    @media (max-width: 980px) {
+      .smx-admin-dashboard-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .smx-admin-section-nav {
+        position: static;
+        max-height: none;
+      }
+
+      .smx-admin-section-nav-links {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 2px;
+      }
+
+      .smx-admin-section-nav a {
+        flex: 0 0 auto;
+        white-space: nowrap;
+      }
+    }
+
+    .smx-admin-dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 14px;
+    }
+
+    .smx-admin-stat-card {
+      min-width: 0;
+      padding: 16px;
+      border: 1px solid var(--smx-border);
+      border-radius: 16px;
+      background: var(--smx-surface);
+      box-shadow: var(--smx-shadow);
+    }
+
+    .smx-admin-stat-label {
+      margin: 0 0 8px;
+      color: var(--smx-muted);
+      font-weight: 750;
+      font-size: 0.84rem;
+      line-height: 1.25;
+    }
+
+    .smx-admin-stat-value {
+      margin: 0;
+      max-width: 100%;
+      font-size: clamp(1.2rem, 2.1vw, 1.75rem);
+      line-height: 1.15;
+      font-weight: 850;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+      color: var(--smx-text);
+    }
+
+    .smx-admin-stat-value.is-revenue {
+      font-size: clamp(1.05rem, 1.75vw, 1.35rem);
+      line-height: 1.25;
+    }
+
+    .smx-admin-trend-panel {
+      margin-top: 22px;
+      padding: 18px;
+      border: 1px solid var(--smx-border);
+      border-radius: 16px;
+      background: var(--smx-surface);
+      box-shadow: var(--smx-shadow);
+    }
+
+    .smx-admin-trend-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+
+    .smx-admin-trend-header h2 {
+      margin: 0 0 6px;
+      font-size: 1.12rem;
+    }
+
+    .smx-admin-trend-header p {
+      margin: 0;
+      color: var(--smx-muted);
+      font-size: 0.93rem;
+    }
+
+    .smx-admin-trend-legend {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--smx-muted);
+      font-size: 0.88rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .smx-admin-trend-legend::before {
+      content: "";
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: var(--smx-primary);
+    }
+
+    .smx-admin-trend-bars {
+      display: grid;
+      grid-template-columns: repeat(14, minmax(22px, 1fr));
+      gap: 10px;
+      align-items: end;
+      min-height: 180px;
+      padding: 16px 8px 8px;
+      border: 1px solid var(--smx-border);
+      border-radius: 14px;
+      background: linear-gradient(to top, #f8fafc, transparent);
+    }
+
+    .smx-admin-trend-day {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: 1fr auto auto;
+      gap: 7px;
+      align-items: end;
+      height: 150px;
+    }
+
+    .smx-admin-trend-bar-wrap {
+      display: flex;
+      align-items: end;
+      justify-content: center;
+      height: 100%;
+      min-height: 88px;
+    }
+
+    .smx-admin-trend-bar {
+      width: min(100%, 24px);
+      min-height: 3px;
+      border-radius: 999px 999px 6px 6px;
+      background: var(--smx-primary);
+    }
+
+    .smx-admin-trend-count {
+      color: var(--smx-text);
+      font-size: 0.84rem;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      text-align: center;
+    }
+
+    .smx-admin-trend-label {
+      color: var(--smx-muted);
+      font-size: 0.76rem;
+      font-weight: 750;
+      text-align: center;
+      white-space: nowrap;
+      transform: rotate(-28deg);
+      transform-origin: center top;
+    }
+
+    @media (max-width: 720px) {
+      .smx-admin-trend-header {
+        display: grid;
+      }
+
+      .smx-admin-trend-bars {
+        overflow-x: auto;
+        grid-template-columns: repeat(14, minmax(46px, 1fr));
+      }
+
+      .smx-admin-trend-label {
+        transform: none;
+      }
+    }
+
+    .smx-admin-chart-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+      margin-top: 22px;
+    }
+
+    .smx-admin-chart-card {
+      min-width: 0;
+      padding: 18px;
+      border: 1px solid var(--smx-border);
+      border-radius: 16px;
+      background: var(--smx-surface);
+      box-shadow: var(--smx-shadow);
+    }
+
+    .smx-admin-chart-card h2 {
+      margin-top: 0;
+      margin-bottom: 6px;
+      font-size: 1.08rem;
+    }
+
+    .smx-admin-chart-subtitle {
+      margin: 0 0 16px;
+      color: var(--smx-muted);
+      font-size: 0.92rem;
+    }
+
+    .smx-admin-chart-list {
+      display: grid;
+      gap: 13px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .smx-admin-chart-row {
+      display: grid;
+      gap: 6px;
+    }
+
+    .smx-admin-chart-row-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      font-size: 0.92rem;
+    }
+
+    .smx-admin-chart-label {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 750;
+      color: var(--smx-text);
+    }
+
+    .smx-admin-chart-value {
+      flex: 0 0 auto;
+      color: var(--smx-muted);
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    .smx-admin-chart-track {
+      height: 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #edf2f7;
+    }
+
+    .smx-admin-chart-bar {
+      min-width: 2%;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--smx-primary);
+    }
+
+    .smx-admin-chart-empty {
+      margin: 0;
+      color: var(--smx-muted);
+      font-size: 0.94rem;
+    }
+
+    .smx-admin-feed-list {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .smx-admin-feed-item {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid var(--smx-border);
+      border-radius: 14px;
+      background: var(--smx-surface);
+    }
+
+    .smx-admin-feed-kind {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 66px;
+      height: 30px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: #eef4ff;
+      color: #3538cd;
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .smx-admin-feed-kind.is-warning {
+      background: #fff7ed;
+      color: #b54708;
+    }
+
+    .smx-admin-feed-kind.is-ok {
+      background: #ecfdf3;
+      color: #027a48;
+    }
+
+    .smx-admin-feed-title {
+      margin: 0 0 4px;
+      color: var(--smx-text);
+      font-weight: 850;
+      overflow-wrap: anywhere;
+    }
+
+    .smx-admin-feed-detail {
+      margin: 0;
+      color: var(--smx-muted);
+      font-size: 0.92rem;
+      overflow-wrap: anywhere;
+    }
+
+    .smx-admin-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.8fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .smx-admin-action-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+    }
+
+    .smx-admin-action-card {
+      display: block;
+      padding: 16px;
+      border: 1px solid var(--smx-border);
+      border-radius: 14px;
+      background: var(--smx-surface);
+    }
+
+    .smx-admin-action-card:hover {
+      border-color: var(--smx-primary);
+      text-decoration: none;
+    }
+
+    .smx-admin-action-card strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--smx-text);
+    }
+
+    .smx-admin-health-panel {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .smx-admin-health-panel > h2,
+    .smx-admin-health-panel > p {
+      flex: 0 0 auto;
+    }
+
+    .smx-admin-health-scroll {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      padding-right: 8px;
+      margin-right: -8px;
+    }
+
+    .smx-admin-health-list {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .smx-admin-health-item {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid var(--smx-border);
+      border-radius: 14px;
+      background: var(--smx-surface);
+    }
+
+    .smx-admin-health-status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      font-weight: 900;
+      background: #fef3f2;
+      color: var(--smx-danger);
+    }
+
+    .smx-admin-health-status.is-ok {
+      background: #ecfdf3;
+      color: #027a48;
+    }
+
+    .smx-admin-health-title {
+      margin: 0 0 4px;
+      font-weight: 850;
+    }
+
+    .smx-admin-health-detail {
+      margin: 0;
+      color: var(--smx-muted);
+      font-size: 0.93rem;
+    }
+
+    .smx-admin-home-preview {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .smx-admin-home-preview-logo {
+      max-height: 80px;
+      max-width: 260px;
+      object-fit: contain;
+      border: 1px solid var(--smx-border);
+      border-radius: 12px;
+      padding: 8px;
+      background: var(--smx-surface);
+    }
+
+    .smx-admin-home-preview-favicon {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      border: 1px solid var(--smx-border);
+      border-radius: 12px;
+      padding: 8px;
+      background: var(--smx-surface);
+    }
+
+    .success {
+      color: #027a48;
+      font-weight: 700;
+    }
+
+    @media (max-width: 920px) {
+      .smx-admin-trend-panel {
+      margin-top: 22px;
+      padding: 18px;
+      border: 1px solid var(--smx-border);
+      border-radius: 16px;
+      background: var(--smx-surface);
+      box-shadow: var(--smx-shadow);
+    }
+
+    .smx-admin-trend-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+
+    .smx-admin-trend-header h2 {
+      margin: 0 0 6px;
+      font-size: 1.12rem;
+    }
+
+    .smx-admin-trend-header p {
+      margin: 0;
+      color: var(--smx-muted);
+      font-size: 0.93rem;
+    }
+
+    .smx-admin-trend-legend {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--smx-muted);
+      font-size: 0.88rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .smx-admin-trend-legend::before {
+      content: "";
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: var(--smx-primary);
+    }
+
+    .smx-admin-trend-bars {
+      display: grid;
+      grid-template-columns: repeat(14, minmax(22px, 1fr));
+      gap: 10px;
+      align-items: end;
+      min-height: 180px;
+      padding: 16px 8px 8px;
+      border: 1px solid var(--smx-border);
+      border-radius: 14px;
+      background: linear-gradient(to top, #f8fafc, transparent);
+    }
+
+    .smx-admin-trend-day {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: 1fr auto auto;
+      gap: 7px;
+      align-items: end;
+      height: 150px;
+    }
+
+    .smx-admin-trend-bar-wrap {
+      display: flex;
+      align-items: end;
+      justify-content: center;
+      height: 100%;
+      min-height: 88px;
+    }
+
+    .smx-admin-trend-bar {
+      width: min(100%, 24px);
+      min-height: 3px;
+      border-radius: 999px 999px 6px 6px;
+      background: var(--smx-primary);
+    }
+
+    .smx-admin-trend-count {
+      color: var(--smx-text);
+      font-size: 0.84rem;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      text-align: center;
+    }
+
+    .smx-admin-trend-label {
+      color: var(--smx-muted);
+      font-size: 0.76rem;
+      font-weight: 750;
+      text-align: center;
+      white-space: nowrap;
+      transform: rotate(-28deg);
+      transform-origin: center top;
+    }
+
+    @media (max-width: 720px) {
+      .smx-admin-trend-header {
+        display: grid;
+      }
+
+      .smx-admin-trend-bars {
+        overflow-x: auto;
+        grid-template-columns: repeat(14, minmax(46px, 1fr));
+      }
+
+      .smx-admin-trend-label {
+        transform: none;
+      }
+    }
+
+    .smx-admin-chart-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+      margin-top: 22px;
+    }
+
+    .smx-admin-chart-card {
+      min-width: 0;
+      padding: 18px;
+      border: 1px solid var(--smx-border);
+      border-radius: 16px;
+      background: var(--smx-surface);
+      box-shadow: var(--smx-shadow);
+    }
+
+    .smx-admin-chart-card h2 {
+      margin-top: 0;
+      margin-bottom: 6px;
+      font-size: 1.08rem;
+    }
+
+    .smx-admin-chart-subtitle {
+      margin: 0 0 16px;
+      color: var(--smx-muted);
+      font-size: 0.92rem;
+    }
+
+    .smx-admin-chart-list {
+      display: grid;
+      gap: 13px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .smx-admin-chart-row {
+      display: grid;
+      gap: 6px;
+    }
+
+    .smx-admin-chart-row-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      font-size: 0.92rem;
+    }
+
+    .smx-admin-chart-label {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 750;
+      color: var(--smx-text);
+    }
+
+    .smx-admin-chart-value {
+      flex: 0 0 auto;
+      color: var(--smx-muted);
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    .smx-admin-chart-track {
+      height: 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #edf2f7;
+    }
+
+    .smx-admin-chart-bar {
+      min-width: 2%;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--smx-primary);
+    }
+
+    .smx-admin-chart-empty {
+      margin: 0;
+      color: var(--smx-muted);
+      font-size: 0.94rem;
+    }
+
+    .smx-admin-feed-list {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .smx-admin-feed-item {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid var(--smx-border);
+      border-radius: 14px;
+      background: var(--smx-surface);
+    }
+
+    .smx-admin-feed-kind {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 66px;
+      height: 30px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: #eef4ff;
+      color: #3538cd;
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .smx-admin-feed-kind.is-warning {
+      background: #fff7ed;
+      color: #b54708;
+    }
+
+    .smx-admin-feed-kind.is-ok {
+      background: #ecfdf3;
+      color: #027a48;
+    }
+
+    .smx-admin-feed-title {
+      margin: 0 0 4px;
+      color: var(--smx-text);
+      font-weight: 850;
+      overflow-wrap: anywhere;
+    }
+
+    .smx-admin-feed-detail {
+      margin: 0;
+      color: var(--smx-muted);
+      font-size: 0.92rem;
+      overflow-wrap: anywhere;
+    }
+
+    .smx-admin-layout {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
   <main>
-    <header>
-      <div>
-        <div class="brand">
-          {% if commerce_config.logo_url %}
-            <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.site_title }} logo">
-          {% endif %}
-          <span class="brand-title">{{ commerce_config.site_title }} · {{ commerce_config.module_title }}</span>
-        </div>
+    <header class="smx-site-header">
+      <a class="smx-site-brand" href="/commerce/admin">
+        {% if commerce_config.logo_url %}
+          <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.store_title }} logo">
+        {% endif %}
+        <span class="smx-site-brand-title">{{ commerce_config.store_title }} Admin</span>
+      </a>
 
-        <h1>Admin Dashboard</h1>
-        <p class="muted">Manage {{ commerce_config.module_title }} for {{ commerce_config.site_title }}.</p>
-      </div>
+      <nav class="smx-nav" aria-label="Commerce admin navigation">
+        <a href="{{ commerce_config.host_home_url }}">Home</a>
+        <a href="/commerce/admin">Admin</a>
+        <a href="/commerce/admin/products">Products</a>
+        <a href="/commerce/admin/categories">Categories</a>
+        <a href="/commerce/admin/orders">Orders</a>
+      </nav>
 
-      <form method="post" action="/commerce/admin/logout">
+      <form method="post" action="/commerce/admin/logout" class="smx-inline-form">
         <button type="submit">Sign out</button>
       </form>
+      <details class="smx-mobile-menu">
+        <summary aria-label="Open menu"><span class="smx-mobile-menu-icon" aria-hidden="true"></span></summary>
+        <div class="smx-mobile-menu-panel">
+          <nav class="smx-mobile-menu-links" aria-label="Mobile navigation">
+              <a href="{{ commerce_config.host_home_url }}">Home</a>
+              <a href="/commerce/admin">Admin</a>
+              <a href="/commerce/admin/products">Products</a>
+              <a href="/commerce/admin/categories">Categories</a>
+              <a href="/commerce/admin/orders">Orders</a>
+          </nav>
+          <form method="post" action="/commerce/admin/logout" class="smx-mobile-menu-form">
+                  <button type="submit">Sign out</button>
+                </form>
+        </div>
+      </details>
     </header>
 
-    <nav>
-      <a href="{{ commerce_config.project_home_url }}">Back to {{ commerce_config.site_title }}</a>
-      <a href="/commerce/admin">Admin home</a>
-      <a href="/commerce/admin/products">Products</a>
-      <a href="/commerce/admin/categories">Categories</a>
-      <a href="/commerce/admin/orders">Orders</a>
-    </nav>
+    <div class="smx-admin-dashboard-shell">
+      <aside class="smx-admin-section-nav" aria-label="Dashboard section navigation">
+        <p class="smx-admin-section-nav-title">Dashboard</p>
+        <nav class="smx-admin-section-nav-links">
+          <a href="#dashboard-overview">Overview</a>
+          <a href="#dashboard-command">Command</a>
+          <a href="#dashboard-today">Today</a>
+          <a href="#dashboard-kpis">KPIs</a>
+          <a href="#dashboard-catalog">Catalog</a>
+          <a href="#dashboard-summary">Summary</a>
+          <a href="#dashboard-trend">Trend</a>
+          <a href="#dashboard-charts">Charts</a>
+          <a href="#dashboard-feed">Feed</a>
+          <a href="#dashboard-recent-orders">Orders</a>
+          <a href="#dashboard-health">Health</a>
+        </nav>
+      </aside>
+
+      <div class="smx-admin-dashboard-content">
+    <section id="dashboard-overview" class="smx-panel">
+      <h1>Admin Dashboard</h1>
+      <p class="smx-muted">
+        Control station for {{ commerce_config.store_title }} on {{ commerce_config.host_site_title }}.
+        Review orders, products, setup health, storefront readiness, and branding from one place.
+      </p>
+    </section>
 
     {% if message %}
-      <section class="panel">
+      <section class="smx-panel">
         <p class="success">{{ message }}</p>
       </section>
     {% endif %}
 
     {% if error %}
-      <section class="panel">
+      <section class="smx-panel">
         <p class="error">{{ error }}</p>
       </section>
     {% endif %}
 
-    <section class="panel">
-      <h2>Branding assets</h2>
-      <p class="muted">
-        Upload a logo and favicon for this client project. Images are stored in
-        <code>smxcommerce/assets/</code>. Existing assets are replaced only when you upload new files.
-      </p>
+    <section id="dashboard-command" class="smx-admin-command-strip" aria-label="Commerce command center">
+      <article class="smx-admin-command-card">
+        <p class="smx-admin-command-label">Setup health score</p>
+        <p class="smx-admin-command-value">{{ dashboard_health_summary.percent }}%</p>
+        <div class="smx-admin-meter" aria-hidden="true">
+          <div class="smx-admin-meter-bar" style="width: {{ dashboard_health_summary.percent }}%;"></div>
+        </div>
+        <p class="smx-admin-command-note">
+          {{ dashboard_health_summary.passing }} of {{ dashboard_health_summary.total }} checks passing.
+        </p>
+      </article>
 
-      <div class="preview">
-        {% if commerce_config.logo_url %}
-          <div>
-            <p class="muted">Current logo</p>
-            <img class="preview-logo" src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.site_title }} logo preview">
-          </div>
-        {% endif %}
+      <article class="smx-admin-command-card">
+        <p class="smx-admin-command-label">Attention needed</p>
+        <p class="smx-admin-command-value">{{ dashboard_health_summary.attention }}</p>
+        <p class="smx-admin-command-note">{{ dashboard_health_summary.status }}</p>
+      </article>
 
-        {% if commerce_config.favicon_url %}
-          <div>
-            <p class="muted">Current favicon</p>
-            <img class="preview-favicon" src="{{ commerce_config.favicon_url }}" alt="{{ commerce_config.site_title }} favicon preview">
-          </div>
-        {% endif %}
-      </div>
+      <article class="smx-admin-command-card">
+        <p class="smx-admin-command-label">Order queue</p>
+        <p class="smx-admin-command-value">{{ dashboard_stats.pending_orders }}</p>
+        <p class="smx-admin-command-note">Pending orders awaiting completion or review.</p>
+      </article>
 
-      <form method="post" action="/commerce/admin/branding/assets" enctype="multipart/form-data">
-        <label for="logo">Upload logo</label>
-        <input id="logo" name="logo" type="file" accept=".png,.jpg,.jpeg,.webp,.gif,image/png,image/jpeg,image/webp,image/gif">
-
-        <label for="favicon">Upload favicon</label>
-        <input id="favicon" name="favicon" type="file" accept=".png,.ico,image/png,image/x-icon">
-
-        <button type="submit">Upload branding assets</button>
-      </form>
+      <article class="smx-admin-command-card">
+        <p class="smx-admin-command-label">Control actions</p>
+        <p class="smx-admin-command-value">Operate</p>
+        <div class="smx-admin-command-actions">
+          <a href="/commerce/admin/orders">Orders</a>
+          <a href="/commerce">Storefront</a>
+          <a href="/commerce/admin/branding">Branding</a>
+        </div>
+      </article>
     </section>
 
-    <section class="panel">
-      <h2>Commerce sections</h2>
+    <section id="dashboard-today" class="smx-admin-today-panel" aria-label="Today snapshot">
+      <div class="smx-admin-today-header">
+        <div>
+          <h2>Today snapshot</h2>
+          <p>Same-day operational view from current commerce order rows.</p>
+        </div>
+        <span class="smx-admin-today-badge">Live today</span>
+      </div>
 
-      <div class="grid">
-        <a class="card-link" href="/commerce/admin/products">
-          <strong>Products</strong><br>
-          <span class="muted">Create, update, price, archive, and safely delete products.</span>
-        </a>
+      <div class="smx-admin-today-grid">
+        <article class="smx-admin-today-card">
+          <p class="smx-admin-today-label">Orders today</p>
+          <p class="smx-admin-today-value">{{ dashboard_today_snapshot.total_orders }}</p>
+        </article>
 
-        <a class="card-link" href="/commerce/admin/categories">
-          <strong>Categories</strong><br>
-          <span class="muted">Organize products and manage category hierarchy.</span>
-        </a>
+        <article class="smx-admin-today-card">
+          <p class="smx-admin-today-label">Paid today</p>
+          <p class="smx-admin-today-value">{{ dashboard_today_snapshot.paid_orders }}</p>
+        </article>
 
-        <a class="card-link" href="/commerce/admin/orders">
-          <strong>Orders</strong><br>
-          <span class="muted">Review practice/live orders and export CSV.</span>
-        </a>
+        <article class="smx-admin-today-card">
+          <p class="smx-admin-today-label">Pending today</p>
+          <p class="smx-admin-today-value">{{ dashboard_today_snapshot.pending_orders }}</p>
+        </article>
+
+        <article class="smx-admin-today-card">
+          <p class="smx-admin-today-label">Cancelled today</p>
+          <p class="smx-admin-today-value">{{ dashboard_today_snapshot.cancelled_orders }}</p>
+        </article>
+
+        <article class="smx-admin-today-card">
+          <p class="smx-admin-today-label">Failed today</p>
+          <p class="smx-admin-today-value">{{ dashboard_today_snapshot.failed_orders }}</p>
+        </article>
+
+        <article class="smx-admin-today-card">
+          <p class="smx-admin-today-label">Revenue today</p>
+          <p class="smx-admin-today-value is-money">{{ dashboard_today_snapshot.revenue_display }}</p>
+        </article>
       </div>
     </section>
+
+    <section id="dashboard-kpis" class="smx-admin-kpi-panel" aria-label="Business KPIs">
+      <div class="smx-admin-kpi-header">
+        <div>
+          <h2>Business KPIs</h2>
+          <p>Commercial quality signals calculated from current orders and product publishing state.</p>
+        </div>
+        <span class="smx-admin-kpi-badge">Performance</span>
+      </div>
+
+      <div class="smx-admin-kpi-grid">
+        <article class="smx-admin-kpi-card">
+          <p class="smx-admin-kpi-label">Paid order rate</p>
+          <p class="smx-admin-kpi-value">{{ dashboard_business_kpis.paid_rate_display }}</p>
+          <div class="smx-admin-kpi-meter" aria-hidden="true">
+            <div class="smx-admin-kpi-meter-bar" style="width: {{ dashboard_business_kpis.paid_rate_percent }}%;"></div>
+          </div>
+          <p class="smx-admin-kpi-note">Share of all orders marked paid.</p>
+        </article>
+
+        <article class="smx-admin-kpi-card">
+          <p class="smx-admin-kpi-label">Average order value</p>
+          <p class="smx-admin-kpi-value is-money">{{ dashboard_business_kpis.average_order_value_display }}</p>
+          <p class="smx-admin-kpi-note">Average value across paid orders.</p>
+        </article>
+
+        <article class="smx-admin-kpi-card">
+          <p class="smx-admin-kpi-label">Cart checkout share</p>
+          <p class="smx-admin-kpi-value">{{ dashboard_business_kpis.cart_checkout_share_display }}</p>
+          <div class="smx-admin-kpi-meter" aria-hidden="true">
+            <div class="smx-admin-kpi-meter-bar" style="width: {{ dashboard_business_kpis.cart_checkout_share_percent }}%;"></div>
+          </div>
+          <p class="smx-admin-kpi-note">Orders created from multi-item carts.</p>
+        </article>
+
+        <article class="smx-admin-kpi-card">
+          <p class="smx-admin-kpi-label">Product publish rate</p>
+          <p class="smx-admin-kpi-value">{{ dashboard_business_kpis.product_publish_rate_display }}</p>
+          <div class="smx-admin-kpi-meter" aria-hidden="true">
+            <div class="smx-admin-kpi-meter-bar" style="width: {{ dashboard_business_kpis.product_publish_rate_percent }}%;"></div>
+          </div>
+          <p class="smx-admin-kpi-note">Products currently active versus total products.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="dashboard-catalog" class="smx-admin-catalog-panel" aria-label="Catalog readiness">
+      <div class="smx-admin-catalog-header">
+        <div>
+          <h2>Catalog Readiness</h2>
+          <p>Storefront sellability checks for products, prices, images, categories, and draft backlog.</p>
+        </div>
+
+        <div class="smx-admin-catalog-score">
+          <span class="smx-admin-catalog-score-value">{{ dashboard_catalog_readiness.score_percent }}%</span>
+          <span class="smx-admin-catalog-score-label">
+            {{ dashboard_catalog_readiness.passing }}/{{ dashboard_catalog_readiness.total }} ready
+          </span>
+        </div>
+      </div>
+
+      <div class="smx-admin-catalog-meter" aria-hidden="true">
+        <div class="smx-admin-catalog-meter-bar" style="width: {{ dashboard_catalog_readiness.score_percent }}%;"></div>
+      </div>
+
+      {% if dashboard_catalog_readiness['items'] %}
+        <div class="smx-admin-catalog-grid">
+          {% for item in dashboard_catalog_readiness['items'] %}
+            <article class="smx-admin-catalog-item">
+              <span class="smx-admin-catalog-status{% if item.ok %} is-ok{% endif %}">
+                {% if item.ok %}OK{% else %}!{% endif %}
+              </span>
+
+              <div>
+                <p class="smx-admin-catalog-title">{{ item.label }}</p>
+                <p class="smx-admin-catalog-metric">{{ item.metric }}</p>
+                <p class="smx-admin-catalog-detail">{{ item.detail }}</p>
+                <a class="smx-admin-catalog-action" href="{{ item.action_url }}">Review</a>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="smx-muted">Catalog readiness checks are not available yet.</p>
+      {% endif %}
+    </section>
+
+    <section id="dashboard-summary" class="smx-admin-dashboard-grid" aria-label="Commerce summary">
+      <article class="smx-admin-stat-card">
+        <p class="smx-admin-stat-label">Total orders</p>
+        <p class="smx-admin-stat-value">{{ dashboard_stats.total_orders }}</p>
+      </article>
+
+      <article class="smx-admin-stat-card">
+        <p class="smx-admin-stat-label">Pending orders</p>
+        <p class="smx-admin-stat-value">{{ dashboard_stats.pending_orders }}</p>
+      </article>
+
+      <article class="smx-admin-stat-card">
+        <p class="smx-admin-stat-label">Paid orders</p>
+        <p class="smx-admin-stat-value">{{ dashboard_stats.paid_orders }}</p>
+      </article>
+
+      <article class="smx-admin-stat-card">
+        <p class="smx-admin-stat-label">Total revenue</p>
+        <p class="smx-admin-stat-value is-revenue">{{ dashboard_stats.total_revenue_display }}</p>
+      </article>
+
+      <article class="smx-admin-stat-card">
+        <p class="smx-admin-stat-label">Active products</p>
+        <p class="smx-admin-stat-value">{{ dashboard_stats.active_products }}</p>
+      </article>
+
+      <article class="smx-admin-stat-card">
+        <p class="smx-admin-stat-label">Draft products</p>
+        <p class="smx-admin-stat-value">{{ dashboard_stats.draft_products }}</p>
+      </article>
+
+      <article class="smx-admin-stat-card">
+        <p class="smx-admin-stat-label">Categories</p>
+        <p class="smx-admin-stat-value">{{ dashboard_stats.category_count }}</p>
+      </article>
+    </section>
+
+    <section id="dashboard-trend" class="smx-admin-trend-panel" aria-label="14-day order volume trend">
+      <div class="smx-admin-trend-header">
+        <div>
+          <h2>14-day order volume</h2>
+          <p>Daily order activity from the latest commerce order rows.</p>
+        </div>
+        <span class="smx-admin-trend-legend">Total orders</span>
+      </div>
+
+      {% if dashboard_charts.daily_order_volume %}
+        <div class="smx-admin-trend-bars">
+          {% for day in dashboard_charts.daily_order_volume %}
+            <div class="smx-admin-trend-day" title="{{ day.label }} ? {{ day.total_orders }} total ? {{ day.paid_orders }} paid ? {{ day.pending_orders }} pending">
+              <div class="smx-admin-trend-bar-wrap">
+                <div class="smx-admin-trend-bar" style="height: {{ day.percent }}%;"></div>
+              </div>
+              <div class="smx-admin-trend-count">{{ day.total_orders }}</div>
+              <div class="smx-admin-trend-label">{{ day.label }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="smx-admin-chart-empty">No order trend data yet.</p>
+      {% endif %}
+    </section>
+
+    <section id="dashboard-charts" class="smx-admin-chart-grid" aria-label="Commerce dashboard charts">
+      <article class="smx-admin-chart-card">
+        <h2>Order status</h2>
+        <p class="smx-admin-chart-subtitle">Distribution of orders by operational state.</p>
+
+        {% if dashboard_charts.order_status %}
+          <ul class="smx-admin-chart-list">
+            {% for entry in dashboard_charts.order_status %}
+              <li class="smx-admin-chart-row">
+                <div class="smx-admin-chart-row-header">
+                  <span class="smx-admin-chart-label">{{ entry.label }}</span>
+                  <span class="smx-admin-chart-value">{{ entry.display }}</span>
+                </div>
+                <div class="smx-admin-chart-track" aria-hidden="true">
+                  <div class="smx-admin-chart-bar" style="width: {{ entry.percent }}%;"></div>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="smx-admin-chart-empty">No order status data yet.</p>
+        {% endif %}
+      </article>
+
+      <article class="smx-admin-chart-card">
+        <h2>Product status</h2>
+        <p class="smx-admin-chart-subtitle">Active, draft, paused, and archived product balance.</p>
+
+        {% if dashboard_charts.product_status %}
+          <ul class="smx-admin-chart-list">
+            {% for entry in dashboard_charts.product_status %}
+              <li class="smx-admin-chart-row">
+                <div class="smx-admin-chart-row-header">
+                  <span class="smx-admin-chart-label">{{ entry.label }}</span>
+                  <span class="smx-admin-chart-value">{{ entry.display }}</span>
+                </div>
+                <div class="smx-admin-chart-track" aria-hidden="true">
+                  <div class="smx-admin-chart-bar" style="width: {{ entry.percent }}%;"></div>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="smx-admin-chart-empty">No product status data yet.</p>
+        {% endif %}
+      </article>
+
+      <article class="smx-admin-chart-card">
+        <h2>Checkout mix</h2>
+        <p class="smx-admin-chart-subtitle">Cart checkout versus single-product checkout usage.</p>
+
+        {% if dashboard_charts.checkout_mix %}
+          <ul class="smx-admin-chart-list">
+            {% for entry in dashboard_charts.checkout_mix %}
+              <li class="smx-admin-chart-row">
+                <div class="smx-admin-chart-row-header">
+                  <span class="smx-admin-chart-label">{{ entry.label }}</span>
+                  <span class="smx-admin-chart-value">{{ entry.display }}</span>
+                </div>
+                <div class="smx-admin-chart-track" aria-hidden="true">
+                  <div class="smx-admin-chart-bar" style="width: {{ entry.percent }}%;"></div>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="smx-admin-chart-empty">No checkout mix data yet.</p>
+        {% endif %}
+      </article>
+
+      <article class="smx-admin-chart-card">
+        <h2>Revenue by currency</h2>
+        <p class="smx-admin-chart-subtitle">Paid revenue grouped by currency.</p>
+
+        {% if dashboard_charts.revenue_by_currency %}
+          <ul class="smx-admin-chart-list">
+            {% for entry in dashboard_charts.revenue_by_currency %}
+              <li class="smx-admin-chart-row">
+                <div class="smx-admin-chart-row-header">
+                  <span class="smx-admin-chart-label">{{ entry.label }}</span>
+                  <span class="smx-admin-chart-value">{{ entry.display }}</span>
+                </div>
+                <div class="smx-admin-chart-track" aria-hidden="true">
+                  <div class="smx-admin-chart-bar" style="width: {{ entry.percent }}%;"></div>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="smx-admin-chart-empty">No paid revenue yet.</p>
+        {% endif %}
+      </article>
+
+      <article class="smx-admin-chart-card">
+        <h2>Category load</h2>
+        <p class="smx-admin-chart-subtitle">Product distribution across the busiest categories.</p>
+
+        {% if dashboard_charts.category_load %}
+          <ul class="smx-admin-chart-list">
+            {% for entry in dashboard_charts.category_load %}
+              <li class="smx-admin-chart-row">
+                <div class="smx-admin-chart-row-header">
+                  <span class="smx-admin-chart-label">{{ entry.label }}</span>
+                  <span class="smx-admin-chart-value">{{ entry.display }}</span>
+                </div>
+                <div class="smx-admin-chart-track" aria-hidden="true">
+                  <div class="smx-admin-chart-bar" style="width: {{ entry.percent }}%;"></div>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="smx-admin-chart-empty">No category/product distribution yet.</p>
+        {% endif %}
+      </article>
+    </section>
+
+    <div class="smx-admin-layout">
+      <div>
+        <section class="smx-panel">
+          <h2>Quick actions</h2>
+          <p class="smx-muted">Common admin tasks for running the commerce module.</p>
+
+          <div class="smx-admin-action-grid">
+            <a class="smx-admin-action-card" href="/commerce/admin/products/new">
+              <strong>Create product</strong>
+              <span class="smx-muted">Add a new product or service to the storefront.</span>
+            </a>
+
+            <a class="smx-admin-action-card" href="/commerce/admin/categories/new">
+              <strong>Create category</strong>
+              <span class="smx-muted">Organize products into storefront categories.</span>
+            </a>
+
+            <a class="smx-admin-action-card" href="/commerce/admin/orders">
+              <strong>View orders</strong>
+              <span class="smx-muted">Review customer orders and payment state.</span>
+            </a>
+
+            <a class="smx-admin-action-card" href="/commerce/admin/orders.csv">
+              <strong>Download orders CSV</strong>
+              <span class="smx-muted">Export order records for analysis or reporting.</span>
+            </a>
+
+            <a class="smx-admin-action-card" href="/commerce">
+              <strong>Preview storefront</strong>
+              <span class="smx-muted">Open the public commerce home page.</span>
+            </a>
+
+            <a class="smx-admin-action-card" href="/commerce/admin/branding">
+              <strong>Branding/settings</strong>
+              <span class="smx-muted">Manage store branding, titles, URLs, logo, and favicon.</span>
+            </a>
+          </div>
+        </section>
+
+        <section id="dashboard-feed" class="smx-panel">
+          <h2>Operations feed</h2>
+          <p class="smx-muted">Recent commerce activity and setup issues requiring attention.</p>
+
+          <ul class="smx-admin-feed-list">
+            {% for event in dashboard_operations_feed %}
+              <li class="smx-admin-feed-item">
+                <span class="smx-admin-feed-kind{% if event.tone == 'warning' %} is-warning{% elif event.tone == 'ok' %} is-ok{% endif %}">
+                  {{ event.kind }}
+                </span>
+                <div>
+                  <p class="smx-admin-feed-title">{{ event.title }}</p>
+                  <p class="smx-admin-feed-detail">{{ event.detail }}</p>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
+
+        <section id="dashboard-recent-orders" class="smx-panel">
+          <h2>Recent orders</h2>
+          <p class="smx-muted">Latest orders across single-product and cart checkouts.</p>
+
+          {% if recent_orders %}
+            <div class="smx-table-wrap">
+              <table class="smx-table">
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Buyer</th>
+                    <th>Status</th>
+                    <th>Amount</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for order in recent_orders %}
+                    <tr>
+                      <td>{{ order.public_id }}</td>
+                      <td>
+                        {{ order.buyer.full_name }}<br>
+                        <span class="smx-muted">{{ order.buyer.email }}</span>
+                      </td>
+                      <td><span class="badge">{{ order.status.value }}</span></td>
+                      <td>{{ order.amount.currency }} {{ "%.2f"|format(order.amount.amount_cents / 100) }}</td>
+                      <td><a href="/commerce/admin/orders/{{ order.public_id }}/edit">Edit order</a></td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="smx-muted">No recent orders yet.</p>
+          {% endif %}
+        </section>
+      </div>
+
+      <aside>
+        <section id="dashboard-health" class="smx-panel smx-admin-health-panel">
+          <h2>Setup health</h2>
+          <p class="smx-muted">Operational readiness checks for checkout, email, assets, and database access.</p>
+
+          <div class="smx-admin-health-scroll">
+            <ul class="smx-admin-health-list">
+              {% for health in setup_health %}
+              <li class="smx-admin-health-item">
+                <span class="smx-admin-health-status{% if health.ok %} is-ok{% endif %}">
+                  {% if health.ok %}OK{% else %}!{% endif %}
+                </span>
+                <div>
+                  <p class="smx-admin-health-title">{{ health.label }}</p>
+                  <p class="smx-admin-health-detail">{{ health.detail }}</p>
+                </div>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+      </div>
+    </div>
   </main>
 </body>
 </html>

@@ -23,6 +23,7 @@
   <main>
     <nav>
       <a href="/commerce/admin/orders">Orders</a>
+        <a href="/commerce/admin/branding">Settings</a>
       <a href="/commerce/admin/products">Products</a>
       <a href="/commerce/admin/categories">Categories</a>
     </nav>
@@ -30,7 +31,21 @@
     <section class="panel">
       <h1>Edit order</h1>
       <p class="muted">Order ID: {{ order.public_id }}</p>
-      <p class="muted">Product: {{ order.product_slug }} · Price: {{ order.price_code }} · Amount: {{ order.amount.currency }} {{ order.amount.major() }}</p>
+      {% set cart_items = order.metadata.cart_items if order.metadata and order.metadata.cart_items else [] %}
+
+        {% if cart_items %}
+          <div class="muted">
+            <p><strong>Cart order items:</strong></p>
+            <ul class="smx-compact-list">
+              {% for item in cart_items %}
+                <li>{{ item.product_name }} <span>x {{ item.quantity }}</span> <span>· {{ item.price_label }}</span> <span>· {{ item.currency }} {{ "%.2f"|format(item.amount_cents / 100) }}</span></li>
+              {% endfor %}
+            </ul>
+            <p><strong>Amount:</strong> {{ order.amount.currency }} {{ order.amount.major() }}</p>
+          </div>
+        {% else %}
+          <p class="muted">Product: {{ order.product_slug }} · Price: {{ order.price_code }} · Amount: {{ order.amount.currency }} {{ order.amount.major() }}</p>
+        {% endif %}
       <p class="muted">Payment reference: {{ order.payment_reference or "not set" }}</p>
 
           {% set page_error = error or request.args.get("error") %}

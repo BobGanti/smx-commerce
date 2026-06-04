@@ -51,6 +51,11 @@ Thumbs.db
 .vscode/
 .idea/
 
+.tmp_smx_*/
+*.db
+*.sqlite
+*.sqlite3
+
 # Logs
 *.log
 logs/
@@ -61,3 +66,4 @@ MANIFEST.in
 pyproject.toml
 pytest_fail.txt
 smx-commerce-cloud-run-deployment.md
+

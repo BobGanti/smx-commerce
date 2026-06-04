@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>{{ commerce_config.project_title }} · Checkout cancelled</title>
+  <title>{{ commerce_config.store_title }} · Checkout cancelled</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {% if commerce_config.favicon_url %}
     <link rel="icon" href="{{ commerce_config.favicon_url }}">
@@ -22,7 +22,7 @@
 <body>
   <main>
     <nav>
-      <a href="{{ commerce_config.project_home_url }}">Back to {{ commerce_config.project_title }}</a>
+      <a href="{{ commerce_config.host_home_url }}">Back to {{ commerce_config.store_title }}</a>
       <a href="/commerce">Commerce home</a>
       <a href="/products">Back to products</a>
     </nav>
@@ -30,9 +30,9 @@
     <section class="panel">
       <div class="brand">
         {% if commerce_config.logo_url %}
-          <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.project_title }} logo">
+          <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.store_title }} logo">
         {% endif %}
-        <span class="brand-title">{{ commerce_config.project_title }}</span>
+        <span class="brand-title">{{ commerce_config.store_title }}</span>
       </div>
 
       <h1>Checkout cancelled</h1>
@@ -43,7 +43,25 @@
         <h2>Order</h2>
         <p><strong>Order ID:</strong> {{ order.public_id }}</p>
         <p><strong>Status:</strong> {{ order.status }}</p>
-        <p><strong>Product:</strong> {{ order.product_slug }}</p>
+
+        {% set cart_items = order.metadata.cart_items if order.metadata and order.metadata.cart_items else [] %}
+
+        {% if cart_items %}
+          <h3>Cart items</h3>
+          <ul>
+            {% for item in cart_items %}
+              <li>
+                {{ item.product_name }}
+                <span class="muted">x {{ item.quantity }}</span>
+                <span class="muted">· {{ item.price_label }}</span>
+                <span class="muted">· {{ item.currency }} {{ "%.2f"|format((item.amount_cents * item.quantity) / 100) }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p><strong>Product:</strong> {{ order.product_slug }}</p>
+          <p><strong>Price option:</strong> {{ order.price_code }}</p>
+        {% endif %}
       {% else %}
         <p class="muted">No order ID was supplied in the redirect URL.</p>
       {% endif %}
