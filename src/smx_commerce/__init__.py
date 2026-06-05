@@ -12,7 +12,9 @@ from smx_commerce.catalog.routes_admin import (
 from smx_commerce.catalog.routes_public import create_public_catalog_blueprint
 from smx_commerce.checkout.routes import create_checkout_blueprint
 from smx_commerce.checkout.routes_admin import create_order_admin_blueprint
+from smx_commerce.customers.emailer import CustomerLoginEmailService
 from smx_commerce.core import CommerceRuntime
+from smx_commerce.customers.routes import create_customer_auth_blueprint
 from smx_commerce.env_config import build_commerce_config_from_env, load_env_file
 from smx_commerce.notifications import (
     MemoryEmailSender,
@@ -36,6 +38,7 @@ def create_commerce_blueprint(
     payment_webhook_verifier: PaymentWebhookVerifier | None = None,
     payment_checkout_provider: PaymentCheckoutProvider | None = None,
     order_confirmation_service: OrderConfirmationEmailService | None = None,
+    customer_login_email_service: CustomerLoginEmailService | None = None,
     admin_token: str | None = None,
 ):
     commerce_runtime = runtime or CommerceRuntime.from_mapping(config)
@@ -80,6 +83,12 @@ def create_commerce_blueprint(
         )
 
     bp.register_blueprint(create_public_catalog_blueprint(commerce_runtime))
+    bp.register_blueprint(
+        create_customer_auth_blueprint(
+            commerce_runtime,
+            customer_login_email_service=customer_login_email_service,
+        )
+    )
     bp.register_blueprint(
         create_checkout_blueprint(
             commerce_runtime,
@@ -134,6 +143,7 @@ def init_commerce(app, *, config=None, init_schema: bool = False):
             payment_checkout_provider=_build_checkout_provider(resolved_config),
             payment_webhook_verifier=_build_webhook_verifier(resolved_config),
             order_confirmation_service=_build_order_confirmation_service(resolved_config),
+            customer_login_email_service=_build_customer_login_email_service(resolved_config),
         )
     )
 
@@ -216,6 +226,43 @@ def _build_webhook_verifier(config: dict):
         )
 
     raise ValueError(f"unsupported payment_provider: {provider}")
+
+
+
+def _build_email_sender(config: dict):
+    email_provider = config.get("email_provider")
+
+    if email_provider in {None, "", "none"}:
+        return None
+
+    if email_provider == "memory":
+        return MemoryEmailSender()
+
+    if email_provider == "smtp":
+        return SMTPEmailSender(
+            host=config["smtp_host"],
+            port=int(config.get("smtp_port", 587)),
+            default_from_email=config.get("default_from_email"),
+            username=config.get("smtp_username"),
+            password=config.get("smtp_password"),
+            use_tls=bool(config.get("smtp_use_tls", True)),
+            use_ssl=bool(config.get("smtp_use_ssl", False)),
+        )
+
+    raise ValueError(f"unsupported email_provider: {email_provider}")
+
+
+def _build_customer_login_email_service(config: dict):
+    sender = _build_email_sender(config)
+
+    if sender is None:
+        return None
+
+    return CustomerLoginEmailService(
+        sender,
+        from_email=config.get("default_from_email"),
+        store_title=config.get("store_title") or "smxCommerce",
+    )
 
 
 def _build_order_confirmation_service(config: dict):

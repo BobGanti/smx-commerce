@@ -51,6 +51,65 @@ class CustomerRepository:
 
         return self._to_customer(row) if row is not None else None
 
+    def get_or_create_from_identity(
+        self,
+        *,
+        email: str,
+        full_name: str = "",
+        phone: str = "",
+        company: str = "",
+        metadata: dict | None = None,
+    ) -> Customer:
+        normalized_email = validate_email(email)
+        normalized_full_name = (full_name or "").strip()
+        normalized_phone = (phone or "").strip()
+        normalized_company = (company or "").strip()
+
+        existing = self.session.execute(
+            select(CustomerRow).where(CustomerRow.email == normalized_email)
+        ).scalar_one_or_none()
+
+        if existing is not None:
+            changed = False
+
+            if normalized_full_name and not existing.full_name:
+                existing.full_name = normalized_full_name
+                changed = True
+
+            if normalized_phone and not existing.phone:
+                existing.phone = normalized_phone
+                changed = True
+
+            if normalized_company and not existing.company:
+                existing.company = normalized_company
+                changed = True
+
+            if metadata:
+                existing.metadata_json = {
+                    **dict(existing.metadata_json or {}),
+                    **dict(metadata or {}),
+                }
+                changed = True
+
+            if changed:
+                self.session.flush()
+
+            return self._to_customer(existing)
+
+        row = CustomerRow(
+            public_id=self._new_public_id("cus", CustomerRow),
+            email=normalized_email,
+            full_name=normalized_full_name,
+            phone=normalized_phone,
+            company=normalized_company,
+            metadata_json=dict(metadata or {}),
+        )
+
+        self.session.add(row)
+        self.session.flush()
+
+        return self._to_customer(row)
+
     def get_or_create_from_buyer(self, buyer: BuyerDetails) -> Customer:
         existing = self.session.execute(
             select(CustomerRow).where(CustomerRow.email == buyer.email)
@@ -185,7 +244,7 @@ class CustomerRepository:
         if row is None:
             return None
 
-        now = utc_now()
+        now = _normalize_now_for_datetime(row.expires_at)
 
         if row.revoked_at is not None or row.expires_at <= now:
             return None

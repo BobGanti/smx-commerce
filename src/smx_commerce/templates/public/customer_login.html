@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{% if commerce_config %}{{ commerce_config.store_title }}{% else %}smxCommerce{% endif %} ? Customer sign in</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% if commerce_config and commerce_config.favicon_url %}
+    <link rel="icon" href="{{ commerce_config.favicon_url }}">
+  {% endif %}
+  <link rel="stylesheet" href="/commerce/static/smx-commerce.css">
+  <style>
+    .smx-customer-login-shell {
+      max-width: 620px;
+      margin: 0 auto;
+    }
+
+    .smx-customer-login-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+    .smx-customer-login-notice {
+      margin: 16px 0;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid var(--smx-border);
+      background: #f8fafc;
+      font-weight: 750;
+    }
+
+    .smx-customer-login-notice.is-success {
+      background: #ecfdf3;
+      color: #027a48;
+      border-color: #abefc6;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="smx-site-header">
+      <a class="smx-site-brand" href="/commerce">
+        {% if commerce_config and commerce_config.logo_url %}
+          <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.store_title }} logo">
+        {% endif %}
+        <span class="smx-site-brand-title">{% if commerce_config %}{{ commerce_config.store_title }}{% else %}smxCommerce{% endif %}</span>
+      </a>
+
+      <nav class="smx-nav" aria-label="Commerce navigation">
+        <a href="{% if commerce_config %}{{ commerce_config.host_home_url }}{% else %}/{% endif %}">Back to host</a>
+        <a href="/commerce">Commerce home</a>
+        <a href="/products">Products</a>
+        <a href="/cart">Cart</a>
+      </nav>
+
+      <details class="smx-mobile-menu">
+        <summary aria-label="Open menu"><span class="smx-mobile-menu-icon" aria-hidden="true"></span></summary>
+        <div class="smx-mobile-menu-panel">
+          <nav class="smx-mobile-menu-links" aria-label="Mobile navigation">
+            <a href="{% if commerce_config %}{{ commerce_config.host_home_url }}{% else %}/{% endif %}">Back to host</a>
+            <a href="/commerce">Commerce home</a>
+            <a href="/products">Products</a>
+            <a href="/cart">Cart</a>
+          </nav>
+        </div>
+      </details>
+    </header>
+
+    <div class="smx-customer-login-shell">
+      <section class="smx-panel">
+        <h1>Customer sign in</h1>
+        <p class="smx-muted">Enter your email address and we will send you a secure one-time sign-in link.</p>
+
+        {% if error %}
+          <p class="error">{{ error }}</p>
+        {% endif %}
+
+        {% if success %}
+          <div class="smx-customer-login-notice is-success">{{ success }}</div>
+        {% endif %}
+
+        <form method="post" action="/commerce/customer/login">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="email" required>
+
+          <label for="full_name">Name <span class="smx-muted">(optional)</span></label>
+          <input id="full_name" name="full_name" autocomplete="name">
+
+          {% if request.args.get("next") %}
+            <input type="hidden" name="next" value="{{ request.args.get('next') }}">
+          {% endif %}
+
+          <button type="submit">Send sign-in link</button>
+        </form>
+
+        <div class="smx-customer-login-actions">
+          <a href="/commerce">Commerce home</a>
+          <a href="/products">Browse products</a>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

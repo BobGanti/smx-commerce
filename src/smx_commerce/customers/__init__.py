@@ -25,3 +25,10 @@ __all__ = [
     "IssuedCustomerAuthToken",
     "IssuedCustomerSession",
 ]
+
+from smx_commerce.customers.emailer import CustomerLoginEmailContext, CustomerLoginEmailService
+
+__all__ = [
+    "CustomerLoginEmailContext",
+    "CustomerLoginEmailService",
+]
