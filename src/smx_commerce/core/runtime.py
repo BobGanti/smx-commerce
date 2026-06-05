@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from smx_commerce.core.config import CommerceConfig
 from smx_commerce.core.db import create_schema, make_engine, make_session_factory
-from smx_commerce.core.schema import assert_schema_ready, get_missing_tables
+from smx_commerce.core.schema import assert_schema_ready, ensure_schema_upgrades, get_missing_tables
 
 
 @dataclass
@@ -41,6 +41,7 @@ class CommerceRuntime:
 
     def init_schema(self) -> None:
         create_schema(self.engine)
+        ensure_schema_upgrades(self.engine)
 
     def get_missing_tables(self) -> list[str]:
         return get_missing_tables(self.engine)

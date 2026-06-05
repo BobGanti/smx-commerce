@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 from sqlalchemy.engine import Engine
 
 
@@ -59,6 +59,42 @@ def get_missing_columns(engine: Engine) -> list[str]:
                 missing.append(f"{table_name}.{column_name}")
 
     return missing
+
+
+
+def ensure_schema_upgrades(engine: Engine) -> list[str]:
+    """Apply safe, idempotent schema upgrades for existing client databases.
+
+    SQLAlchemy create_all() creates missing tables but does not add columns to
+    tables that already exist. This helper handles additive upgrades that are
+    safe for existing deployments.
+    """
+
+    applied: list[str] = []
+    inspector = inspect(engine)
+
+    if inspector.has_table("smx_orders"):
+        existing_columns = {
+            column["name"]
+            for column in inspector.get_columns("smx_orders")
+        }
+
+        if "customer_id" not in existing_columns:
+            with engine.begin() as connection:
+                connection.execute(
+                    text("ALTER TABLE smx_orders ADD COLUMN customer_id INTEGER")
+                )
+                connection.execute(
+                    text(
+                        "CREATE INDEX IF NOT EXISTS "
+                        "ix_smx_orders_customer_id "
+                        "ON smx_orders (customer_id)"
+                    )
+                )
+
+            applied.append("smx_orders.customer_id")
+
+    return applied
 
 
 def assert_schema_ready(engine: Engine) -> None:
