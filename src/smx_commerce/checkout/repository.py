@@ -139,6 +139,37 @@ class OrderRepository:
             "skipped": skipped,
         }
 
+    def list_by_customer_public_id(
+        self,
+        customer_public_id: str,
+        *,
+        limit: int | None = 50,
+    ) -> list[Order]:
+        normalized_customer_public_id = validate_required_text(
+            customer_public_id,
+            "customer_public_id",
+        )
+
+        customer_id = self.session.execute(
+            select(CustomerRow.id).where(CustomerRow.public_id == normalized_customer_public_id)
+        ).scalar_one_or_none()
+
+        if customer_id is None:
+            return []
+
+        query = (
+            select(OrderRow)
+            .where(OrderRow.customer_id == customer_id)
+            .order_by(OrderRow.id.desc())
+        )
+
+        if limit is not None:
+            query = query.limit(limit)
+
+        rows = self.session.execute(query).scalars().all()
+
+        return [self._to_domain(row) for row in rows]
+
     def get_by_public_id(self, public_id: str) -> Order | None:
         normalized_public_id = validate_required_text(public_id, "public_id")
 

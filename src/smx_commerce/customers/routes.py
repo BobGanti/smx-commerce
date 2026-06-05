@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 from flask import Blueprint, jsonify, make_response, redirect, render_template, request
 
 from smx_commerce.core import CommerceRuntime
+from smx_commerce.checkout.repository import OrderRepository
 from smx_commerce.customers.emailer import CustomerLoginEmailService
 from smx_commerce.customers.objects import CustomerAuthTokenPurpose
 from smx_commerce.customers.repository import CustomerRepository
@@ -122,7 +123,108 @@ def create_customer_auth_blueprint(
 
         return response
 
+    @bp.get("/commerce/customer/account")
+    def account():
+        session_token = request.cookies.get(CUSTOMER_SESSION_COOKIE)
+
+        if not session_token:
+            return _customer_auth_required()
+
+        with runtime.session_scope() as session:
+            repo = CustomerRepository(session)
+            customer = repo.get_customer_by_session_token(session_token)
+
+            if customer is None:
+                return _customer_auth_required(clear_cookie=True)
+
+            orders = OrderRepository(session).list_by_customer_public_id(customer.public_id)
+            entitlements = repo.list_entitlements(customer.public_id)
+
+        if _wants_html():
+            return render_template(
+                "public/customer_account.html",
+                commerce_config=runtime.config,
+                customer=customer,
+                orders=orders,
+                entitlements=entitlements,
+            )
+
+        return jsonify(
+            {
+                "status": "ok",
+                "customer": {
+                    "public_id": customer.public_id,
+                    "email": customer.email,
+                    "full_name": customer.full_name,
+                    "phone": customer.phone,
+                    "company": customer.company,
+                    "status": customer.status.value,
+                },
+                "orders": [
+                    {
+                        "public_id": order.public_id,
+                        "product_slug": order.product_slug,
+                        "price_code": order.price_code,
+                        "status": order.status.value,
+                        "amount_cents": order.amount.amount_cents,
+                        "currency": order.amount.currency,
+                    }
+                    for order in orders
+                ],
+                "entitlements": [
+                    {
+                        "public_id": entitlement.public_id,
+                        "order_public_id": entitlement.order_public_id,
+                        "product_slug": entitlement.product_slug,
+                        "price_code": entitlement.price_code,
+                        "entitlement_type": entitlement.entitlement_type.value,
+                        "status": entitlement.status.value,
+                    }
+                    for entitlement in entitlements
+                ],
+            }
+        )
+
+    @bp.post("/commerce/customer/logout")
+    def logout():
+        session_token = request.cookies.get(CUSTOMER_SESSION_COOKIE)
+
+        if session_token:
+            with runtime.session_scope() as session:
+                CustomerRepository(session).revoke_session(session_token)
+
+        if _wants_html():
+            response = make_response(redirect("/commerce", code=303))
+        else:
+            response = make_response(jsonify({"status": "ok", "authenticated": False}))
+
+        response.delete_cookie(
+            CUSTOMER_SESSION_COOKIE,
+            path="/commerce",
+        )
+
+        return response
+
+
     return bp
+
+
+
+def _customer_auth_required(*, clear_cookie: bool = False):
+    if _wants_html():
+        response = make_response(
+            redirect("/commerce/customer/login?next=/commerce/customer/account", code=303)
+        )
+    else:
+        response = make_response(jsonify({"error": "customer authentication required"}), 401)
+
+    if clear_cookie:
+        response.delete_cookie(
+            CUSTOMER_SESSION_COOKIE,
+            path="/commerce",
+        )
+
+    return response
 
 
 def _public_base_url(runtime: CommerceRuntime) -> str:
