@@ -10,6 +10,8 @@ from smx_commerce.catalog.models import ProductPriceRow, ProductRow
 from smx_commerce.catalog.objects import Money, PriceStatus, ProductStatus, validate_required_text
 from smx_commerce.checkout.models import OrderRow, utc_now
 from smx_commerce.checkout.objects import BuyerDetails, Order, OrderStatus
+from smx_commerce.customers.models import CustomerRow
+from smx_commerce.customers.repository import CustomerRepository
 
 
 class OrderRepository:
@@ -28,8 +30,10 @@ class OrderRepository:
     ) -> Order:
         product = self._get_active_product_or_raise(product_slug)
         price = self._get_active_price_or_raise(product.slug, price_code)
+        customer_id = self._get_or_create_customer_id(buyer)
 
         row = OrderRow(
+            customer_id=customer_id,
             public_id=self._new_public_id(),
             product_slug=product.slug,
             price_code=price.code,
@@ -64,7 +68,10 @@ class OrderRepository:
         if not isinstance(amount, Money):
             raise TypeError("amount must be a Money instance")
 
+        customer_id = self._get_or_create_customer_id(buyer)
+
         row = OrderRow(
+            customer_id=customer_id,
             public_id=self._new_public_id(),
             product_slug="cart",
             price_code="cart",
@@ -86,6 +93,51 @@ class OrderRepository:
 
         return self._to_domain(row)
     
+
+    def _get_or_create_customer_id(self, buyer: BuyerDetails) -> int:
+        customer = CustomerRepository(self.session).get_or_create_from_buyer(buyer)
+
+        return self.session.execute(
+            select(CustomerRow.id).where(CustomerRow.public_id == customer.public_id)
+        ).scalar_one()
+
+    def backfill_customer_links(self, *, limit: int | None = None) -> dict[str, int]:
+        query = select(OrderRow).where(OrderRow.customer_id.is_(None)).order_by(OrderRow.id.asc())
+
+        if limit is not None:
+            query = query.limit(limit)
+
+        rows = self.session.execute(query).scalars().all()
+
+        checked = 0
+        linked = 0
+        skipped = 0
+
+        for row in rows:
+            checked += 1
+
+            try:
+                buyer = BuyerDetails(
+                    full_name=row.buyer_full_name,
+                    email=row.buyer_email,
+                    phone=row.buyer_phone,
+                    company=row.buyer_company,
+                    metadata=dict(row.buyer_metadata_json or {}),
+                )
+            except ValueError:
+                skipped += 1
+                continue
+
+            row.customer_id = self._get_or_create_customer_id(buyer)
+            linked += 1
+
+        self.session.flush()
+
+        return {
+            "checked": checked,
+            "linked": linked,
+            "skipped": skipped,
+        }
 
     def get_by_public_id(self, public_id: str) -> Order | None:
         normalized_public_id = validate_required_text(public_id, "public_id")

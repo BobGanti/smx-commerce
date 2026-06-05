@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import DateTime, Integer, JSON, String, Text
+from sqlalchemy import DateTime, Integer, JSON, String, Text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from smx_commerce.core.db import Base
@@ -19,6 +19,13 @@ class OrderRow(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     public_id: Mapped[str] = mapped_column(String(80), unique=True, index=True, nullable=False)
+
+    customer_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("smx_customers.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
 
     product_slug: Mapped[str] = mapped_column(String(140), index=True, nullable=False)
     price_code: Mapped[str] = mapped_column(String(120), nullable=False)
