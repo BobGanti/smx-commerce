@@ -3,7 +3,7 @@ from __future__ import annotations
 from flask import Blueprint, jsonify, redirect, render_template, request
 from sqlalchemy import text
 
-from smx_commerce.checkout import OrderRepository
+from smx_commerce.checkout import OrderRepository, OrderStatus
 from smx_commerce.core import CommerceRuntime
 
 
@@ -67,7 +67,6 @@ def create_order_edit_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
                         buyer_phone = :buyer_phone,
                         buyer_company = :buyer_company,
                         notes = :notes,
-                        status = :status,
                         updated_at = CURRENT_TIMESTAMP
                     WHERE public_id = :public_id
                     """
@@ -79,8 +78,12 @@ def create_order_edit_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
                     "buyer_phone": payload.get("buyer_phone", ""),
                     "buyer_company": payload.get("buyer_company", ""),
                     "notes": payload.get("notes", ""),
-                    "status": requested_status,
                 },
+            )
+
+            OrderRepository(session).update(
+                public_id,
+                status=OrderStatus(requested_status),
             )
 
         return redirect(f"/commerce/admin/orders/{public_id}", code=303)

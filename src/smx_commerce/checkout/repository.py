@@ -10,7 +10,8 @@ from smx_commerce.catalog.models import ProductPriceRow, ProductRow
 from smx_commerce.catalog.objects import Money, PriceStatus, ProductStatus, validate_required_text
 from smx_commerce.checkout.models import OrderRow, utc_now
 from smx_commerce.checkout.objects import BuyerDetails, Order, OrderStatus
-from smx_commerce.customers.models import CustomerRow
+from smx_commerce.customers.models import CustomerEntitlementRow, CustomerRow
+from smx_commerce.customers.objects import CustomerEntitlementStatus, CustomerEntitlementType
 from smx_commerce.customers.repository import CustomerRepository
 
 
@@ -224,12 +225,17 @@ class OrderRepository:
         if unknown_fields:
             raise ValueError(f"unsupported order update field(s): {sorted(unknown_fields)}")
 
+        should_create_paid_entitlements = False
+
         if "status" in changes:
             status = changes["status"]
             row.status = status.value if isinstance(status, OrderStatus) else OrderStatus(status).value
 
-            if row.status == OrderStatus.PAID.value and row.paid_at is None:
-                row.paid_at = utc_now()
+            if row.status == OrderStatus.PAID.value:
+                should_create_paid_entitlements = True
+
+                if row.paid_at is None:
+                    row.paid_at = utc_now()
 
         if "payment_reference" in changes:
             row.payment_reference = changes["payment_reference"]
@@ -241,6 +247,10 @@ class OrderRepository:
             row.notes = changes["notes"] or ""
 
         self.session.flush()
+
+        if should_create_paid_entitlements:
+            self._ensure_paid_entitlements(row)
+            self.session.flush()
 
         return self._to_domain(row)
 
@@ -257,6 +267,119 @@ class OrderRepository:
 
     def fail(self, public_id: str) -> Order:
         return self.update(public_id, status=OrderStatus.FAILED)
+
+    def _ensure_paid_entitlements(self, row: OrderRow) -> None:
+        if row.status != OrderStatus.PAID.value:
+            return
+
+        if row.customer_id is None:
+            buyer = BuyerDetails(
+                full_name=row.buyer_full_name,
+                email=row.buyer_email,
+                phone=row.buyer_phone,
+                company=row.buyer_company,
+                metadata=dict(row.buyer_metadata_json or {}),
+            )
+            row.customer_id = self._get_or_create_customer_id(buyer)
+            self.session.flush()
+
+        customer_public_id = self.session.execute(
+            select(CustomerRow.public_id).where(CustomerRow.id == row.customer_id)
+        ).scalar_one_or_none()
+
+        if not customer_public_id:
+            return
+
+        customer_repo = CustomerRepository(self.session)
+
+        for item in self._paid_entitlement_items(row):
+            product_slug = item["product_slug"]
+            price_code = item["price_code"]
+
+            if self._paid_entitlement_exists(
+                customer_id=row.customer_id,
+                order_public_id=row.public_id,
+                product_slug=product_slug,
+                price_code=price_code,
+            ):
+                continue
+
+            customer_repo.create_entitlement(
+                customer_public_id=customer_public_id,
+                order_public_id=row.public_id,
+                product_slug=product_slug,
+                price_code=price_code,
+                entitlement_type=self._entitlement_type_for_item(product_slug, price_code),
+                status=CustomerEntitlementStatus.ACTIVE,
+                metadata={
+                    "source": "paid_order",
+                    "payment_provider": row.payment_provider,
+                    "payment_reference": row.payment_reference or "",
+                },
+            )
+
+    def _paid_entitlement_items(self, row: OrderRow) -> list[dict[str, str]]:
+        cart_items = dict(row.metadata_json or {}).get("cart_items")
+
+        if isinstance(cart_items, list) and cart_items:
+            items: list[dict[str, str]] = []
+
+            for item in cart_items:
+                if not isinstance(item, dict):
+                    continue
+
+                product_slug = str(item.get("product_slug") or "").strip()
+                price_code = str(item.get("price_code") or "").strip()
+
+                if product_slug and price_code:
+                    items.append({"product_slug": product_slug, "price_code": price_code})
+
+            return items
+
+        return [{"product_slug": row.product_slug, "price_code": row.price_code}]
+
+    def _paid_entitlement_exists(
+        self,
+        *,
+        customer_id: int,
+        order_public_id: str,
+        product_slug: str,
+        price_code: str,
+    ) -> bool:
+        existing = self.session.execute(
+            select(CustomerEntitlementRow.id).where(
+                CustomerEntitlementRow.customer_id == customer_id,
+                CustomerEntitlementRow.order_public_id == order_public_id,
+                CustomerEntitlementRow.product_slug == product_slug,
+                CustomerEntitlementRow.price_code == price_code,
+            )
+        ).scalar_one_or_none()
+
+        return existing is not None
+
+    def _entitlement_type_for_item(
+        self,
+        product_slug: str,
+        price_code: str,
+    ) -> CustomerEntitlementType:
+        price_row = self.session.execute(
+            select(ProductPriceRow).where(
+                ProductPriceRow.product_slug == product_slug,
+                ProductPriceRow.code == price_code,
+            )
+        ).scalar_one_or_none()
+
+        if price_row is not None and price_row.billing_mode == "recurring":
+            return CustomerEntitlementType.SUBSCRIPTION
+
+        product_row = self.session.execute(
+            select(ProductRow).where(ProductRow.slug == product_slug)
+        ).scalar_one_or_none()
+
+        if product_row is not None and product_row.kind == "service":
+            return CustomerEntitlementType.SERVICE_ACCESS
+
+        return CustomerEntitlementType.ONE_TIME
 
     def _get_active_product_or_raise(self, product_slug: str) -> ProductRow:
         row = self.session.execute(
