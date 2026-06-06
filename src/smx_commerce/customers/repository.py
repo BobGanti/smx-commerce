@@ -8,6 +8,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from smx_commerce.catalog.objects import validate_required_text
 from smx_commerce.checkout.objects import BuyerDetails, validate_email
 from smx_commerce.core.ids import generate_public_id
 from smx_commerce.customers.models import (
@@ -149,6 +150,34 @@ class CustomerRepository:
         self.session.flush()
 
         return self._to_customer(row)
+
+    def get_by_internal_id(self, internal_id: int) -> Customer | None:
+        row = self.session.execute(
+            select(CustomerRow).where(CustomerRow.id == int(internal_id))
+        ).scalar_one_or_none()
+
+        return self._to_customer(row) if row is not None else None
+
+    def list_entitlements_for_order(self, order_public_id: str) -> list[CustomerEntitlement]:
+        normalized_order_public_id = validate_required_text(order_public_id, "order_public_id")
+
+        rows = self.session.execute(
+            select(CustomerEntitlementRow)
+            .where(CustomerEntitlementRow.order_public_id == normalized_order_public_id)
+            .order_by(CustomerEntitlementRow.id.desc())
+        ).scalars().all()
+
+        entitlements: list[CustomerEntitlement] = []
+
+        for row in rows:
+            customer_public_id = self.session.execute(
+                select(CustomerRow.public_id).where(CustomerRow.id == row.customer_id)
+            ).scalar_one_or_none()
+
+            if customer_public_id:
+                entitlements.append(self._to_entitlement(row, customer_public_id))
+
+        return entitlements
 
     def create_auth_token(
         self,

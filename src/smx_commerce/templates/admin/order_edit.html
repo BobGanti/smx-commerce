@@ -124,9 +124,61 @@
         <p><strong>Payment reference:</strong> {{ order.payment_reference or "not set" }}</p>
       </div>
 
+      <div class="smx-order-summary">
+        <p><strong>Linked customer:</strong>
+          {% if linked_customer %}
+            {{ linked_customer.full_name or "No name" }}
+            <span class="smx-muted">? {{ linked_customer.email }} ? {{ linked_customer.public_id }}</span>
+          {% else %}
+            <span class="smx-muted">No linked customer record found.</span>
+          {% endif %}
+        </p>
+
+        <p><strong>Entitlements:</strong>
+          {% if order_entitlements %}
+            {{ order_entitlements|length }} access record{% if order_entitlements|length != 1 %}s{% endif %}
+          {% else %}
+            <span class="smx-muted">None yet.</span>
+          {% endif %}
+        </p>
+      </div>
+
       {% set page_error = error or request.args.get("error") %}
       {% if page_error %}
         <p id="order-delete-error" class="error">{{ page_error }}</p>
+      {% endif %}
+
+      {% if order_entitlements %}
+        <section class="smx-panel">
+          <h2>Order entitlements</h2>
+
+          <div class="smx-table-wrap">
+            <table class="smx-table">
+              <thead>
+                <tr>
+                  <th>Access ID</th>
+                  <th>Customer</th>
+                  <th>Product</th>
+                  <th>Price</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for entitlement in order_entitlements %}
+                  <tr>
+                    <td>{{ entitlement.public_id }}</td>
+                    <td>{{ entitlement.customer_public_id }}</td>
+                    <td>{{ entitlement.product_slug or "?" }}</td>
+                    <td>{{ entitlement.price_code or "?" }}</td>
+                    <td>{{ entitlement.entitlement_type.value }}</td>
+                    <td><span class="badge">{{ entitlement.status.value }}</span></td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
       {% endif %}
 
       <form method="post" action="/commerce/admin/orders/{{ order.public_id }}/update">
