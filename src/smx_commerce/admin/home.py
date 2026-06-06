@@ -14,6 +14,7 @@ from smx_commerce.checkout import OrderRepository, OrderStatus
 from smx_commerce.checkout.models import OrderRow, utc_now
 from smx_commerce.core import CommerceRuntime
 from smx_commerce.core.settings_repository import CommerceSettingsRepository
+from smx_commerce.customers.models import CustomerEntitlementRow, CustomerRow
 
 
 ALLOWED_LOGO_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
@@ -162,6 +163,8 @@ def _build_dashboard_context(runtime: CommerceRuntime) -> dict:
             order_rows = session.execute(
                 select(OrderRow).order_by(OrderRow.created_at.desc())
             ).scalars().all()
+            customers = session.execute(select(CustomerRow)).scalars().all()
+            entitlements = session.execute(select(CustomerEntitlementRow)).scalars().all()
 
         paid_orders = [order for order in orders if order.status == OrderStatus.PAID]
         revenue_by_currency: dict[str, int] = {}
@@ -178,6 +181,8 @@ def _build_dashboard_context(runtime: CommerceRuntime) -> dict:
             "active_products": sum(1 for product in products if product.status == ProductStatus.ACTIVE),
             "draft_products": sum(1 for product in products if product.status == ProductStatus.DRAFT),
             "category_count": len(categories),
+            "customer_count": len(customers),
+            "active_entitlements": sum(1 for entitlement in entitlements if entitlement.status == "active"),
         }
 
         setup_health = _build_setup_health(runtime, database_connected=True)
@@ -786,6 +791,8 @@ def _empty_dashboard_stats() -> dict:
         "active_products": 0,
         "draft_products": 0,
         "category_count": 0,
+        "customer_count": 0,
+        "active_entitlements": 0,
     }
 
 
