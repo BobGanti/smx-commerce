@@ -427,6 +427,60 @@ class CustomerRepository:
 
         return self._to_entitlement(row, customer_row.public_id)
 
+    def get_active_entitlement(
+        self,
+        *,
+        customer_public_id: str,
+        product_slug: str,
+        price_code: str | None = None,
+    ) -> CustomerEntitlement | None:
+        customer_row = self._get_customer_row_or_raise(customer_public_id)
+        normalized_product_slug = validate_required_text(product_slug, "product_slug")
+        normalized_price_code = (price_code or "").strip()
+
+        statement = select(CustomerEntitlementRow).where(
+            CustomerEntitlementRow.customer_id == customer_row.id,
+            CustomerEntitlementRow.product_slug == normalized_product_slug,
+            CustomerEntitlementRow.status == CustomerEntitlementStatus.ACTIVE.value,
+        )
+
+        if normalized_price_code:
+            statement = statement.where(CustomerEntitlementRow.price_code == normalized_price_code)
+
+        rows = self.session.execute(
+            statement.order_by(CustomerEntitlementRow.id.desc())
+        ).scalars().all()
+
+        for row in rows:
+            if self._entitlement_is_current(row):
+                return self._to_entitlement(row, customer_row.public_id)
+
+        return None
+
+    def has_active_entitlement(
+        self,
+        *,
+        customer_public_id: str,
+        product_slug: str,
+        price_code: str | None = None,
+    ) -> bool:
+        return self.get_active_entitlement(
+            customer_public_id=customer_public_id,
+            product_slug=product_slug,
+            price_code=price_code,
+        ) is not None
+
+    def _entitlement_is_current(self, row: CustomerEntitlementRow) -> bool:
+        now = _normalize_now_for_datetime(row.ends_at or row.starts_at)
+
+        if row.starts_at is not None and row.starts_at > now:
+            return False
+
+        if row.ends_at is not None and row.ends_at <= now:
+            return False
+
+        return True
+
     def set_entitlement_status(
         self,
         *,
