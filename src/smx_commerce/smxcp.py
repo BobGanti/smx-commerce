@@ -162,6 +162,7 @@ def _render_setup_file() -> str:
     return '''from __future__ import annotations
 
 from pathlib import Path
+
 from smx_commerce import setup_commerce as _setup_commerce
 
 
@@ -176,8 +177,21 @@ def setup_commerce(app, *, init_schema: bool = True):
     smx-commerce will not overwrite it.
     """
     return _setup_commerce(
-        app,
+        app=app,
         project_root=PROJECT_ROOT,
+        init_schema=init_schema,
+    )
+
+
+def register_commerce_plugin(app, *, init_schema: bool = True):
+    """
+    Compatibility alias for plugin-style host applications.
+
+    Existing clients can keep calling setup_commerce(app).
+    New plugin-oriented clients may call register_commerce_plugin(app).
+    """
+    return setup_commerce(
+        app,
         init_schema=init_schema,
     )
 '''
