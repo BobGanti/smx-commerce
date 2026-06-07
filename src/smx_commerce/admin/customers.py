@@ -4,7 +4,7 @@ from flask import Blueprint, jsonify, redirect, render_template, request
 
 from smx_commerce.checkout.repository import OrderRepository
 from smx_commerce.core import CommerceRuntime
-from smx_commerce.customers.objects import CustomerStatus
+from smx_commerce.customers.objects import CustomerEntitlementStatus, CustomerStatus
 from smx_commerce.customers.repository import CustomerRepository
 
 
@@ -57,6 +57,41 @@ def create_customer_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
             return jsonify({
                 "status": "ok",
                 "customer": customer_to_dict(customer),
+            })
+
+        except ValueError as exc:
+            if customer_admin_wants_html():
+                return redirect(
+                    f"/commerce/admin/customers/{customer_public_id}?error={str(exc)}",
+                    code=303,
+                )
+
+            return jsonify({"error": str(exc)}), 400
+
+
+    @bp.post("/customers/<customer_public_id>/entitlements/<entitlement_public_id>/status")
+    def update_entitlement_status(customer_public_id: str, entitlement_public_id: str):
+        requested_status = (request.form.get("status") or "").strip().lower()
+
+        try:
+            status = CustomerEntitlementStatus(requested_status)
+
+            with runtime.session_scope() as session:
+                entitlement = CustomerRepository(session).set_entitlement_status(
+                    customer_public_id=customer_public_id,
+                    entitlement_public_id=entitlement_public_id,
+                    status=status,
+                )
+
+            if customer_admin_wants_html():
+                return redirect(
+                    f"/commerce/admin/customers/{entitlement.customer_public_id}?message=Entitlement status updated.",
+                    code=303,
+                )
+
+            return jsonify({
+                "status": "ok",
+                "entitlement": entitlement_to_dict(entitlement),
             })
 
         except ValueError as exc:

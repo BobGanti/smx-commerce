@@ -427,6 +427,39 @@ class CustomerRepository:
 
         return self._to_entitlement(row, customer_row.public_id)
 
+    def set_entitlement_status(
+        self,
+        *,
+        customer_public_id: str,
+        entitlement_public_id: str,
+        status: CustomerEntitlementStatus | str,
+    ) -> CustomerEntitlement:
+        customer_row = self._get_customer_row_or_raise(customer_public_id)
+        normalized_entitlement_public_id = validate_required_text(
+            entitlement_public_id,
+            "entitlement_public_id",
+        )
+        status_value = (
+            status.value
+            if isinstance(status, CustomerEntitlementStatus)
+            else CustomerEntitlementStatus(status).value
+        )
+
+        row = self.session.execute(
+            select(CustomerEntitlementRow).where(
+                CustomerEntitlementRow.customer_id == customer_row.id,
+                CustomerEntitlementRow.public_id == normalized_entitlement_public_id,
+            )
+        ).scalar_one_or_none()
+
+        if row is None:
+            raise ValueError(f"entitlement not found: {normalized_entitlement_public_id}")
+
+        row.status = status_value
+        self.session.flush()
+
+        return self._to_entitlement(row, customer_row.public_id)
+
     def list_entitlements(self, customer_public_id: str) -> list[CustomerEntitlement]:
         customer_row = self._get_customer_row_or_raise(customer_public_id)
 

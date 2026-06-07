@@ -141,6 +141,7 @@
                 <th>Price</th>
                 <th>Type</th>
                 <th>Status</th>
+                <th>Admin</th>
               </tr>
             </thead>
             <tbody>
@@ -152,6 +153,21 @@
                   <td>{{ entitlement.price_code or "?" }}</td>
                   <td>{{ entitlement.entitlement_type.value }}</td>
                   <td><span class="badge">{{ entitlement.status.value }}</span></td>
+                  <td>
+                    <form
+                      method="post"
+                      action="/commerce/admin/customers/{{ customer.public_id }}/entitlements/{{ entitlement.public_id }}/status"
+                      onsubmit="return confirm('Change this entitlement status?');"
+                    >
+                      {% if entitlement.status.value == "cancelled" %}
+                        <input type="hidden" name="status" value="active">
+                        <button type="submit">Reactivate</button>
+                      {% else %}
+                        <input type="hidden" name="status" value="cancelled">
+                        <button type="submit">Cancel</button>
+                      {% endif %}
+                    </form>
+                  </td>
                 </tr>
               {% endfor %}
             </tbody>
