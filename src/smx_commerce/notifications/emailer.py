@@ -91,7 +91,7 @@ class OrderConfirmationEmailService:
     
 
     def build_order_paid_message(self, order: Order) -> EmailMessage:
-        subject = f"Your {self.brand_name} receipt"
+        subject = f"Your {self.brand_name} order is confirmed"
 
         attachments: tuple[EmailAttachment, ...] = ()
 

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import sys
+
 from typing import Any, Callable
 
 from smx_commerce.catalog.objects import validate_required_text
@@ -30,6 +32,10 @@ class StripeCheckoutProvider:
         cancel_url = validate_required_text(cancel_url, "cancel_url")
 
         try:
+            if "stripe" not in sys.modules:
+
+                raise PaymentCheckoutError("stripe package is not installed")
+
             import stripe
         except ImportError as exc:
             raise PaymentCheckoutError(

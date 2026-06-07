@@ -37,6 +37,17 @@ def create_order_edit_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
 
     @bp.post("/orders/<public_id>/update")
     def update_order_from_form(public_id: str):
+        requested_status = (request.form.get("status") or "").strip().lower()
+        if requested_status == "paid":
+            context = _load_order_admin_context(runtime, public_id)
+            return render_template(
+                "admin/order_edit.html",
+                commerce_config=runtime.config,
+                editable_statuses=sorted(ADMIN_EDITABLE_ORDER_STATUSES),
+                error="Order status can only be changed by a verified payment event.",
+                **context,
+            ), 400
+
         payload = request.form
         requested_status = payload.get("status", "pending").strip().lower()
 

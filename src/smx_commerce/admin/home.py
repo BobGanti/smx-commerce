@@ -79,13 +79,13 @@ def create_admin_home_blueprint(runtime: CommerceRuntime) -> Blueprint:
                     else:
                         repository.delete(key)
 
-            return redirect("/commerce/admin/branding?message=Branding settings updated.", code=303)
+            return redirect("/commerce/admin?message=Branding settings updated.", code=303)
 
         except ValueError as exc:
-            return redirect(f"/commerce/admin/branding?error={str(exc)}", code=303)
+            return redirect(f"/commerce/admin?error={str(exc)}", code=303)
 
         except Exception as exc:
-            return redirect(f"/commerce/admin/branding?error=Branding settings could not be saved: {exc}", code=303)
+            return redirect(f"/commerce/admin?error=Branding settings could not be saved: {exc}", code=303)
 
     @bp.post("/branding/assets")
     def upload_branding_assets():
@@ -117,12 +117,12 @@ def create_admin_home_blueprint(runtime: CommerceRuntime) -> Blueprint:
                 uploaded_any = True
 
             if not uploaded_any:
-                return redirect("/commerce/admin/branding?error=No logo or favicon file was selected.", code=303)
+                return redirect("/commerce/admin?error=No logo or favicon file was selected.", code=303)
 
-            return redirect("/commerce/admin/branding?message=Branding assets updated.", code=303)
+            return redirect("/commerce/admin?message=Branding assets updated.", code=303)
 
         except ValueError as exc:
-            return redirect(f"/commerce/admin/branding?error={str(exc)}", code=303)
+            return redirect(f"/commerce/admin?error={str(exc)}", code=303)
 
     return bp
 

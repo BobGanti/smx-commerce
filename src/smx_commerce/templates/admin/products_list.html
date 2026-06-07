@@ -112,6 +112,62 @@
         <p class="smx-muted">No products have been created yet.</p>
       </section>
     {% endif %}
+  
+    <section class="smx-panel">
+      <h2>Create product</h2>
+      <form method="post" action="/commerce/admin/products" enctype="multipart/form-data">
+        <label>
+          Slug
+          <input type="text" name="slug" required>
+        </label>
+
+        <label>
+          Name
+          <input type="text" name="name" required>
+        </label>
+
+        <label>
+          Kind
+          <input type="text" name="kind" value="generic">
+        </label>
+
+        <label>
+          Categories
+          <select name="category_slugs" multiple>
+            {% for category in categories %}
+              <option value="{{ category.slug }}">{{ category.name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+
+        <label>
+          Status
+          <select name="status">
+            <option value="draft">draft</option>
+            <option value="active">active</option>
+            <option value="archived">archived</option>
+          </select>
+        </label>
+
+        <label>
+          Summary
+          <textarea name="summary"></textarea>
+        </label>
+
+        <label>
+          Description
+          <textarea name="description"></textarea>
+        </label>
+
+        <label>
+          Sort order
+          <input type="number" name="sort_order" value="0">
+        </label>
+
+        <button type="submit">Create product</button>
+      </form>
+    </section>
+
   </main>
 </body>
 </html>
