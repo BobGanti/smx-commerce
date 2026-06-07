@@ -13,6 +13,7 @@ from smx_commerce.catalog.routes_admin import (
 from smx_commerce.catalog.routes_public import create_public_catalog_blueprint
 from smx_commerce.checkout.routes import create_checkout_blueprint
 from smx_commerce.checkout.routes_admin import create_order_admin_blueprint
+from smx_commerce.customers.access import customer_has_active_entitlement, get_customer_active_entitlement
 from smx_commerce.customers.emailer import CustomerLoginEmailService
 from smx_commerce.core import CommerceRuntime
 from smx_commerce.customers.routes import create_customer_auth_blueprint
@@ -309,4 +310,6 @@ __all__ = [
     "load_env_file",
     "ensure_smxcommerce_scaffold",
     "setup_commerce",
+    "customer_has_active_entitlement",
+    "get_customer_active_entitlement",
 ]

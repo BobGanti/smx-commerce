@@ -1,3 +1,8 @@
+from .access import (
+    customer_has_active_entitlement,
+    get_customer_active_entitlement,
+)
+from .emailer import CustomerLoginEmailContext, CustomerLoginEmailService
 from .objects import (
     Customer,
     CustomerAuthToken,
@@ -19,16 +24,13 @@ __all__ = [
     "CustomerEntitlement",
     "CustomerEntitlementStatus",
     "CustomerEntitlementType",
+    "CustomerLoginEmailContext",
+    "CustomerLoginEmailService",
     "CustomerRepository",
     "CustomerSession",
     "CustomerStatus",
     "IssuedCustomerAuthToken",
     "IssuedCustomerSession",
-]
-
-from smx_commerce.customers.emailer import CustomerLoginEmailContext, CustomerLoginEmailService
-
-__all__ = [
-    "CustomerLoginEmailContext",
-    "CustomerLoginEmailService",
+    "customer_has_active_entitlement",
+    "get_customer_active_entitlement",
 ]
