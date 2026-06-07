@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, jsonify, redirect, render_template, request
 
 from smx_commerce.checkout.repository import OrderRepository
 from smx_commerce.core import CommerceRuntime
@@ -35,6 +35,40 @@ def create_customer_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
         except ValueError as exc:
             return jsonify({"error": str(exc)}), 400
 
+    @bp.post("/customers/<customer_public_id>/status")
+    def update_customer_status(customer_public_id: str):
+        requested_status = (request.form.get("status") or "").strip().lower()
+
+        try:
+            status = CustomerStatus(requested_status)
+
+            with runtime.session_scope() as session:
+                customer = CustomerRepository(session).set_status(
+                    customer_public_id,
+                    status,
+                )
+
+            if customer_admin_wants_html():
+                return redirect(
+                    f"/commerce/admin/customers/{customer.public_id}?message=Customer status updated.",
+                    code=303,
+                )
+
+            return jsonify({
+                "status": "ok",
+                "customer": customer_to_dict(customer),
+            })
+
+        except ValueError as exc:
+            if customer_admin_wants_html():
+                return redirect(
+                    f"/commerce/admin/customers/{customer_public_id}?error={str(exc)}",
+                    code=303,
+                )
+
+            return jsonify({"error": str(exc)}), 400
+
+
     @bp.get("/customers/<customer_public_id>")
     def customer_detail(customer_public_id: str):
         with runtime.session_scope() as session:
@@ -56,6 +90,8 @@ def create_customer_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
                 orders=orders,
                 entitlements=entitlements,
                 sessions=sessions,
+                message=request.args.get("message"),
+                error=request.args.get("error"),
             )
 
         return jsonify(

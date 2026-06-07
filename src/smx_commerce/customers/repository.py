@@ -269,12 +269,16 @@ class CustomerRepository:
         if row.used_at is not None or row.expires_at <= now:
             return None
 
-        row.used_at = now
-
         customer_row = self.session.execute(
             select(CustomerRow).where(CustomerRow.id == row.customer_id)
         ).scalar_one()
 
+        if customer_row.status != CustomerStatus.ACTIVE.value:
+            row.used_at = now
+            self.session.flush()
+            return None
+
+        row.used_at = now
         customer_row.last_login_at = now
         self.session.flush()
 
@@ -287,6 +291,10 @@ class CustomerRepository:
         expires_in_days: int = 30,
     ) -> IssuedCustomerSession:
         customer_row = self._get_customer_row_or_raise(customer_public_id)
+
+        if customer_row.status != CustomerStatus.ACTIVE.value:
+            raise ValueError("customer is blocked")
+
         session_token = token_urlsafe(32)
 
         row = CustomerSessionRow(
@@ -324,6 +332,11 @@ class CustomerRepository:
             select(CustomerRow).where(CustomerRow.id == row.customer_id)
         ).scalar_one()
 
+        if customer_row.status != CustomerStatus.ACTIVE.value:
+            row.revoked_at = row.revoked_at or now
+            self.session.flush()
+            return None
+
         self.session.flush()
 
         return self._to_customer(customer_row)
@@ -340,6 +353,35 @@ class CustomerRepository:
         self.session.flush()
 
         return True
+
+    def set_status(
+        self,
+        customer_public_id: str,
+        status: CustomerStatus | str,
+    ) -> Customer:
+        customer_row = self._get_customer_row_or_raise(customer_public_id)
+        status_value = status.value if isinstance(status, CustomerStatus) else CustomerStatus(status).value
+
+        customer_row.status = status_value
+
+        if status_value == CustomerStatus.BLOCKED.value:
+            self._revoke_customer_sessions(customer_row.id)
+
+        self.session.flush()
+
+        return self._to_customer(customer_row)
+
+    def _revoke_customer_sessions(self, customer_id: int) -> None:
+        now = utc_now()
+        rows = self.session.execute(
+            select(CustomerSessionRow).where(
+                CustomerSessionRow.customer_id == int(customer_id),
+                CustomerSessionRow.revoked_at.is_(None),
+            )
+        ).scalars().all()
+
+        for row in rows:
+            row.revoked_at = now
 
     def create_entitlement(
         self,
