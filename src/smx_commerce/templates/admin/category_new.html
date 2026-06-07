@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <link rel="stylesheet" href="/commerce/static/smx-commerce.css">
-  <title>{{ commerce_config.host_site_title }} - Create Product</title>
+  <title>{{ commerce_config.host_site_title }} · Create Category · Commerce Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {% if commerce_config.favicon_url %}
     <link rel="icon" href="{{ commerce_config.favicon_url }}">
@@ -53,12 +53,57 @@
     </header>
 
     <section class="smx-panel">
-      <h1>Create product</h1>
-      <p class="smx-muted">Add a new product to {{ commerce_config.store_title }}.</p>
-      <p><a href="/commerce/admin/products">Back to products</a></p>
+      <h1>Create category</h1>
+
+      {% if error %}
+        <div class="smx-alert smx-alert-error">{{ error }}</div>
+      {% endif %}
+
+      <form method="post" action="/commerce/admin/categories">
+        <label>
+          Slug
+          <input type="text" name="slug" required>
+        </label>
+
+        <label>
+          Name
+          <input type="text" name="name" required>
+        </label>
+
+        <label>
+          Parent category
+          <select name="parent_slug">
+            <option value="">None</option>
+            {% for category in categories %}
+              <option value="{{ category.slug }}">{{ category.name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+
+        <label>
+          Status
+          <select name="status">
+            <option value="active">active</option>
+            <option value="draft">draft</option>
+            <option value="archived">archived</option>
+          </select>
+        </label>
+
+        <label>
+          Description
+          <textarea name="description"></textarea>
+        </label>
+
+        <label>
+          Sort order
+          <input type="number" name="sort_order" value="0">
+        </label>
+
+        <button type="submit">Create category</button>
+      </form>
     </section>
 
-    {% if error %}
+{% if error %}
       <section class="smx-panel">
         <p class="error">{{ error }}</p>
       </section>

@@ -1765,37 +1765,7 @@
 
       </div>
     </div>
-  
-        <section class="smx-panel">
-          <h2>Branding assets</h2>
-          <p class="smx-muted">Upload or replace the commerce logo and favicon used by storefront and admin pages.</p>
-          <p><a href="/commerce/admin/branding">Manage branding assets</a></p>
-        </section>
 
-  
-        <section class="smx-panel">
-          <h2>Branding assets</h2>
-          <p class="smx-muted">Upload or replace the commerce logo and favicon.</p>
-          {% if commerce_config.favicon_url %}
-            <div class="smx-branding-preview">
-              <img src="{{ commerce_config.favicon_url }}" alt="{{ commerce_config.host_site_title }} favicon">
-            </div>
-          {% endif %}
-          <form method="post" action="/commerce/admin/branding/assets" enctype="multipart/form-data">
-            <label>
-              Logo
-              <input type="file" name="logo" accept="image/png,image/jpeg,image/webp,image/gif">
-            </label>
-
-            <label>
-              Favicon
-              <input type="file" name="favicon" accept="image/png,image/jpeg,image/webp,image/gif,image/x-icon">
-            </label>
-
-            <button type="submit">Update branding assets</button>
-          </form>
-        </section>
-
-  </main>
+</main>
 </body>
 </html>

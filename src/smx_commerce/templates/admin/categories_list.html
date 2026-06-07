@@ -107,53 +107,6 @@
         <p class="smx-muted">No categories have been created yet.</p>
       {% endif %}
     </section>
-  
-    <section class="smx-panel">
-      <h2>Create category</h2>
-      <form method="post" action="/commerce/admin/categories">
-        <label>
-          Slug
-          <input type="text" name="slug" required>
-        </label>
-
-        <label>
-          Name
-          <input type="text" name="name" required>
-        </label>
-
-        <label>
-          Parent category
-          <select name="parent_slug">
-            <option value="">None</option>
-            {% for category in categories %}
-              <option value="{{ category.slug }}">{{ category.name }}</option>
-            {% endfor %}
-          </select>
-        </label>
-
-        <label>
-          Status
-          <select name="status">
-            <option value="active">active</option>
-            <option value="draft">draft</option>
-            <option value="archived">archived</option>
-          </select>
-        </label>
-
-        <label>
-          Description
-          <textarea name="description"></textarea>
-        </label>
-
-        <label>
-          Sort order
-          <input type="number" name="sort_order" value="0">
-        </label>
-
-        <button type="submit">Create category</button>
-      </form>
-    </section>
-
-  </main>
+</main>
 </body>
 </html>
