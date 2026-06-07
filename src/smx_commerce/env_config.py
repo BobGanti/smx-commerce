@@ -28,8 +28,11 @@ ENV_TO_CONFIG = {
     "DEFAULT_FROM_EMAIL": "default_from_email",
     
     "HOST_SITE_TITLE": "host_site_title",
+    "SITE_TITLE": "site_title",
     "HOST_HOME_URL": "host_home_url",
+    "PROJECT_HOME_URL": "project_home_url",
     "STORE_TITLE": "store_title",
+    "MODULE_TITLE": "module_title",
     "STORE_HOME_URL": "store_home_url",
     "PUBLIC_BASE_URL": "public_base_url",
     "ASSETS_DIR": "assets_dir",

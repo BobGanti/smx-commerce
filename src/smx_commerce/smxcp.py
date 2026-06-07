@@ -219,15 +219,19 @@ def _render_env_example_file() -> str:
 
 SMX_COMMERCE_DATABASE_URL=sqlite+pysqlite:///./smxcommerce/data/smx_commerce_dev.db
 SMX_COMMERCE_ADMIN_TOKEN=replace-with-a-strong-admin-token
+SMX_COMMERCE_ADMIN_API_KEY=replace-with-a-strong-admin-token
 SMX_COMMERCE_FLASK_SECRET_KEY=replace-with-a-strong-session-secret
 
 SMX_COMMERCE_PAYMENT_PROVIDER=none
 SMX_COMMERCE_EMAIL_PROVIDER=none
 
 SMX_COMMERCE_HOST_SITE_TITLE=SyntaxMatrix
+SMX_COMMERCE_SITE_TITLE=SyntaxMatrix
 SMX_COMMERCE_HOST_HOME_URL=https://your-domain.com
+SMX_COMMERCE_PROJECT_HOME_URL=https://your-domain.com
 
 SMX_COMMERCE_STORE_TITLE=smxCommerce
+SMX_COMMERCE_MODULE_TITLE=smxCommerce
 SMX_COMMERCE_STORE_HOME_URL=/commerce
 
 SMX_COMMERCE_ASSETS_DIR=./smxcommerce/assets
@@ -258,15 +262,19 @@ def _render_runtime_env_file(
 
 SMX_COMMERCE_DATABASE_URL={_sqlite_url_for(db_file)}
 SMX_COMMERCE_ADMIN_TOKEN=local-admin-token
+SMX_COMMERCE_ADMIN_API_KEY=local-admin-key-change-me
 SMX_COMMERCE_FLASK_SECRET_KEY=replace-with-a-strong-session-secret
 
 SMX_COMMERCE_PAYMENT_PROVIDER=none
 SMX_COMMERCE_EMAIL_PROVIDER=none
 
 SMX_COMMERCE_HOST_SITE_TITLE=SyntaxMatrix
+SMX_COMMERCE_SITE_TITLE=SyntaxMatrix
 SMX_COMMERCE_HOST_HOME_URL=/
+SMX_COMMERCE_PROJECT_HOME_URL=/
 
 SMX_COMMERCE_STORE_TITLE=smxCommerce
+SMX_COMMERCE_MODULE_TITLE=smxCommerce
 SMX_COMMERCE_STORE_HOME_URL=/commerce
 
 SMX_COMMERCE_ASSETS_DIR={_path_value(assets_dir)}

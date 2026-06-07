@@ -79,3 +79,73 @@ class CommerceConfig:
             logo_url=values.get("logo_url") or os.getenv("SMX_COMMERCE_LOGO_URL") or "/commerce/assets/logo.png",
             favicon_url=values.get("favicon_url") or os.getenv("SMX_COMMERCE_FAVICON_URL") or "/commerce/assets/favicon.png",
         )
+
+# ---------------------------------------------------------------------
+# Backward compatibility aliases.
+#
+# Older client projects used:
+#   site_title        -> host_site_title
+#   module_title      -> store_title
+#   project_home_url  -> host_home_url
+# ---------------------------------------------------------------------
+
+_CommerceConfig_original_from_mapping = CommerceConfig.from_mapping
+
+
+def _smx_legacy_from_mapping(values: dict | None):
+    normalized = dict(values or {})
+
+    has_legacy_site_title = "site_title" in normalized
+    has_legacy_module_title = "module_title" in normalized
+    has_legacy_project_home_url = "project_home_url" in normalized
+
+    if "host_site_title" not in normalized and has_legacy_site_title:
+        normalized["host_site_title"] = normalized["site_title"]
+
+    if "store_title" not in normalized and has_legacy_module_title:
+        normalized["store_title"] = normalized["module_title"]
+
+    if "host_home_url" not in normalized and has_legacy_project_home_url:
+        normalized["host_home_url"] = normalized["project_home_url"]
+
+    config = _CommerceConfig_original_from_mapping(normalized)
+
+    if has_legacy_site_title or has_legacy_module_title or has_legacy_project_home_url:
+        if has_legacy_project_home_url:
+            legacy_main_site_title = config.store_title
+        else:
+            legacy_main_site_title = config.host_site_title
+
+        object.__setattr__(config, "_smx_legacy_main_site_title", legacy_main_site_title)
+
+    return config
+
+
+CommerceConfig.from_mapping = staticmethod(_smx_legacy_from_mapping)
+
+
+def _commerce_config_site_title(self):
+    return self.host_site_title
+
+
+def _commerce_config_module_title(self):
+    return self.store_title
+
+
+def _commerce_config_project_home_url(self):
+    return self.host_home_url
+
+
+def _commerce_config_main_site_title(self):
+    return getattr(self, "_smx_legacy_main_site_title", self.store_title)
+
+
+def _commerce_config_main_site_url(self):
+    return self.host_home_url
+
+
+CommerceConfig.site_title = property(_commerce_config_site_title)
+CommerceConfig.module_title = property(_commerce_config_module_title)
+CommerceConfig.project_home_url = property(_commerce_config_project_home_url)
+CommerceConfig.main_site_title = property(_commerce_config_main_site_title)
+CommerceConfig.main_site_url = property(_commerce_config_main_site_url)
