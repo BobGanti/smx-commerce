@@ -16,9 +16,9 @@ class CommerceConfig:
     store_home_url: str = "/commerce"
     public_base_url: str | None = None
 
-    assets_dir: str = "./smxcommerce/assets"
-    products_assets_dir: str = "./smxcommerce/assets/products"
-    receipts_dir: str = "./smxcommerce/assets/receipts"
+    assets_dir: str = "./commerce/assets"
+    products_assets_dir: str = "./commerce/assets/products"
+    receipts_dir: str = "./commerce/assets/receipts"
     logo_url: str | None = "/commerce/assets/logo.png"
     favicon_url: str | None = "/commerce/assets/favicon.png"
 
@@ -30,7 +30,7 @@ class CommerceConfig:
         return cls(
             database_url=os.getenv(
                 "SMX_COMMERCE_DATABASE_URL",
-                "sqlite+pysqlite:///./smxcommerce/data/smx_commerce_dev.db",
+                "sqlite+pysqlite:///./commerce/data/smx_commerce_dev.db",
             ),
             echo_sql=os.getenv("SMX_COMMERCE_ECHO_SQL", "").lower() in {"1", "true", "yes"},
             admin_token=os.getenv("SMX_COMMERCE_ADMIN_TOKEN") or os.getenv("SMX_COMMERCE_ADMIN_API_KEY") or None,
@@ -39,9 +39,9 @@ class CommerceConfig:
             host_home_url=os.getenv("SMX_COMMERCE_HOST_HOME_URL", "/"),
             store_home_url=os.getenv("SMX_COMMERCE_STORE_HOME_URL", "/commerce"),
             public_base_url=os.getenv("SMX_COMMERCE_PUBLIC_BASE_URL") or os.getenv("PUBLIC_BASE_URL") or None,
-            assets_dir=os.getenv("SMX_COMMERCE_ASSETS_DIR", "./smxcommerce/assets"),
-            products_assets_dir=os.getenv("SMX_COMMERCE_PRODUCTS_ASSETS_DIR", "./smxcommerce/assets/products"),
-            receipts_dir=os.getenv("SMX_COMMERCE_RECEIPTS_DIR", "./smxcommerce/assets/receipts"),
+            assets_dir=os.getenv("SMX_COMMERCE_ASSETS_DIR", "./commerce/assets"),
+            products_assets_dir=os.getenv("SMX_COMMERCE_PRODUCTS_ASSETS_DIR", "./commerce/assets/products"),
+            receipts_dir=os.getenv("SMX_COMMERCE_RECEIPTS_DIR", "./commerce/assets/receipts"),
             logo_url=os.getenv("SMX_COMMERCE_LOGO_URL") or "/commerce/assets/logo.png",
 
             favicon_url=os.getenv("SMX_COMMERCE_FAVICON_URL") or "/commerce/assets/favicon.png",
@@ -63,7 +63,7 @@ class CommerceConfig:
                 "database_url",
                 os.getenv(
                     "SMX_COMMERCE_DATABASE_URL",
-                    "sqlite+pysqlite:///./smxcommerce/data/smx_commerce_dev.db",
+                    "sqlite+pysqlite:///./commerce/data/smx_commerce_dev.db",
                 ),
             ),
             echo_sql=bool(values.get("echo_sql", False)),
@@ -73,9 +73,9 @@ class CommerceConfig:
             host_home_url=values.get("host_home_url") or os.getenv("SMX_COMMERCE_HOST_HOME_URL") or "/",
             store_home_url=values.get("store_home_url") or os.getenv("SMX_COMMERCE_STORE_HOME_URL") or "/commerce",
             public_base_url=values.get("public_base_url") or os.getenv("SMX_COMMERCE_PUBLIC_BASE_URL") or os.getenv("PUBLIC_BASE_URL") or None,
-            assets_dir=values.get("assets_dir") or os.getenv("SMX_COMMERCE_ASSETS_DIR") or "./smxcommerce/assets",
-            products_assets_dir=values.get("products_assets_dir") or os.getenv("SMX_COMMERCE_PRODUCTS_ASSETS_DIR") or "./smxcommerce/assets/products",
-            receipts_dir=values.get("receipts_dir") or os.getenv("SMX_COMMERCE_RECEIPTS_DIR") or "./smxcommerce/assets/receipts",
+            assets_dir=values.get("assets_dir") or os.getenv("SMX_COMMERCE_ASSETS_DIR") or "./commerce/assets",
+            products_assets_dir=values.get("products_assets_dir") or os.getenv("SMX_COMMERCE_PRODUCTS_ASSETS_DIR") or "./commerce/assets/products",
+            receipts_dir=values.get("receipts_dir") or os.getenv("SMX_COMMERCE_RECEIPTS_DIR") or "./commerce/assets/receipts",
             logo_url=values.get("logo_url") or os.getenv("SMX_COMMERCE_LOGO_URL") or "/commerce/assets/logo.png",
             favicon_url=values.get("favicon_url") or os.getenv("SMX_COMMERCE_FAVICON_URL") or "/commerce/assets/favicon.png",
         )
@@ -99,8 +99,13 @@ def _smx_legacy_from_mapping(values: dict | None):
     has_legacy_module_title = "module_title" in normalized
     has_legacy_project_home_url = "project_home_url" in normalized
 
-    if "host_site_title" not in normalized and has_legacy_site_title:
-        normalized["host_site_title"] = normalized["site_title"]
+    if "host_site_title" not in normalized:
+        if has_legacy_site_title:
+            normalized["host_site_title"] = normalized["site_title"]
+        elif "project_title" in normalized:
+            normalized["host_site_title"] = normalized["project_title"]
+        elif "brand_name" in normalized:
+            normalized["host_site_title"] = normalized["brand_name"]
 
     if "store_title" not in normalized and has_legacy_module_title:
         normalized["store_title"] = normalized["module_title"]

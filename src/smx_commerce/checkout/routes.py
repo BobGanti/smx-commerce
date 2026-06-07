@@ -103,7 +103,7 @@ def create_checkout_blueprint(
 ) -> Blueprint:
     bp = Blueprint("smx_commerce_checkout", __name__)
 
-    @bp.post("/checkout/start")
+    @bp.post("/commerce/checkout/start")
     def start_checkout():
         payload = _checkout_payload()
 
@@ -132,12 +132,12 @@ def create_checkout_blueprint(
                         order=order,
                         success_url=_absolute_checkout_url(
                             runtime,
-                            payload.get("success_url", "/checkout/success"),
+                            payload.get("success_url", "/commerce/checkout/success"),
                             order_public_id=order.public_id,
                         ),
                         cancel_url=_absolute_checkout_url(
                             runtime,
-                            payload.get("cancel_url", "/checkout/cancel"),
+                            payload.get("cancel_url", "/commerce/checkout/cancel"),
                             order_public_id=order.public_id,
                         ),
                     )
@@ -159,7 +159,7 @@ def create_checkout_blueprint(
             return jsonify({"error": str(exc)}), 400
 
 
-    @bp.post("/checkout/cart/start")
+    @bp.post("/commerce/checkout/cart/start")
     def start_cart_checkout():
         payload = _checkout_payload()
         cart_items = list_cart_items(flask_session)
@@ -204,12 +204,12 @@ def create_checkout_blueprint(
                         order=order,
                         success_url=_absolute_checkout_url(
                             runtime,
-                            payload.get("success_url", "/checkout/success"),
+                            payload.get("success_url", "/commerce/checkout/success"),
                             order_public_id=order.public_id,
                         ),
                         cancel_url=_absolute_checkout_url(
                             runtime,
-                            payload.get("cancel_url", "/checkout/cancel"),
+                            payload.get("cancel_url", "/commerce/checkout/cancel"),
                             order_public_id=order.public_id,
                         ),
                     )
@@ -231,7 +231,7 @@ def create_checkout_blueprint(
             return jsonify({"error": str(exc)}), 400
         
     
-    @bp.get("/checkout/success")
+    @bp.get("/commerce/checkout/success")
     def checkout_success():
         order_public_id = request.args.get("order_id") or request.args.get("order_public_id")
 
@@ -265,7 +265,7 @@ def create_checkout_blueprint(
 
         return jsonify(payload)
 
-    @bp.get("/checkout/cancel")
+    @bp.get("/commerce/checkout/cancel")
     def checkout_cancel():
         order_public_id = request.args.get("order_id") or request.args.get("order_public_id")
 

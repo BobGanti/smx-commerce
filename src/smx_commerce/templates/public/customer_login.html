@@ -42,16 +42,16 @@
     <header class="smx-site-header">
       <a class="smx-site-brand" href="/commerce">
         {% if commerce_config and commerce_config.logo_url %}
-          <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.store_title }} logo">
+          <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.host_site_title }} logo">
         {% endif %}
         <span class="smx-site-brand-title">{% if commerce_config %}{{ commerce_config.store_title }}{% else %}smxCommerce{% endif %}</span>
       </a>
 
       <nav class="smx-nav" aria-label="Commerce navigation">
-        <a href="{% if commerce_config %}{{ commerce_config.host_home_url }}{% else %}/{% endif %}">Back to host</a>
+        <a href="{% if commerce_config %}{{ commerce_config.host_home_url }}{% else %}/{% endif %}">Back to {% if commerce_config %}{{ commerce_config.host_site_title }}{% else %}host{% endif %}</a>
         <a href="/commerce">Commerce home</a>
-        <a href="/products">Products</a>
-        <a href="/cart">Cart</a>
+        <a href="/commerce/products">Products</a>
+        <a href="/commerce/cart">Cart</a>
         <a href="/commerce/customer/account">Account</a>
       </nav>
 
@@ -59,10 +59,10 @@
         <summary aria-label="Open menu"><span class="smx-mobile-menu-icon" aria-hidden="true"></span></summary>
         <div class="smx-mobile-menu-panel">
           <nav class="smx-mobile-menu-links" aria-label="Mobile navigation">
-            <a href="{% if commerce_config %}{{ commerce_config.host_home_url }}{% else %}/{% endif %}">Back to host</a>
+            <a href="{% if commerce_config %}{{ commerce_config.host_home_url }}{% else %}/{% endif %}">Back to {% if commerce_config %}{{ commerce_config.host_site_title }}{% else %}host{% endif %}</a>
             <a href="/commerce">Commerce home</a>
-            <a href="/products">Products</a>
-            <a href="/cart">Cart</a>
+            <a href="/commerce/products">Products</a>
+            <a href="/commerce/cart">Cart</a>
         <a href="/commerce/customer/account">Account</a>
           </nav>
         </div>
@@ -98,7 +98,7 @@
 
         <div class="smx-customer-login-actions">
           <a href="/commerce">Commerce home</a>
-          <a href="/products">Browse products</a>
+          <a href="/commerce/products">Browse products</a>
         </div>
       </section>
     </div>

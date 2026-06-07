@@ -6,7 +6,7 @@ from pathlib import Path
 import shutil
 
 
-SCAFFOLD_DIR_NAME = "smxcommerce"
+SCAFFOLD_DIR_NAME = "commerce"
 SETUP_FILE_NAME = "smx_commerce_setup.py"
 ENV_EXAMPLE_FILE_NAME = ".smx_commerce_example.env"
 ENV_FILE_NAME = ".smx_commerce.env"
@@ -46,7 +46,7 @@ class SmxCommerceScaffold:
     favicon_file: Path
 
 
-def ensure_smxcommerce_scaffold(
+def ensure_commerce_scaffold(
     *,
     project_root: str | Path | None = None,
 ) -> SmxCommerceScaffold:
@@ -202,7 +202,7 @@ def _render_env_example_file() -> str:
 #
 # Copy this file to:
 #
-#   smxcommerce/.smx_commerce.env
+#   commerce/.smx_commerce.env
 #
 # Then replace the placeholder values.
 #
@@ -211,13 +211,13 @@ def _render_env_example_file() -> str:
 #   python -c "import secrets; print(secrets.token_urlsafe(32))"
 #
 # IMPORTANT:
-# - Do not commit smxcommerce/.smx_commerce.env.
+# - Do not commit commerce/.smx_commerce.env.
 # - The admin key is chosen by the project owner.
 # - smx-commerce does not generate a hidden admin token.
 # - Public users should not see an Admin button.
 # - Admins enter through /commerce/admin and authenticate with the admin key.
 
-SMX_COMMERCE_DATABASE_URL=sqlite+pysqlite:///./smxcommerce/data/smx_commerce_dev.db
+SMX_COMMERCE_DATABASE_URL=sqlite+pysqlite:///./commerce/data/smx_commerce_dev.db
 SMX_COMMERCE_ADMIN_TOKEN=replace-with-a-strong-admin-token
 SMX_COMMERCE_ADMIN_API_KEY=replace-with-a-strong-admin-token
 SMX_COMMERCE_FLASK_SECRET_KEY=replace-with-a-strong-session-secret
@@ -234,9 +234,9 @@ SMX_COMMERCE_STORE_TITLE=smxCommerce
 SMX_COMMERCE_MODULE_TITLE=smxCommerce
 SMX_COMMERCE_STORE_HOME_URL=/commerce
 
-SMX_COMMERCE_ASSETS_DIR=./smxcommerce/assets
-SMX_COMMERCE_PRODUCTS_ASSETS_DIR=./smxcommerce/assets/products
-SMX_COMMERCE_RECEIPTS_DIR=./smxcommerce/assets/receipts
+SMX_COMMERCE_ASSETS_DIR=./commerce/assets
+SMX_COMMERCE_PRODUCTS_ASSETS_DIR=./commerce/assets/products
+SMX_COMMERCE_RECEIPTS_DIR=./commerce/assets/receipts
 SMX_COMMERCE_LOGO_URL=/commerce/assets/logo.png
 SMX_COMMERCE_FAVICON_URL=/commerce/assets/favicon.png
 '''
@@ -293,10 +293,10 @@ def _render_deploy_env_example_file() -> str:
 # - Do not put raw secret values in this file.
 #
 # Local development runtime config:
-#   smxcommerce/.smx_commerce.env
+#   commerce/.smx_commerce.env
 #
 # Production deployment example:
-#   smxcommerce/.smx_commerce.deploy_example.env
+#   commerce/.smx_commerce.deploy_example.env
 #
 # smxCP rule:
 #   one Secret Manager vault -> one SMX_COMMERCE_* Cloud Run env var

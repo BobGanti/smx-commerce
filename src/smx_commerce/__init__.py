@@ -31,7 +31,7 @@ from smx_commerce.payments import (
 )
 from smx_commerce.payments.routes import create_payment_webhook_blueprint
 from smx_commerce.payments.verifiers import PaymentWebhookVerifier
-from smx_commerce.smxcp import ensure_smxcommerce_scaffold
+from smx_commerce.smxcp import ensure_commerce_scaffold
 
 def create_commerce_blueprint(
     config=None,
@@ -178,7 +178,7 @@ def setup_commerce(
     project_root=None,
     init_schema: bool = True,
 ):
-    scaffold = ensure_smxcommerce_scaffold(project_root=project_root)
+    scaffold = ensure_commerce_scaffold(project_root=project_root)
 
     return init_commerce_from_env(
         app,
@@ -289,7 +289,7 @@ def _build_order_confirmation_service(config: dict):
     else:
         raise ValueError(f"unsupported email_provider: {email_provider}")
 
-    assets_dir = Path(config.get("assets_dir") or "./smxcommerce/assets")
+    assets_dir = Path(config.get("assets_dir") or "./commerce/assets")
     receipts_dir = config.get("receipts_dir") or str(assets_dir / "receipts")
     logo_path = assets_dir / "logo.png"
 
@@ -308,7 +308,7 @@ __all__ = [
     "init_commerce",
     "init_commerce_from_env",
     "load_env_file",
-    "ensure_smxcommerce_scaffold",
+    "ensure_commerce_scaffold",
     "setup_commerce",
     "customer_has_active_entitlement",
     "get_customer_active_entitlement",

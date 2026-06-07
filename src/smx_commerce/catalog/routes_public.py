@@ -79,7 +79,7 @@ def create_public_catalog_blueprint(runtime: CommerceRuntime) -> Blueprint:
         template_folder="../templates",
     )
 
-    @bp.get("/cart")
+    @bp.get("/commerce/cart")
     def view_cart():
         cart_items = list_cart_items(flask_session)
         currencies = {item.currency for item in cart_items}
@@ -93,7 +93,7 @@ def create_public_catalog_blueprint(runtime: CommerceRuntime) -> Blueprint:
             commerce_config=runtime.config,
         )
 
-    @bp.post("/cart/add")
+    @bp.post("/commerce/cart/add")
     def add_to_cart():
         product_slug = request.form.get("product_slug", "")
         price_code = request.form.get("price_code", "")
@@ -129,12 +129,12 @@ def create_public_catalog_blueprint(runtime: CommerceRuntime) -> Blueprint:
                 ),
             )
 
-            return redirect("/cart", code=303)
+            return redirect("/commerce/cart", code=303)
 
         except (TypeError, ValueError) as exc:
             return jsonify({"error": str(exc)}), 400
     
-    @bp.post("/cart/remove")
+    @bp.post("/commerce/cart/remove")
     def remove_from_cart():
         product_slug = request.form.get("product_slug", "")
         price_code = request.form.get("price_code", "")
@@ -145,13 +145,13 @@ def create_public_catalog_blueprint(runtime: CommerceRuntime) -> Blueprint:
                 product_slug=product_slug,
                 price_code=price_code,
             )
-            return redirect("/cart", code=303)
+            return redirect("/commerce/cart", code=303)
 
         except (TypeError, ValueError) as exc:
             return jsonify({"error": str(exc)}), 400
         
 
-    @bp.post("/cart/update")
+    @bp.post("/commerce/cart/update")
     def update_cart():
         product_slug = request.form.get("product_slug", "")
         price_code = request.form.get("price_code", "")
@@ -164,13 +164,13 @@ def create_public_catalog_blueprint(runtime: CommerceRuntime) -> Blueprint:
                 price_code=price_code,
                 quantity=quantity,
             )
-            return redirect("/cart", code=303)
+            return redirect("/commerce/cart", code=303)
 
         except (TypeError, ValueError) as exc:
             return jsonify({"error": str(exc)}), 400
         
 
-    @bp.get("/products")
+    @bp.get("/commerce/products")
     def list_public_products():
         category_slug = request.args.get("category_slug")
 
@@ -197,7 +197,7 @@ def create_public_catalog_blueprint(runtime: CommerceRuntime) -> Blueprint:
         except ValueError as exc:
             return jsonify({"error": str(exc)}), 400
 
-    @bp.get("/products/<slug>")
+    @bp.get("/commerce/products/<slug>")
     def get_public_product(slug: str):
         with runtime.session_scope() as session:
             catalog = CatalogService(session)

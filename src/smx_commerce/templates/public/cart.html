@@ -14,26 +14,26 @@
     <header class="smx-site-header">
       <a class="smx-site-brand" href="/commerce">
         {% if commerce_config.logo_url %}
-          <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.store_title }} logo">
+          <img src="{{ commerce_config.logo_url }}" alt="{{ commerce_config.host_site_title }} logo">
         {% endif %}
         <span class="smx-site-brand-title">{{ commerce_config.store_title }}</span>
       </a>
 
       <nav class="smx-nav" aria-label="Store navigation">
-        <a href="{{ commerce_config.host_home_url }}">Main site</a>
+        <a href="{{ commerce_config.host_home_url }}">Back to {{ commerce_config.host_site_title }}</a>
         <a href="/commerce">Store home</a>
-        <a href="/products">Products</a>
-        <a href="/cart">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
+        <a href="/commerce/products">Products</a>
+        <a href="/commerce/cart">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
         <a href="/commerce/customer/account">Account</a>
       </nav>
       <details class="smx-mobile-menu">
         <summary aria-label="Open menu"><span class="smx-mobile-menu-icon" aria-hidden="true"></span></summary>
         <div class="smx-mobile-menu-panel">
           <nav class="smx-mobile-menu-links" aria-label="Mobile navigation">
-              <a href="{{ commerce_config.host_home_url }}">Main site</a>
+              <a href="{{ commerce_config.host_home_url }}">Back to {{ commerce_config.host_site_title }}</a>
               <a href="/commerce">Store home</a>
-              <a href="/products">Products</a>
-              <a href="/cart">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
+              <a href="/commerce/products">Products</a>
+              <a href="/commerce/cart">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
         <a href="/commerce/customer/account">Account</a>
           </nav>
         </div>
@@ -66,7 +66,7 @@
                         {% endif %}
                         <div>
                         <strong>{{ item.product_name }}</strong><br>
-                        <a href="/products/{{ item.product_slug }}">View product</a>
+                        <a href="/commerce/products/{{ item.product_slug }}">View product</a>
                         </div>
                     </div>
                     </td>
@@ -74,7 +74,7 @@
                     <td>{{ item.price_label }}</td>
 
                     <td>
-                    <form class="smx-inline-form" method="post" action="/cart/update">
+                    <form class="smx-inline-form" method="post" action="/commerce/cart/update">
                         <input type="hidden" name="product_slug" value="{{ item.product_slug }}">
                         <input type="hidden" name="price_code" value="{{ item.price_code }}">
                         <input
@@ -94,7 +94,7 @@
                     <td>{{ item.currency }} {{ "%.2f"|format(item.line_total_cents / 100) }}</td>
 
                     <td>
-                    <form method="post" action="/cart/remove">
+                    <form method="post" action="/commerce/cart/remove">
                         <input type="hidden" name="product_slug" value="{{ item.product_slug }}">
                         <input type="hidden" name="price_code" value="{{ item.price_code }}">
                         <button type="submit">Remove</button>
@@ -112,7 +112,7 @@
                 {{ cart_currency }} {{ "%.2f"|format(cart_total_cents / 100) }}
             </p>
 
-            <form class="smx-checkout-form" method="post" action="/checkout/cart/start">
+            <form class="smx-checkout-form" method="post" action="/commerce/checkout/cart/start">
                 <h2>Checkout details</h2>
 
                 <div class="smx-form-grid">
@@ -142,7 +142,7 @@
         </div>
       {% else %}
         <p class="smx-muted">Your cart is empty.</p>
-        <p><a href="/products">Browse products</a></p>
+        <p><a href="/commerce/products">Browse products</a></p>
       {% endif %}
     </section>
   </main>
