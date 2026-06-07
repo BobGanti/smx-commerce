@@ -40,7 +40,11 @@ def create_customer_auth_blueprint(
     def submit_login():
         email = (request.form.get("email") or (request.get_json(silent=True) or {}).get("email") or "").strip()
         full_name = (request.form.get("full_name") or (request.get_json(silent=True) or {}).get("full_name") or "").strip()
-        next_url = _safe_next_url(request.form.get("next") or (request.get_json(silent=True) or {}).get("next"))
+        next_url = _safe_next_url(
+            request.form.get("next")
+            or request.args.get("next")
+            or (request.get_json(silent=True) or {}).get("next")
+        )
 
         if not email:
             return _login_error("Email is required", status_code=400)
