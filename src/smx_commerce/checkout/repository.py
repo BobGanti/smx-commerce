@@ -226,6 +226,7 @@ class OrderRepository:
             raise ValueError(f"unsupported order update field(s): {sorted(unknown_fields)}")
 
         should_create_paid_entitlements = False
+        should_cancel_order_entitlements = False
 
         if "status" in changes:
             status = changes["status"]
@@ -236,6 +237,13 @@ class OrderRepository:
 
                 if row.paid_at is None:
                     row.paid_at = utc_now()
+
+            if row.status in {
+                OrderStatus.REFUNDED.value,
+                OrderStatus.CANCELLED.value,
+                OrderStatus.FAILED.value,
+            }:
+                should_cancel_order_entitlements = True
 
         if "payment_reference" in changes:
             row.payment_reference = changes["payment_reference"]
@@ -250,6 +258,10 @@ class OrderRepository:
 
         if should_create_paid_entitlements:
             self._ensure_paid_entitlements(row)
+            self.session.flush()
+
+        if should_cancel_order_entitlements:
+            self._cancel_order_entitlements(row)
             self.session.flush()
 
         return self._to_domain(row)
@@ -267,6 +279,23 @@ class OrderRepository:
 
     def fail(self, public_id: str) -> Order:
         return self.update(public_id, status=OrderStatus.FAILED)
+
+    def _cancel_order_entitlements(self, row: OrderRow) -> None:
+        rows = self.session.execute(
+            select(CustomerEntitlementRow).where(
+                CustomerEntitlementRow.order_public_id == row.public_id,
+                CustomerEntitlementRow.status.in_(
+                    [
+                        CustomerEntitlementStatus.ACTIVE.value,
+                        CustomerEntitlementStatus.PENDING.value,
+                    ]
+                ),
+            )
+        ).scalars().all()
+
+        for entitlement_row in rows:
+            entitlement_row.status = CustomerEntitlementStatus.CANCELLED.value
+
 
     def _ensure_paid_entitlements(self, row: OrderRow) -> None:
         if row.status != OrderStatus.PAID.value:
