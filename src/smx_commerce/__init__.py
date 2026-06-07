@@ -3,6 +3,7 @@ from pathlib import Path
 
 from flask import Blueprint, render_template, send_from_directory
 
+from smx_commerce.admin.customers import create_customer_admin_blueprint
 from smx_commerce.admin import apply_admin_token_guard, create_admin_auth_blueprint, create_admin_home_blueprint, create_settings_admin_blueprint, create_product_edit_admin_blueprint, create_price_edit_admin_blueprint, create_category_edit_admin_blueprint, create_safe_delete_admin_blueprint, create_order_edit_admin_blueprint, create_product_edit_admin_blueprint
 from smx_commerce.catalog.routes_admin import (
     create_category_admin_blueprint,
@@ -122,6 +123,7 @@ def create_commerce_blueprint(
     admin_bp.register_blueprint(create_price_admin_blueprint(commerce_runtime))
     admin_bp.register_blueprint(create_price_edit_admin_blueprint(commerce_runtime))
     admin_bp.register_blueprint(create_order_admin_blueprint(commerce_runtime))
+    admin_bp.register_blueprint(create_customer_admin_blueprint(commerce_runtime))
     admin_bp.register_blueprint(create_order_edit_admin_blueprint(commerce_runtime))
     admin_bp.register_blueprint(create_settings_admin_blueprint(commerce_runtime))
 

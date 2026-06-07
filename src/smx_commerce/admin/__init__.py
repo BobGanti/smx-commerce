@@ -20,6 +20,7 @@ __all__ = [
     "create_admin_home_blueprint",
     "create_settings_admin_blueprint",
     "create_product_edit_admin_blueprint",
+    "create_customer_admin_blueprint",
 ]
 
 from .price_edit import create_price_edit_admin_blueprint
@@ -29,3 +30,5 @@ from .category_edit import create_category_edit_admin_blueprint
 from .safe_delete import create_safe_delete_admin_blueprint
 
 from .order_edit import create_order_edit_admin_blueprint
+
+from .customers import create_customer_admin_blueprint
