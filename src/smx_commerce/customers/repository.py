@@ -52,6 +52,46 @@ class CustomerRepository:
 
         return self._to_customer(row) if row is not None else None
 
+    def list(
+        self,
+        *,
+        status: CustomerStatus | str | None = None,
+        limit: int | None = 100,
+    ) -> list[Customer]:
+        statement = select(CustomerRow).order_by(CustomerRow.id.desc())
+
+        if status is not None:
+            status_value = status.value if isinstance(status, CustomerStatus) else CustomerStatus(status).value
+            statement = statement.where(CustomerRow.status == status_value)
+
+        if limit is not None:
+            statement = statement.limit(limit)
+
+        rows = self.session.execute(statement).scalars().all()
+
+        return [self._to_customer(row) for row in rows]
+
+    def list_sessions(
+        self,
+        customer_public_id: str,
+        *,
+        limit: int | None = 20,
+    ) -> list[CustomerSession]:
+        customer_row = self._get_customer_row_or_raise(customer_public_id)
+
+        statement = (
+            select(CustomerSessionRow)
+            .where(CustomerSessionRow.customer_id == customer_row.id)
+            .order_by(CustomerSessionRow.id.desc())
+        )
+
+        if limit is not None:
+            statement = statement.limit(limit)
+
+        rows = self.session.execute(statement).scalars().all()
+
+        return [self._to_session(row, customer_row.public_id) for row in rows]
+
     def get_or_create_from_identity(
         self,
         *,
