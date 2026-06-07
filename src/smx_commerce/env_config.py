@@ -10,6 +10,7 @@ ENV_TO_CONFIG = {
     "DATABASE_URL": "database_url",
     "ECHO_SQL": "echo_sql",
     "ADMIN_TOKEN": "admin_token",
+    "ADMIN_API_KEY": "admin_token",
 
     "PAYMENT_PROVIDER": "payment_provider",
     "LOCAL_CHECKOUT_BASE_URL": "local_checkout_base_url",

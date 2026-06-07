@@ -8,6 +8,7 @@ from flask import Blueprint, current_app, jsonify, redirect, render_template, re
 
 
 ADMIN_TOKEN_HEADER = "X-SMX-Commerce-Admin-Token"
+ADMIN_API_KEY_HEADER = "X-SMX-Commerce-Admin-Key"
 ADMIN_SESSION_TOKEN = "smx_commerce_admin_authenticated"
 
 
@@ -31,7 +32,7 @@ def apply_admin_token_guard(bp: Blueprint, admin_token: str | None) -> None:
         if _is_auth_route():
             return None
 
-        supplied_token = request.headers.get(ADMIN_TOKEN_HEADER, "")
+        supplied_token = request.headers.get(ADMIN_TOKEN_HEADER, "") or request.headers.get(ADMIN_API_KEY_HEADER, "")
 
         if supplied_token and compare_digest(supplied_token, expected_token):
             return None
@@ -81,7 +82,7 @@ def create_admin_auth_blueprint(
             return jsonify({"error": "Flask secret_key is required for admin session login"}), 500
 
         payload = request.get_json(silent=True) or {}
-        supplied_token = request.form.get("admin_token") or payload.get("admin_token") or ""
+        supplied_token = request.form.get("admin_token") or request.form.get("admin_api_key") or payload.get("admin_token") or payload.get("admin_api_key") or ""
 
         if not compare_digest(supplied_token, admin_token):
             if _wants_html():
