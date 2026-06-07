@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>{% if commerce_config %}{{ commerce_config.store_title }}{% else %}smxCommerce{% endif %} ? Customer sign in</title>
+  <title>{% if commerce_config %}{{ commerce_config.host_site_title }}{% else %}smxCommerce{% endif %} · Customer sign in</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {% if commerce_config and commerce_config.favicon_url %}
     <link rel="icon" href="{{ commerce_config.favicon_url }}">

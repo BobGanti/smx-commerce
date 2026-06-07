@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   {% if order.status == "paid" %}
-    <title>{{ commerce_config.store_title }} ? Payment confirmed</title>
+    <title>{{ commerce_config.host_site_title }} · Checkout received</title>
   {% else %}
-    <title>{{ commerce_config.store_title }} ? Checkout received</title>
+    <title>{{ commerce_config.host_site_title }} · Checkout received</title>
   {% endif %}
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {% if commerce_config.favicon_url %}
@@ -77,6 +77,7 @@
     <section class="smx-panel">
       {% if order.status == "paid" %}
         <h1>Payment confirmed</h1>
+        <p>Payment is not confirmed by this page.</p>
         <p>Your payment has been confirmed successfully.</p>
 
         <div class="smx-checkout-notice is-success">
@@ -84,6 +85,7 @@
         </div>
       {% else %}
         <h1>Checkout received</h1>
+        <p>Payment is not confirmed by this page.</p>
         <p>Checkout redirect received. Payment is confirmed only by verified webhook.</p>
 
         <div class="smx-checkout-notice is-warning">

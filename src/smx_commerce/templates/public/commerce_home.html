@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>{{ commerce_config.store_title }} ? Commerce</title>
+  <title>{{ commerce_config.host_site_title }} · Commerce</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {% if commerce_config.favicon_url %}
     <link rel="icon" href="{{ commerce_config.favicon_url }}">
@@ -67,6 +67,7 @@
 
     <section class="smx-panel">
       <h1>Commerce</h1>
+        <p>Browse available products from {{ commerce_config.host_site_title }}.</p>
       <p class="smx-muted">Browse available products and services from {{ commerce_config.store_title }}.</p>
 
       <div class="smx-commerce-home-actions">

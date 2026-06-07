@@ -175,7 +175,7 @@ def create_category_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
                     categories = catalog.list_categories(include_archived=False)
 
                 return render_template(
-                    "admin/category_new.html",
+                    "admin/categories_list.html",
                     categories=categories,
                     error=str(exc),
                     commerce_config=runtime.config,
