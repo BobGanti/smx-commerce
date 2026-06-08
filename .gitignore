@@ -44,17 +44,13 @@ repair_*.py
 fix_*.py
 inspect_*.py
 _tmp_*.py
+.tmp_smx_*/
 
 # OS / editor
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
-
-.tmp_smx_*/
-*.db
-*.sqlite
-*.sqlite3
 
 # Logs
 *.log
