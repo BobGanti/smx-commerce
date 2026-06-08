@@ -156,7 +156,7 @@ def init_commerce(app, *, config=None, init_schema: bool = False):
 def init_commerce_from_env(
     app,
     *,
-    env_file: str = ".env.smx-commerce",
+    env_file: str = "commerce/.smx_commerce.env",
     init_schema: bool = False,
     prefix: str = "SMX_COMMERCE_",
 ):
