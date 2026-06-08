@@ -116,6 +116,11 @@ def build_commerce_config_from_env(
         if raw_value is None or raw_value == "":
             continue
 
+        # Primary names win over backward-compatibility aliases that map to
+        # the same internal config key.
+        if config_key in config and env_suffix in {"ADMIN_API_KEY", "SITE_TITLE", "MODULE_TITLE", "PROJECT_HOME_URL"}:
+            continue
+
         config[config_key] = _coerce_config_value(config_key, raw_value)
 
     _apply_cloud_run_aliases(config, prefix=prefix)

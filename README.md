@@ -27,18 +27,19 @@ The project owner creates the admin key. `smx-commerce` does not invent a hidden
 For local development, copy:
 
 ```text
-.env.smx-commerce.example
+commerce/.smx_commerce_example.env
 ```
 
 to:
 
 ```text
-.env.smx-commerce
+commerce/.smx_commerce.env
 ```
 
 Then set:
 
 ```text
+SMX_COMMERCE_ADMIN_TOKEN
 SMX_COMMERCE_ADMIN_API_KEY=<your-admin-token>
 SMX_COMMERCE_FLASK_SECRET_KEY=<your-session-secret>
 ```
@@ -49,7 +50,8 @@ Generate strong values with:
 python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
-Use one generated value for `SMX_COMMERCE_ADMIN_API_KEY` and another generated value for `SMX_COMMERCE_FLASK_SECRET_KEY`.
+Use one generated value for `SMX_COMMERCE_ADMIN_TOKEN
+SMX_COMMERCE_ADMIN_API_KEY` and another generated value for `SMX_COMMERCE_FLASK_SECRET_KEY`.
 
 ### Local demo example
 
@@ -62,7 +64,7 @@ http://127.0.0.1:5055/commerce/admin
 The local key is whatever you set in:
 
 ```text
-.env.smx-commerce
+commerce/.smx_commerce.env
 ```
 
 ### Cloud deployment
@@ -72,6 +74,7 @@ For cloud deployment, set the same values as environment variables or secrets in
 Example names:
 
 ```text
+SMX_COMMERCE_ADMIN_TOKEN
 SMX_COMMERCE_ADMIN_API_KEY
 SMX_COMMERCE_FLASK_SECRET_KEY
 ```
