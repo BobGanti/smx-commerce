@@ -33,30 +33,34 @@
       <h1>Customer support</h1>
       <p class="smx-muted">Send a support request to {{ commerce_config.store_title }}.</p>
 
+      {% if error %}
+        <div class="smx-alert smx-alert-error">{{ error }}</div>
+      {% endif %}
+
       <form method="post" action="/commerce/support/submit" class="smx-form">
         <label>
           Name
-          <input type="text" name="customer_name">
+          <input type="text" name="customer_name" value="{{ form_data.get('customer_name', '') }}">
         </label>
 
         <label>
           Email
-          <input type="email" name="customer_email" required>
+          <input type="email" name="customer_email" value="{{ form_data.get('customer_email', '') }}" required>
         </label>
 
         <label>
           Order reference
-          <input type="text" name="order_public_id" placeholder="Optional">
+          <input type="text" name="order_public_id" value="{{ form_data.get('order_public_id', '') }}" placeholder="Optional">
         </label>
 
         <label>
           Subject
-          <input type="text" name="subject" required>
+          <input type="text" name="subject" value="{{ form_data.get('subject', '') }}" required>
         </label>
 
         <label>
           Message
-          <textarea name="message" rows="8" required></textarea>
+          <textarea name="message" rows="8" required>{{ form_data.get('message', '') }}</textarea>
         </label>
 
         <button type="submit">Submit support request</button>

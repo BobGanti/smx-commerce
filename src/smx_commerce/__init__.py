@@ -90,26 +90,36 @@ def create_commerce_blueprint(
         return render_template(
             "public/support.html",
             commerce_config=commerce_runtime.config,
+            form_data={},
+            error="",
         )
     @bp.post("/commerce/support/submit")
     def commerce_support_submit():
-        with commerce_runtime.session_scope() as session:
-            repository = SupportRepository(session)
-            thread = repository.create_thread(
-                customer_email=request.form.get("customer_email", ""),
-                customer_name=request.form.get("customer_name", ""),
-                subject=request.form.get("subject", ""),
-                order_public_id=request.form.get("order_public_id", ""),
-                source="public_support",
-                metadata={"entrypoint": "/commerce/support"},
-            )
-            repository.add_customer_message(
-                thread.public_id,
-                body=request.form.get("message", ""),
-                sender_name=request.form.get("customer_name", ""),
-                sender_email=request.form.get("customer_email", ""),
-                metadata={"entrypoint": "/commerce/support"},
-            )
+        try:
+            with commerce_runtime.session_scope() as session:
+                repository = SupportRepository(session)
+                thread = repository.create_thread(
+                    customer_email=request.form.get("customer_email", ""),
+                    customer_name=request.form.get("customer_name", ""),
+                    subject=request.form.get("subject", ""),
+                    order_public_id=request.form.get("order_public_id", ""),
+                    source="public_support",
+                    metadata={"entrypoint": "/commerce/support"},
+                )
+                repository.add_customer_message(
+                    thread.public_id,
+                    body=request.form.get("message", ""),
+                    sender_name=request.form.get("customer_name", ""),
+                    sender_email=request.form.get("customer_email", ""),
+                    metadata={"entrypoint": "/commerce/support"},
+                )
+        except (TypeError, ValueError) as exc:
+            return render_template(
+                "public/support.html",
+                commerce_config=commerce_runtime.config,
+                form_data=dict(request.form),
+                error=str(exc),
+            ), 400
 
         return redirect(
             f"/commerce/support?submitted=1&thread_id={thread.public_id}",

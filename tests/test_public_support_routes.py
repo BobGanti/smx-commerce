@@ -98,3 +98,31 @@ def test_public_support_submit_creates_thread_and_customer_message(tmp_path):
     assert len(detail.messages) == 1
     assert detail.messages[0].sender_type.value == "customer"
     assert detail.messages[0].body == "I paid yesterday and still cannot access the course."
+
+def test_public_support_submit_error_preserves_branding_and_form_data(tmp_path):
+    client, _runtime = create_client_and_runtime(tmp_path)
+
+    response = client.post(
+        "/commerce/support/submit",
+        data={
+            "customer_name": "Aoife Murphy",
+            "customer_email": "Aoife@example.com",
+            "subject": "Missing message",
+            "message": "",
+        },
+        content_type="application/x-www-form-urlencoded",
+        headers={"Accept": "text/html"},
+    )
+
+    assert response.status_code == 400
+
+    html = response.get_data(as_text=True)
+
+    assert "Client Portal · Support" in html
+    assert "Customer support" in html
+    assert "body is required" in html
+    assert "Aoife Murphy" in html
+    assert "Aoife@example.com" in html
+    assert "Missing message" in html
+    assert 'href="/client-home"' in html
+    assert "Back to Client Portal" in html
