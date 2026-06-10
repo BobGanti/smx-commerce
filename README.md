@@ -1,4 +1,4 @@
-﻿# smx-commerce
+# smx-commerce
 
 `smx-commerce` is an installable commerce package for SyntaxMatrix-based projects.
 
@@ -185,7 +185,7 @@ The primary admin key is:
 SMX_COMMERCE_ADMIN_TOKEN
 ```
 
-`SMX_COMMERCE_ADMIN_API_KEY` remains as a backward-compatible alias.
+`SMX_COMMERCE_ADMIN_TOKEN` remains as a backward-compatible alias.
 
 When both are present, keep them the same to avoid local login confusion.
 
@@ -298,7 +298,7 @@ Example:
 
 ```env
 SMX_COMMERCE_ADMIN_TOKEN=replace-with-a-strong-admin-token
-SMX_COMMERCE_ADMIN_API_KEY=replace-with-a-strong-admin-token
+SMX_COMMERCE_ADMIN_TOKEN=replace-with-a-strong-admin-token
 ```
 
 ---
@@ -1065,9 +1065,7 @@ to:
 commerce/.smx_commerce.env
 ```
 
-The old `SMX_COMMERCE_ADMIN_API_KEY` variable is still accepted as a compatibility alias, but new projects should use:
-
-```env
+Use only this variable for admin authentication:```env
 SMX_COMMERCE_ADMIN_TOKEN
 ```
 
@@ -1093,7 +1091,7 @@ If both are present, keep them the same:
 
 ```env
 SMX_COMMERCE_ADMIN_TOKEN=local-admin-token
-SMX_COMMERCE_ADMIN_API_KEY=local-admin-token
+SMX_COMMERCE_ADMIN_TOKEN=local-admin-token
 ```
 
 Restart the host application after changing the env file.
@@ -1314,7 +1312,7 @@ Then set:
 
 ```text
 SMX_COMMERCE_ADMIN_TOKEN
-SMX_COMMERCE_ADMIN_API_KEY=<your-admin-token>
+SMX_COMMERCE_ADMIN_TOKEN=<your-admin-token>
 SMX_COMMERCE_FLASK_SECRET_KEY=<your-session-secret>
 ```
 
@@ -1325,7 +1323,7 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
 Use one generated value for `SMX_COMMERCE_ADMIN_TOKEN
-SMX_COMMERCE_ADMIN_API_KEY` and another generated value for `SMX_COMMERCE_FLASK_SECRET_KEY`.
+SMX_COMMERCE_ADMIN_TOKEN` and another generated value for `SMX_COMMERCE_FLASK_SECRET_KEY`.
 
 ### Local demo example
 
@@ -1349,7 +1347,7 @@ Example names:
 
 ```text
 SMX_COMMERCE_ADMIN_TOKEN
-SMX_COMMERCE_ADMIN_API_KEY
+SMX_COMMERCE_ADMIN_TOKEN
 SMX_COMMERCE_FLASK_SECRET_KEY
 ```
 

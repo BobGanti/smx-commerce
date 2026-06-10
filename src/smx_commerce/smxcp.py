@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from dataclasses import dataclass
 from importlib import resources
@@ -219,7 +219,6 @@ def _render_env_example_file() -> str:
 
 SMX_COMMERCE_DATABASE_URL=sqlite+pysqlite:///./commerce/data/smx_commerce_dev.db
 SMX_COMMERCE_ADMIN_TOKEN=replace-with-a-strong-admin-token
-SMX_COMMERCE_ADMIN_API_KEY=replace-with-a-strong-admin-token
 SMX_COMMERCE_FLASK_SECRET_KEY=replace-with-a-strong-session-secret
 
 SMX_COMMERCE_PAYMENT_PROVIDER=none
@@ -262,7 +261,6 @@ def _render_runtime_env_file(
 
 SMX_COMMERCE_DATABASE_URL={_sqlite_url_for(db_file)}
 SMX_COMMERCE_ADMIN_TOKEN=local-admin-token
-SMX_COMMERCE_ADMIN_API_KEY=local-admin-token
 SMX_COMMERCE_FLASK_SECRET_KEY=replace-with-a-strong-session-secret
 
 SMX_COMMERCE_PAYMENT_PROVIDER=none
