@@ -1,7 +1,7 @@
 from __future__ import annotations
 from pathlib import Path
 
-from flask import Blueprint, render_template, send_from_directory
+from flask import Blueprint, redirect, render_template, request, send_from_directory
 
 from smx_commerce.admin.customers import create_customer_admin_blueprint
 from smx_commerce.admin import apply_admin_token_guard, create_admin_auth_blueprint, create_admin_home_blueprint, create_settings_admin_blueprint, create_product_edit_admin_blueprint, create_price_edit_admin_blueprint, create_category_edit_admin_blueprint, create_safe_delete_admin_blueprint, create_order_edit_admin_blueprint, create_product_edit_admin_blueprint
@@ -32,6 +32,7 @@ from smx_commerce.payments import (
 from smx_commerce.payments.routes import create_payment_webhook_blueprint
 from smx_commerce.payments.verifiers import PaymentWebhookVerifier
 from smx_commerce.smxcp import ensure_commerce_scaffold
+from smx_commerce.support import SupportRepository
 
 def create_commerce_blueprint(
     config=None,
@@ -84,6 +85,36 @@ def create_commerce_blueprint(
             commerce_config=commerce_runtime.config,
         )
 
+    @bp.get("/commerce/support")
+    def commerce_support_form():
+        return render_template(
+            "public/support.html",
+            commerce_config=commerce_runtime.config,
+        )
+    @bp.post("/commerce/support/submit")
+    def commerce_support_submit():
+        with commerce_runtime.session_scope() as session:
+            repository = SupportRepository(session)
+            thread = repository.create_thread(
+                customer_email=request.form.get("customer_email", ""),
+                customer_name=request.form.get("customer_name", ""),
+                subject=request.form.get("subject", ""),
+                order_public_id=request.form.get("order_public_id", ""),
+                source="public_support",
+                metadata={"entrypoint": "/commerce/support"},
+            )
+            repository.add_customer_message(
+                thread.public_id,
+                body=request.form.get("message", ""),
+                sender_name=request.form.get("customer_name", ""),
+                sender_email=request.form.get("customer_email", ""),
+                metadata={"entrypoint": "/commerce/support"},
+            )
+
+        return redirect(
+            f"/commerce/support?submitted=1&thread_id={thread.public_id}",
+            code=303,
+        )
     bp.register_blueprint(create_public_catalog_blueprint(commerce_runtime))
     bp.register_blueprint(
         create_customer_auth_blueprint(
