@@ -39,5 +39,6 @@ def create_schema(engine: Engine) -> None:
     import smx_commerce.customers.models  # noqa: F401
     import smx_commerce.payments.models  # noqa: F401
     import smx_commerce.core.settings_models  # noqa: F401
+    import smx_commerce.support.models  # noqa: F401
 
     Base.metadata.create_all(engine)

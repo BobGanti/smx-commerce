@@ -11,7 +11,6 @@
 </head>
 <body>
   <main>
-    <a class="smx-host-back-link" href="{{ commerce_config.host_home_url }}">Back to {{ commerce_config.host_site_title }}</a>
     <header class="smx-site-header">
       <a class="smx-site-brand" href="/commerce/admin">
         {% if commerce_config.logo_url %}
@@ -21,7 +20,7 @@
       </a>
 
       <nav class="smx-nav" aria-label="Admin navigation">
-        <a href="{{ commerce_config.host_home_url }}">Home</a>
+        <a href="{{ commerce_config.host_home_url }}">Back to {{ commerce_config.host_site_title }}</a>
         <a href="/commerce/admin">Admin</a>
         <a href="/commerce/admin/products">Products</a>
         <a href="/commerce/admin/categories">Categories</a>
@@ -38,7 +37,7 @@
         <summary aria-label="Open menu"><span class="smx-mobile-menu-icon" aria-hidden="true"></span></summary>
         <div class="smx-mobile-menu-panel">
           <nav class="smx-mobile-menu-links" aria-label="Mobile navigation">
-            <a href="{{ commerce_config.host_home_url }}">Home</a>
+            <a href="{{ commerce_config.host_home_url }}">Back to {{ commerce_config.host_site_title }}</a>
             <a href="/commerce/admin">Admin</a>
             <a href="/commerce/admin/products">Products</a>
             <a href="/commerce/admin/categories">Categories</a>
@@ -104,3 +103,4 @@
   </main>
 </body>
 </html>
+

@@ -17,6 +17,8 @@ REQUIRED_TABLES = [
     "smx_customers",
     "smx_payment_events",
     "smx_commerce_settings",
+    "smx_commerce_support_threads",
+    "smx_commerce_support_messages",
 ]
 
 
