@@ -4,7 +4,7 @@ from pathlib import Path
 from flask import Blueprint, redirect, render_template, request, send_from_directory
 
 from smx_commerce.admin.customers import create_customer_admin_blueprint
-from smx_commerce.ai import CommerceAIClient, load_gemini_env_client
+from smx_commerce.ai import CommerceAIClient
 from smx_commerce.admin import apply_admin_token_guard, create_admin_auth_blueprint, create_admin_home_blueprint, create_settings_admin_blueprint, create_product_edit_admin_blueprint, create_price_edit_admin_blueprint, create_category_edit_admin_blueprint, create_safe_delete_admin_blueprint, create_order_edit_admin_blueprint, create_product_edit_admin_blueprint
 from smx_commerce.catalog.routes_admin import (
     create_category_admin_blueprint,
@@ -51,7 +51,7 @@ def create_commerce_blueprint(
     if init_schema:
         commerce_runtime.init_schema()
 
-    commerce_runtime.ai_client = ai_client or load_gemini_env_client()
+    commerce_runtime.ai_client = ai_client
 
     resolved_admin_token = admin_token
     if resolved_admin_token is None:
