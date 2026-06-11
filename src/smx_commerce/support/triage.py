@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Any
 
@@ -261,11 +262,21 @@ class SupportTriageService:
             "allowed_priorities": sorted(ALLOWED_SUPPORT_PRIORITIES),
         }
 
-        classification = self.issue_classifier.classify(context)
-        summary = self.summary_agent.summarize(context)
-        missing_information = self.missing_information_agent.identify_missing_information(context)
-        escalation = self.escalation_assessor.assess(context)
-        priority = self.priority_assessor.assess(context)
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            classification_future = executor.submit(self.issue_classifier.classify, context)
+            summary_future = executor.submit(self.summary_agent.summarize, context)
+            missing_information_future = executor.submit(
+                self.missing_information_agent.identify_missing_information,
+                context,
+            )
+            escalation_future = executor.submit(self.escalation_assessor.assess, context)
+            priority_future = executor.submit(self.priority_assessor.assess, context)
+
+            classification = classification_future.result()
+            summary = summary_future.result()
+            missing_information = missing_information_future.result()
+            escalation = escalation_future.result()
+            priority = priority_future.result()
 
         recommended_priority = priority.recommended_priority
         if recommended_priority not in ALLOWED_SUPPORT_PRIORITIES:

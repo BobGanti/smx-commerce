@@ -74,12 +74,16 @@ def test_support_analysis_service_composes_and_persists_reply_draft():
             "next_actions": ["Ask customer for order ID", "Verify payment before promising access"],
         }
 
-        assert [call["agent_name"] for call in ai_client.calls] == [
+        call_names = [call["agent_name"] for call in ai_client.calls]
+
+        assert set(call_names[:5]) == {
             "commerce_support_issue_classifier",
             "commerce_support_summary",
             "commerce_support_missing_information",
             "commerce_support_escalation_assessor",
             "commerce_support_priority_assessor",
+        }
+        assert call_names[5:] == [
             "commerce_support_reply_planner",
             "commerce_support_reply_composer",
             "commerce_support_reply_verifier",

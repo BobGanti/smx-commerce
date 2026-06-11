@@ -64,9 +64,18 @@ def test_support_analysis_service_triages_thread_and_persists_result():
         assert loaded.metadata["triage"]["missing_information"] == ["order_public_id"]
 
         assert len(ai_client.calls) == 5
-        assert ai_client.calls[0]["context"]["customer_email"] == "aoife@example.com"
-        assert ai_client.calls[0]["context"]["subject"] == "I paid but did not receive access"
-        assert ai_client.calls[0]["context"]["customer_message"] == "I paid yesterday and still cannot access the course."
+        assert {call["agent_name"] for call in ai_client.calls} == {
+            "commerce_support_issue_classifier",
+            "commerce_support_summary",
+            "commerce_support_missing_information",
+            "commerce_support_escalation_assessor",
+            "commerce_support_priority_assessor",
+        }
+
+        for call in ai_client.calls:
+            assert call["context"]["customer_email"] == "aoife@example.com"
+            assert call["context"]["subject"] == "I paid but did not receive access"
+            assert call["context"]["customer_message"] == "I paid yesterday and still cannot access the course."
 
 
 def test_support_analysis_service_requires_existing_thread():

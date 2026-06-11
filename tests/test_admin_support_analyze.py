@@ -89,7 +89,13 @@ def test_admin_support_analyze_runs_ai_and_persists_triage(tmp_path):
     }
 
     assert len(ai_client.calls) == 5
-    assert ai_client.calls[0]["agent_name"] == "commerce_support_issue_classifier"
+    assert {call["agent_name"] for call in ai_client.calls} == {
+        "commerce_support_issue_classifier",
+        "commerce_support_summary",
+        "commerce_support_missing_information",
+        "commerce_support_escalation_assessor",
+        "commerce_support_priority_assessor",
+    }
 
     detail_response = client.get(
         f"/commerce/admin/support/{thread_public_id}?format=json",

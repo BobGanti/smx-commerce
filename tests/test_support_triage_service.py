@@ -48,12 +48,15 @@ def test_support_triage_service_uses_narrow_single_responsibility_agents():
     assert result.recommended_priority == "high"
     assert result.missing_information == ["order_public_id"]
 
-    assert [call["agent_name"] for call in ai_client.calls] == TRIAGE_AGENT_NAMES
+    call_names = [call["agent_name"] for call in ai_client.calls]
 
-    first_call = ai_client.calls[0]
-    assert first_call["context"]["customer_email"] == "aoife@example.com"
-    assert "allowed_issue_types" in first_call["context"]
-    assert "payment_problem" in first_call["context"]["allowed_issue_types"]
+    assert len(call_names) == len(TRIAGE_AGENT_NAMES)
+    assert set(call_names) == set(TRIAGE_AGENT_NAMES)
+
+    for call in ai_client.calls:
+        assert call["context"]["customer_email"] == "aoife@example.com"
+        assert "allowed_issue_types" in call["context"]
+        assert "payment_problem" in call["context"]["allowed_issue_types"]
 
 
 def test_support_triage_service_falls_back_when_classifier_invents_issue_type():
