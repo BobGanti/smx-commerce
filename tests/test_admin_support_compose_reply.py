@@ -18,7 +18,7 @@ class FakeAIClient:
         }
 
 
-def create_client(tmp_path, ai_client=None):
+def create_client(tmp_path, ai_client=None, ai_profile=None):
     db_file = tmp_path / "commerce.db"
     app = Flask(__name__)
 
@@ -37,6 +37,7 @@ def create_client(tmp_path, ai_client=None):
         },
         init_schema=True,
         ai_client=ai_client,
+        ai_profile=ai_profile,
     )
 
     return app.test_client()
@@ -153,3 +154,90 @@ def test_admin_support_detail_shows_reply_draft_button_and_result(tmp_path):
     assert "Required" in html
     assert "Hi Aoife, thanks for reaching out." in html
     assert "Next actions: Ask customer for order ID, Verify payment before promising access" in html
+
+
+
+class FakeGoogleResponse:
+    def __init__(self, text):
+        self.text = text
+
+
+class FakeGoogleModels:
+    def __init__(self):
+        self.calls = []
+
+    def generate_content(self, **kwargs):
+        self.calls.append(kwargs)
+        contents = kwargs["contents"]
+
+        if "commerce_support_reply_planner" in contents:
+            return FakeGoogleResponse(
+                """{
+                    "reply_strategy": "Ask for the order ID and explain that payment will be verified before access changes.",
+                    "facts_to_include": ["Customer says they paid yesterday"],
+                    "questions_to_ask": ["Please send your order ID"],
+                    "forbidden_claims": ["Do not say access has been restored"],
+                    "needs_human_review": true
+                }"""
+            )
+
+        if "commerce_support_reply_composer" in contents:
+            return FakeGoogleResponse(
+                """{
+                    "body": "Hi Aoife, thanks for reaching out. Please send your order ID so we can verify the payment and help restore access.",
+                    "tone": "helpful",
+                    "next_actions": ["Ask customer for order ID", "Verify payment before promising access"]
+                }"""
+            )
+
+        if "commerce_support_reply_verifier" in contents:
+            return FakeGoogleResponse(
+                """{
+                    "is_safe": true,
+                    "needs_revision": false,
+                    "concerns": []
+                }"""
+            )
+
+        raise AssertionError(f"Unexpected agent prompt: {contents}")
+
+
+class FakeGoogleClient:
+    def __init__(self):
+        self.models = FakeGoogleModels()
+
+
+def test_admin_support_compose_reply_uses_ai_profile_google_adapter(tmp_path):
+    provider_client = FakeGoogleClient()
+    ai_profile = {
+        "provider": "google",
+        "model": "gemini-route-test",
+        "api_key": "redacted",
+        "client": provider_client,
+    }
+
+    client = create_client(tmp_path, ai_profile=ai_profile)
+    thread_public_id = seed_support_request(client)
+
+    response = client.post(
+        f"/commerce/admin/support/{thread_public_id}/compose-reply?format=json",
+        headers={"X-SMX-Commerce-Admin-Token": "secret-admin-key"},
+    )
+
+    assert response.status_code == 200
+
+    assert response.get_json() == {
+        "body": "Hi Aoife, thanks for reaching out. Please send your order ID so we can verify the payment and help restore access.",
+        "tone": "helpful",
+        "needs_human_review": True,
+        "next_actions": ["Ask customer for order ID", "Verify payment before promising access"],
+    }
+
+    assert len(provider_client.models.calls) == 3
+    assert all(call["model"] == "gemini-route-test" for call in provider_client.models.calls)
+
+    prompts = [call["contents"] for call in provider_client.models.calls]
+
+    assert any("commerce_support_reply_planner" in prompt for prompt in prompts)
+    assert any("commerce_support_reply_composer" in prompt for prompt in prompts)
+    assert any("commerce_support_reply_verifier" in prompt for prompt in prompts)
