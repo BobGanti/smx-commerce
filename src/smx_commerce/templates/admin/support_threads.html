@@ -236,6 +236,24 @@
         Review customer support requests submitted through {{ commerce_config.store_title }}.
       </p>
 
+      <form method="get" action="/commerce/admin/support" class="smx-admin-actions">
+        <label for="support-search"><strong>Search support</strong></label>
+        <input
+          id="support-search"
+          name="q"
+          value="{{ query or '' }}"
+          placeholder="Email, order ID, subject, issue type..."
+          style="min-height: 38px; min-width: 280px; padding: 8px 12px; border: 1px solid var(--smx-border); border-radius: 999px;"
+        >
+        {% if status %}
+          <input type="hidden" name="status" value="{{ status }}">
+        {% endif %}
+        {% if priority %}
+          <input type="hidden" name="priority" value="{{ priority }}">
+        {% endif %}
+        <button type="submit">Search support</button>
+      </form>
+
       <div class="smx-admin-actions">
         <a class="smx-button" href="/commerce/admin/support">All</a>
         <a class="smx-button" href="/commerce/admin/support?status=open">Open</a>

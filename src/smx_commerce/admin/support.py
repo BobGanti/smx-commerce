@@ -43,6 +43,7 @@ def create_support_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
     def list_support_threads():
         status = request.args.get("status") or None
         priority = request.args.get("priority") or None
+        query = (request.args.get("q") or "").strip()
 
         with runtime.session_scope() as session:
             repository = SupportRepository(session)
@@ -51,12 +52,26 @@ def create_support_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
                 priority=SupportThreadPriority(priority) if priority else None,
             )
 
+        if query:
+            query_lower = query.lower()
+            threads = [
+                thread
+                for thread in threads
+                if query_lower in thread.public_id.lower()
+                or query_lower in thread.customer_email.lower()
+                or query_lower in (thread.customer_name or "").lower()
+                or query_lower in thread.subject.lower()
+                or query_lower in (thread.order_public_id or "").lower()
+                or query_lower in thread.issue_type.lower()
+            ]
+
         if admin_support_wants_html():
             return render_template(
                 "admin/support_threads.html",
                 threads=threads,
                 status=status,
                 priority=priority,
+                query=query,
                 commerce_config=runtime.config,
             )
 
