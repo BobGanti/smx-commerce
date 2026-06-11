@@ -122,4 +122,33 @@ def create_support_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
             }
         )
 
+    @bp.post("/support/<thread_public_id>/compose-reply")
+    def compose_support_reply(thread_public_id: str):
+        ai_client = getattr(runtime, "ai_client", None)
+
+        if ai_client is None:
+            if admin_support_wants_html():
+                return redirect(f"/commerce/admin/support/{thread_public_id}?error=ai_client_required")
+
+            return jsonify({"error": "ai_client is required to compose support reply drafts"}), 400
+
+        with runtime.session_scope() as session:
+            service = SupportAnalysisService(
+                session=session,
+                ai_client=ai_client,
+            )
+            draft = service.compose_reply_draft(thread_public_id)
+
+        if admin_support_wants_html():
+            return redirect(f"/commerce/admin/support/{thread_public_id}?message=reply_draft_complete")
+
+        return jsonify(
+            {
+                "body": draft.body,
+                "tone": draft.tone,
+                "needs_human_review": draft.needs_human_review,
+                "next_actions": draft.next_actions,
+            }
+        )
+
     return bp
