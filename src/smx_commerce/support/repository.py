@@ -83,6 +83,35 @@ class SupportRepository:
 
         return self._to_message(row)
 
+    def add_admin_message(
+        self,
+        thread_public_id: str,
+        *,
+        body: str,
+        sender_name: str = "Support",
+        sender_email: str = "",
+        metadata: dict[str, Any] | None = None,
+    ) -> SupportMessage:
+        thread_row = self._get_thread_row_or_raise(thread_public_id)
+
+        row = SupportMessageRow(
+            public_id=self._generate_unique_public_id("supmsg"),
+            thread_public_id=thread_row.public_id,
+            sender_type=SupportMessageSenderType.ADMIN.value,
+            sender_name=(sender_name or "Support").strip(),
+            sender_email=(sender_email or "").strip().lower(),
+            body=validate_required_text(body, "body"),
+            metadata_json=dict(metadata or {}),
+        )
+
+        self.session.add(row)
+        self.session.flush()
+
+        thread_row.updated_at = row.created_at
+        self.session.flush()
+
+        return self._to_message(row)
+
     def get_by_public_id(self, public_id: str) -> SupportThread | None:
         value = validate_required_text(public_id, "public_id")
 

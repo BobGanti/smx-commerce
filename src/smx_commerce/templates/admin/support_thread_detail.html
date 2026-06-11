@@ -224,8 +224,16 @@
         <p class="badge">AI reply draft complete</p>
       {% endif %}
 
+      {% if request.args.get("message") == "reply_saved" %}
+        <p class="badge">Reply saved to conversation</p>
+      {% endif %}
+
       {% if request.args.get("error") == "ai_client_required" %}
         <p class="smx-muted">AI analysis is unavailable because no commerce AI client was provided by the host app.</p>
+      {% endif %}
+
+      {% if request.args.get("error") == "reply_body_required" %}
+        <p class="smx-muted">Reply body is required before saving an admin reply.</p>
       {% endif %}
 
       <form method="post" action="/commerce/admin/support/{{ detail.thread.public_id }}/analyze">
@@ -321,6 +329,13 @@
             Next actions: {{ detail.thread.metadata["reply_draft"]["next_actions"]|join(", ") }}
           </p>
         {% endif %}
+
+        <form method="post" action="/commerce/admin/support/{{ detail.thread.public_id }}/reply">
+          <label for="reply-body"><strong>Review/edit reply</strong></label>
+          <textarea id="reply-body" name="body" rows="8" style="width: 100%; margin-top: 8px;">{{ detail.thread.metadata["reply_draft"]["body"] }}</textarea>
+          <p class="smx-muted">Saving adds this reply to the support conversation. It does not send email.</p>
+          <button type="submit">Save reviewed reply</button>
+        </form>
       </section>
     {% endif %}
 

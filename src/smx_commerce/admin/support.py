@@ -151,4 +151,34 @@ def create_support_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
             }
         )
 
+    @bp.post("/support/<thread_public_id>/reply")
+    def save_support_reply(thread_public_id: str):
+        body = request.form.get("body", "")
+
+        try:
+            with runtime.session_scope() as session:
+                repository = SupportRepository(session)
+                message = repository.add_admin_message(
+                    thread_public_id,
+                    body=body,
+                    sender_name="Support",
+                    metadata={"source": "admin_reviewed_reply"},
+                )
+        except ValueError as exc:
+            if admin_support_wants_html():
+                return redirect(f"/commerce/admin/support/{thread_public_id}?error=reply_body_required")
+
+            return jsonify({"error": str(exc)}), 400
+
+        if admin_support_wants_html():
+            return redirect(f"/commerce/admin/support/{thread_public_id}?message=reply_saved")
+
+        return jsonify(
+            {
+                "public_id": message.public_id,
+                "sender_type": message.sender_type.value,
+                "body": message.body,
+            }
+        )
+
     return bp
