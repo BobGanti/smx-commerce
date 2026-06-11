@@ -253,6 +253,7 @@
                 <th>Status</th>
                 <th>Issue</th>
                 <th>Updated</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -278,6 +279,7 @@
                       <span class="smx-muted">Not updated</span>
                     {% endif %}
                   </td>
+                  <td><a href="/commerce/admin/support/{{ thread.public_id }}">Open thread</a></td>
                 </tr>
               {% endfor %}
             </tbody>

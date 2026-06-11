@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, abort, jsonify, render_template, request
 
 from smx_commerce.core import CommerceRuntime
 from smx_commerce.support import SupportRepository
@@ -58,5 +58,38 @@ def create_support_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
             )
 
         return jsonify([support_thread_to_dict(thread) for thread in threads])
+
+    @bp.get("/support/<thread_public_id>")
+    def view_support_thread(thread_public_id: str):
+        with runtime.session_scope() as session:
+            repository = SupportRepository(session)
+            detail = repository.get_thread_with_messages(thread_public_id)
+
+        if detail is None:
+            abort(404)
+
+        if admin_support_wants_html():
+            return render_template(
+                "admin/support_thread_detail.html",
+                detail=detail,
+                commerce_config=runtime.config,
+            )
+
+        return jsonify(
+            {
+                "thread": support_thread_to_dict(detail.thread),
+                "messages": [
+                    {
+                        "public_id": message.public_id,
+                        "sender_type": message.sender_type.value,
+                        "sender_email": message.sender_email,
+                        "body": message.body,
+                        "metadata": message.metadata,
+                        "created_at": message.created_at.isoformat() if message.created_at else None,
+                    }
+                    for message in detail.messages
+                ],
+            }
+        )
 
     return bp
