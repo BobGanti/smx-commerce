@@ -281,7 +281,13 @@
 
         <article class="smx-thread-meta-card">
           <p class="smx-thread-meta-label">Order</p>
-          <p class="smx-thread-meta-value">{{ detail.thread.order_public_id or "Not provided" }}</p>
+          <p class="smx-thread-meta-value">
+            {% if detail.thread.order_public_id %}
+              <a href="/commerce/admin/orders/{{ detail.thread.order_public_id }}/edit">{{ detail.thread.order_public_id }}</a>
+            {% else %}
+              Not provided
+            {% endif %}
+          </p>
         </article>
       </div>
     </section>
