@@ -181,4 +181,26 @@ def create_support_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
             }
         )
 
+    @bp.post("/support/<thread_public_id>/status")
+    def update_support_thread_status(thread_public_id: str):
+        status = request.form.get("status", "")
+
+        try:
+            with runtime.session_scope() as session:
+                repository = SupportRepository(session)
+                thread = repository.update_thread_status(
+                    thread_public_id,
+                    status=status,
+                )
+        except ValueError as exc:
+            if admin_support_wants_html():
+                return redirect(f"/commerce/admin/support/{thread_public_id}?error=status_invalid")
+
+            return jsonify({"error": str(exc)}), 400
+
+        if admin_support_wants_html():
+            return redirect(f"/commerce/admin/support/{thread_public_id}?message=status_updated")
+
+        return jsonify(support_thread_to_dict(thread))
+
     return bp

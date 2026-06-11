@@ -228,6 +228,10 @@
         <p class="badge">Reply saved to conversation</p>
       {% endif %}
 
+      {% if request.args.get("message") == "status_updated" %}
+        <p class="badge">Thread status updated</p>
+      {% endif %}
+
       {% if request.args.get("error") == "ai_client_required" %}
         <p class="smx-muted">AI analysis is unavailable because no commerce AI client was provided by the host app.</p>
       {% endif %}
@@ -236,12 +240,26 @@
         <p class="smx-muted">Reply body is required before saving an admin reply.</p>
       {% endif %}
 
+      {% if request.args.get("error") == "status_invalid" %}
+        <p class="smx-muted">Invalid support thread status.</p>
+      {% endif %}
+
       <form method="post" action="/commerce/admin/support/{{ detail.thread.public_id }}/analyze">
         <button type="submit">Run AI triage</button>
       </form>
 
       <form method="post" action="/commerce/admin/support/{{ detail.thread.public_id }}/compose-reply">
         <button type="submit">Compose reply draft</button>
+      </form>
+
+      <form method="post" action="/commerce/admin/support/{{ detail.thread.public_id }}/status">
+        <label for="thread-status"><strong>Status</strong></label>
+        <select id="thread-status" name="status">
+          <option value="open"{% if detail.thread.status.value == "open" %} selected{% endif %}>Open</option>
+          <option value="waiting"{% if detail.thread.status.value == "waiting" %} selected{% endif %}>Waiting</option>
+          <option value="resolved"{% if detail.thread.status.value == "resolved" %} selected{% endif %}>Resolved</option>
+        </select>
+        <button type="submit">Update status</button>
       </form>
 
       <div class="smx-thread-meta">

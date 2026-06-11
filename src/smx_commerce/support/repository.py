@@ -247,6 +247,19 @@ class SupportRepository:
 
         return self._to_thread(thread_row)
 
+    def update_thread_status(
+        self,
+        thread_public_id: str,
+        *,
+        status: SupportThreadStatus | str,
+    ) -> SupportThread:
+        thread_row = self._get_thread_row_or_raise(thread_public_id)
+
+        thread_row.status = self._thread_status_value(status)
+        self.session.flush()
+
+        return self._to_thread(thread_row)
+
     def _get_thread_row_or_raise(self, public_id: str) -> SupportThreadRow:
         value = validate_required_text(public_id, "public_id")
 

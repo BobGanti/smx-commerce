@@ -11,6 +11,7 @@ from smx_commerce.checkout.objects import validate_email
 
 class SupportThreadStatus(str, Enum):
     OPEN = "open"
+    WAITING = "waiting"
     REVIEWING = "reviewing"
     WAITING_FOR_CUSTOMER = "waiting_for_customer"
     RESOLVED = "resolved"
