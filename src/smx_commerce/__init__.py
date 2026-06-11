@@ -1,5 +1,6 @@
 from __future__ import annotations
 from pathlib import Path
+from typing import Any
 
 from flask import Blueprint, redirect, render_template, request, send_from_directory
 
@@ -46,6 +47,7 @@ def create_commerce_blueprint(
     customer_login_email_service: CustomerLoginEmailService | None = None,
     admin_token: str | None = None,
     ai_client: CommerceAIClient | None = None,
+    ai_profile: dict[str, Any] | None = None,
 ):
     commerce_runtime = runtime or CommerceRuntime.from_mapping(config)
 
@@ -53,6 +55,7 @@ def create_commerce_blueprint(
         commerce_runtime.init_schema()
 
     commerce_runtime.ai_client = ai_client
+    commerce_runtime.ai_profile = ai_profile
 
     resolved_admin_token = admin_token
     if resolved_admin_token is None:
@@ -60,6 +63,7 @@ def create_commerce_blueprint(
 
     bp = Blueprint("smx_commerce", __name__)
     bp.ai_client = commerce_runtime.ai_client
+    bp.ai_profile = commerce_runtime.ai_profile
 
     @bp.get("/commerce/health")
     def commerce_health():
@@ -181,7 +185,14 @@ def create_commerce_blueprint(
     return bp
 
 
-def init_commerce(app, *, config=None, init_schema: bool = False, ai_client: CommerceAIClient | None = None):
+def init_commerce(
+    app,
+    *,
+    config=None,
+    init_schema: bool = False,
+    ai_client: CommerceAIClient | None = None,
+    ai_profile: dict[str, Any] | None = None,
+):
     resolved_config = config or {}
 
     if resolved_config.get("flask_secret_key") and not app.secret_key:
@@ -196,6 +207,7 @@ def init_commerce(app, *, config=None, init_schema: bool = False, ai_client: Com
             order_confirmation_service=_build_order_confirmation_service(resolved_config),
             customer_login_email_service=_build_customer_login_email_service(resolved_config),
             ai_client=ai_client,
+            ai_profile=ai_profile,
         )
     )
 
@@ -209,6 +221,7 @@ def init_commerce_from_env(
     init_schema: bool = False,
     prefix: str = "SMX_COMMERCE_",
     ai_client: CommerceAIClient | None = None,
+    ai_profile: dict[str, Any] | None = None,
 ):
     config = build_commerce_config_from_env(
         env_file=env_file,
@@ -220,6 +233,7 @@ def init_commerce_from_env(
         config=config,
         init_schema=init_schema,
         ai_client=ai_client,
+        ai_profile=ai_profile,
     )
 
 
@@ -229,6 +243,7 @@ def setup_commerce(
     project_root=None,
     init_schema: bool = True,
     ai_client: CommerceAIClient | None = None,
+    ai_profile: dict[str, Any] | None = None,
 ):
     scaffold = ensure_commerce_scaffold(project_root=project_root)
 
@@ -237,6 +252,7 @@ def setup_commerce(
         env_file=scaffold.env_file,
         init_schema=init_schema,
         ai_client=ai_client,
+        ai_profile=ai_profile,
     )
 
 
