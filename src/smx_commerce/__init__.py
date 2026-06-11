@@ -4,6 +4,7 @@ from pathlib import Path
 from flask import Blueprint, redirect, render_template, request, send_from_directory
 
 from smx_commerce.admin.customers import create_customer_admin_blueprint
+from smx_commerce.ai import CommerceAIClient, load_gemini_env_client
 from smx_commerce.admin import apply_admin_token_guard, create_admin_auth_blueprint, create_admin_home_blueprint, create_settings_admin_blueprint, create_product_edit_admin_blueprint, create_price_edit_admin_blueprint, create_category_edit_admin_blueprint, create_safe_delete_admin_blueprint, create_order_edit_admin_blueprint, create_product_edit_admin_blueprint
 from smx_commerce.catalog.routes_admin import (
     create_category_admin_blueprint,
@@ -43,17 +44,21 @@ def create_commerce_blueprint(
     order_confirmation_service: OrderConfirmationEmailService | None = None,
     customer_login_email_service: CustomerLoginEmailService | None = None,
     admin_token: str | None = None,
+    ai_client: CommerceAIClient | None = None,
 ):
     commerce_runtime = runtime or CommerceRuntime.from_mapping(config)
 
     if init_schema:
         commerce_runtime.init_schema()
 
+    commerce_runtime.ai_client = ai_client or load_gemini_env_client()
+
     resolved_admin_token = admin_token
     if resolved_admin_token is None:
         resolved_admin_token = commerce_runtime.config.admin_token
 
     bp = Blueprint("smx_commerce", __name__)
+    bp.ai_client = commerce_runtime.ai_client
 
     @bp.get("/commerce/health")
     def commerce_health():
@@ -174,7 +179,7 @@ def create_commerce_blueprint(
     return bp
 
 
-def init_commerce(app, *, config=None, init_schema: bool = False):
+def init_commerce(app, *, config=None, init_schema: bool = False, ai_client: CommerceAIClient | None = None):
     resolved_config = config or {}
 
     if resolved_config.get("flask_secret_key") and not app.secret_key:
@@ -188,6 +193,7 @@ def init_commerce(app, *, config=None, init_schema: bool = False):
             payment_webhook_verifier=_build_webhook_verifier(resolved_config),
             order_confirmation_service=_build_order_confirmation_service(resolved_config),
             customer_login_email_service=_build_customer_login_email_service(resolved_config),
+            ai_client=ai_client,
         )
     )
 
@@ -200,6 +206,7 @@ def init_commerce_from_env(
     env_file: str = "commerce/.smx_commerce.env",
     init_schema: bool = False,
     prefix: str = "SMX_COMMERCE_",
+    ai_client: CommerceAIClient | None = None,
 ):
     config = build_commerce_config_from_env(
         env_file=env_file,
@@ -210,6 +217,7 @@ def init_commerce_from_env(
         app,
         config=config,
         init_schema=init_schema,
+        ai_client=ai_client,
     )
 
 
@@ -218,6 +226,7 @@ def setup_commerce(
     *,
     project_root=None,
     init_schema: bool = True,
+    ai_client: CommerceAIClient | None = None,
 ):
     scaffold = ensure_commerce_scaffold(project_root=project_root)
 
@@ -225,6 +234,7 @@ def setup_commerce(
         app,
         env_file=scaffold.env_file,
         init_schema=init_schema,
+        ai_client=ai_client,
     )
 
 
