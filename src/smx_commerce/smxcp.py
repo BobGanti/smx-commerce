@@ -162,16 +162,17 @@ def _render_setup_file() -> str:
     return '''from __future__ import annotations
 
 from pathlib import Path
-
 from smx_commerce import setup_commerce as _setup_commerce
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
-
-def setup_commerce(app, *, init_schema: bool = True):
+def setup_commerce(app, *, init_schema: bool = True, ai_profile=None):
     """
     Initialize smx-commerce for this client project.
+
+    The host project builds and provides ai_profile.
+    smx-commerce uses that profile to build its internal AI adapter and agents.
 
     This file is customer-owned after creation.
     smx-commerce will not overwrite it.
@@ -180,19 +181,7 @@ def setup_commerce(app, *, init_schema: bool = True):
         app=app,
         project_root=PROJECT_ROOT,
         init_schema=init_schema,
-    )
-
-
-def register_commerce_plugin(app, *, init_schema: bool = True):
-    """
-    Compatibility alias for plugin-style host applications.
-
-    Existing clients can keep calling setup_commerce(app).
-    New plugin-oriented clients may call register_commerce_plugin(app).
-    """
-    return setup_commerce(
-        app,
-        init_schema=init_schema,
+        ai_profile=ai_profile,
     )
 '''
 
