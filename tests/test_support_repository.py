@@ -96,3 +96,39 @@ def test_support_repository_gets_thread_with_messages():
             "Please review my refund request.",
             "The order number is ord_123.",
         ]
+
+
+
+def test_support_repository_records_triage_result():
+    Session = _session_factory()
+
+    with Session() as session:
+        repository = SupportRepository(session)
+        thread = repository.create_thread(
+            customer_email="buyer@example.com",
+            subject="I paid but did not receive access",
+        )
+
+        updated = repository.record_triage_result(
+            thread.public_id,
+            issue_type="account_access_issue",
+            confidence=0.88,
+            summary="Customer paid but cannot access purchased content.",
+            should_escalate=False,
+            missing_information=["order_public_id"],
+        )
+
+        assert updated.issue_type == "account_access_issue"
+        assert updated.metadata["triage"] == {
+            "issue_type": "account_access_issue",
+            "confidence": 0.88,
+            "summary": "Customer paid but cannot access purchased content.",
+            "should_escalate": False,
+            "missing_information": ["order_public_id"],
+        }
+
+        loaded = repository.get_by_public_id(thread.public_id)
+
+        assert loaded is not None
+        assert loaded.issue_type == "account_access_issue"
+        assert loaded.metadata["triage"]["summary"] == "Customer paid but cannot access purchased content."

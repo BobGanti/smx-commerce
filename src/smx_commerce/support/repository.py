@@ -136,6 +136,54 @@ class SupportRepository:
 
         return [self._to_thread(row) for row in rows]
 
+    def record_triage_result(
+        self,
+        thread_public_id: str,
+        *,
+        issue_type: str,
+        confidence: float,
+        summary: str,
+        should_escalate: bool,
+        missing_information: list[str] | None = None,
+    ) -> SupportThread:
+        thread_row = self._get_thread_row_or_raise(thread_public_id)
+
+        cleaned_issue_type = validate_required_text(issue_type, "issue_type")
+        cleaned_summary = validate_required_text(summary, "summary")
+
+        try:
+            cleaned_confidence = float(confidence)
+        except (TypeError, ValueError):
+            cleaned_confidence = 0.0
+
+        if cleaned_confidence < 0:
+            cleaned_confidence = 0.0
+
+        if cleaned_confidence > 1:
+            cleaned_confidence = 1.0
+
+        cleaned_missing_information = [
+            str(item).strip()
+            for item in (missing_information or [])
+            if str(item).strip()
+        ]
+
+        metadata = dict(thread_row.metadata_json or {})
+        metadata["triage"] = {
+            "issue_type": cleaned_issue_type,
+            "confidence": cleaned_confidence,
+            "summary": cleaned_summary,
+            "should_escalate": bool(should_escalate),
+            "missing_information": cleaned_missing_information,
+        }
+
+        thread_row.issue_type = cleaned_issue_type
+        thread_row.metadata_json = metadata
+
+        self.session.flush()
+
+        return self._to_thread(thread_row)
+
     def _get_thread_row_or_raise(self, public_id: str) -> SupportThreadRow:
         value = validate_required_text(public_id, "public_id")
 
