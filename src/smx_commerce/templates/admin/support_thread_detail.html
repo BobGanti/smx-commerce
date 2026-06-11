@@ -216,6 +216,18 @@
       <h1>{{ detail.thread.subject }}</h1>
       <p class="smx-muted">{{ detail.thread.public_id }}</p>
 
+      {% if request.args.get("message") == "triage_complete" %}
+        <p class="badge">AI triage complete</p>
+      {% endif %}
+
+      {% if request.args.get("error") == "ai_client_required" %}
+        <p class="smx-muted">AI analysis is unavailable because no commerce AI client was provided by the host app.</p>
+      {% endif %}
+
+      <form method="post" action="/commerce/admin/support/{{ detail.thread.public_id }}/analyze">
+        <button type="submit">Run AI triage</button>
+      </form>
+
       <div class="smx-thread-meta">
         <article class="smx-thread-meta-card">
           <p class="smx-thread-meta-label">Customer</p>
@@ -239,6 +251,38 @@
         </article>
       </div>
     </section>
+
+    {% if detail.thread.metadata.get("triage") %}
+      <section class="smx-panel">
+        <h2>AI Triage</h2>
+        <div class="smx-thread-meta">
+          <article class="smx-thread-meta-card">
+            <p class="smx-thread-meta-label">Issue</p>
+            <p class="smx-thread-meta-value">{{ detail.thread.metadata["triage"]["issue_type"] }}</p>
+          </article>
+
+          <article class="smx-thread-meta-card">
+            <p class="smx-thread-meta-label">Confidence</p>
+            <p class="smx-thread-meta-value">{{ "%.2f"|format(detail.thread.metadata["triage"]["confidence"]) }}</p>
+          </article>
+
+          <article class="smx-thread-meta-card">
+            <p class="smx-thread-meta-label">Escalate</p>
+            <p class="smx-thread-meta-value">
+              {% if detail.thread.metadata["triage"]["should_escalate"] %}Yes{% else %}No{% endif %}
+            </p>
+          </article>
+        </div>
+
+        <p>{{ detail.thread.metadata["triage"]["summary"] }}</p>
+
+        {% if detail.thread.metadata["triage"]["missing_information"] %}
+          <p class="smx-muted">
+            Missing: {{ detail.thread.metadata["triage"]["missing_information"]|join(", ") }}
+          </p>
+        {% endif %}
+      </section>
+    {% endif %}
 
     <section class="smx-panel">
       <h2>Conversation</h2>

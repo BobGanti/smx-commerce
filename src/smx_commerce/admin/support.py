@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from flask import Blueprint, abort, jsonify, render_template, request
+from flask import Blueprint, abort, jsonify, redirect, render_template, request
 
 from smx_commerce.core import CommerceRuntime
-from smx_commerce.support import SupportRepository
+from smx_commerce.support import SupportAnalysisService, SupportRepository
 from smx_commerce.support.objects import SupportThreadStatus
 
 
@@ -89,6 +89,36 @@ def create_support_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
                     }
                     for message in detail.messages
                 ],
+            }
+        )
+
+    @bp.post("/support/<thread_public_id>/analyze")
+    def analyze_support_thread(thread_public_id: str):
+        ai_client = getattr(runtime, "ai_client", None)
+
+        if ai_client is None:
+            if admin_support_wants_html():
+                return redirect(f"/commerce/admin/support/{thread_public_id}?error=ai_client_required")
+
+            return jsonify({"error": "ai_client is required to analyze support threads"}), 400
+
+        with runtime.session_scope() as session:
+            service = SupportAnalysisService(
+                session=session,
+                ai_client=ai_client,
+            )
+            result = service.triage_thread(thread_public_id)
+
+        if admin_support_wants_html():
+            return redirect(f"/commerce/admin/support/{thread_public_id}?message=triage_complete")
+
+        return jsonify(
+            {
+                "issue_type": result.issue_type,
+                "confidence": result.confidence,
+                "summary": result.summary,
+                "should_escalate": result.should_escalate,
+                "missing_information": result.missing_information,
             }
         )
 
