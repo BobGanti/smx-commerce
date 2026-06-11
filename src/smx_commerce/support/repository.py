@@ -184,6 +184,40 @@ class SupportRepository:
 
         return self._to_thread(thread_row)
 
+    def record_reply_draft(
+        self,
+        thread_public_id: str,
+        *,
+        body: str,
+        tone: str,
+        needs_human_review: bool,
+        next_actions: list[str] | None = None,
+    ) -> SupportThread:
+        thread_row = self._get_thread_row_or_raise(thread_public_id)
+
+        cleaned_body = validate_required_text(body, "body")
+        cleaned_tone = validate_required_text(tone, "tone")
+
+        cleaned_next_actions = [
+            str(action).strip()
+            for action in (next_actions or [])
+            if str(action).strip()
+        ]
+
+        metadata = dict(thread_row.metadata_json or {})
+        metadata["reply_draft"] = {
+            "body": cleaned_body,
+            "tone": cleaned_tone,
+            "needs_human_review": bool(needs_human_review),
+            "next_actions": cleaned_next_actions,
+        }
+
+        thread_row.metadata_json = metadata
+
+        self.session.flush()
+
+        return self._to_thread(thread_row)
+
     def _get_thread_row_or_raise(self, public_id: str) -> SupportThreadRow:
         value = validate_required_text(public_id, "public_id")
 
