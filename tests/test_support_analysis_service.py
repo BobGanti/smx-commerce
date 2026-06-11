@@ -27,6 +27,7 @@ def test_support_analysis_service_triages_thread_and_persists_result():
             "confidence": 0.93,
             "summary": "Customer paid but cannot access the course.",
             "should_escalate": False,
+            "recommended_priority": "urgent",
             "missing_information": ["order_public_id"],
         }
     )
@@ -58,6 +59,7 @@ def test_support_analysis_service_triages_thread_and_persists_result():
 
         assert loaded is not None
         assert loaded.issue_type == "account_access_issue"
+        assert loaded.priority.value == "urgent"
         assert loaded.metadata["triage"]["should_escalate"] is False
         assert loaded.metadata["triage"]["missing_information"] == ["order_public_id"]
 

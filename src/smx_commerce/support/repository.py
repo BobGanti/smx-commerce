@@ -179,6 +179,7 @@ class SupportRepository:
         summary: str,
         should_escalate: bool,
         missing_information: list[str] | None = None,
+        recommended_priority: SupportThreadPriority | str | None = None,
     ) -> SupportThread:
         thread_row = self._get_thread_row_or_raise(thread_public_id)
 
@@ -203,15 +204,23 @@ class SupportRepository:
         ]
 
         metadata = dict(thread_row.metadata_json or {})
+        cleaned_recommended_priority = (
+            self._thread_priority_value(recommended_priority)
+            if recommended_priority is not None
+            else thread_row.priority
+        )
+
         metadata["triage"] = {
             "issue_type": cleaned_issue_type,
             "confidence": cleaned_confidence,
             "summary": cleaned_summary,
             "should_escalate": bool(should_escalate),
+            "recommended_priority": cleaned_recommended_priority,
             "missing_information": cleaned_missing_information,
         }
 
         thread_row.issue_type = cleaned_issue_type
+        thread_row.priority = cleaned_recommended_priority
         thread_row.metadata_json = metadata
 
         self.session.flush()

@@ -48,6 +48,7 @@ class SupportAnalysisService:
             summary=result.summary,
             should_escalate=result.should_escalate,
             missing_information=result.missing_information,
+            recommended_priority=result.recommended_priority,
         )
 
         return result

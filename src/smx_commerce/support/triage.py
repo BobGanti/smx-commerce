@@ -6,6 +6,14 @@ from typing import Any
 from smx_commerce.ai import CommerceAIClient
 
 
+ALLOWED_SUPPORT_PRIORITIES = {
+    "low",
+    "normal",
+    "high",
+    "urgent",
+}
+
+
 ALLOWED_SUPPORT_ISSUE_TYPES = {
     "order_status",
     "payment_problem",
@@ -28,6 +36,7 @@ class SupportTriageResult:
     confidence: float
     summary: str
     should_escalate: bool
+    recommended_priority: str
     missing_information: list[str]
 
 
@@ -66,6 +75,7 @@ class SupportTriageService:
                     "confidence",
                     "summary",
                     "should_escalate",
+                    "recommended_priority",
                     "missing_information",
                 ],
                 "properties": {
@@ -80,6 +90,10 @@ class SupportTriageService:
                     },
                     "summary": {"type": "string"},
                     "should_escalate": {"type": "boolean"},
+                    "recommended_priority": {
+                        "type": "string",
+                        "enum": sorted(ALLOWED_SUPPORT_PRIORITIES),
+                    },
                     "missing_information": {
                         "type": "array",
                         "items": {"type": "string"},
@@ -109,6 +123,10 @@ class SupportTriageService:
 
         should_escalate = bool(result.get("should_escalate", False))
 
+        recommended_priority = str(result.get("recommended_priority", "")).strip()
+        if recommended_priority not in ALLOWED_SUPPORT_PRIORITIES:
+            recommended_priority = "high" if should_escalate else "normal"
+
         missing_information = result.get("missing_information", [])
         if not isinstance(missing_information, list):
             missing_information = []
@@ -118,6 +136,7 @@ class SupportTriageService:
             confidence=confidence,
             summary=summary,
             should_escalate=should_escalate,
+            recommended_priority=recommended_priority,
             missing_information=[str(item).strip() for item in missing_information if str(item).strip()],
         )
 

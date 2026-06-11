@@ -116,14 +116,17 @@ def test_support_repository_records_triage_result():
             summary="Customer paid but cannot access purchased content.",
             should_escalate=False,
             missing_information=["order_public_id"],
+            recommended_priority="high",
         )
 
         assert updated.issue_type == "account_access_issue"
+        assert updated.priority.value == "high"
         assert updated.metadata["triage"] == {
             "issue_type": "account_access_issue",
             "confidence": 0.88,
             "summary": "Customer paid but cannot access purchased content.",
             "should_escalate": False,
+            "recommended_priority": "high",
             "missing_information": ["order_public_id"],
         }
 

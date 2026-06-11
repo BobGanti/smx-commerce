@@ -18,6 +18,7 @@ def test_support_triage_service_calls_ai_client_with_allowed_taxonomy():
             "confidence": 0.91,
             "summary": "Customer paid but cannot access the course.",
             "should_escalate": False,
+            "recommended_priority": "high",
             "missing_information": ["order_public_id"],
         }
     )
@@ -35,6 +36,7 @@ def test_support_triage_service_calls_ai_client_with_allowed_taxonomy():
     assert result.confidence == 0.91
     assert result.summary == "Customer paid but cannot access the course."
     assert result.should_escalate is False
+    assert result.recommended_priority == "high"
     assert result.missing_information == ["order_public_id"]
 
     call = ai_client.calls[0]
@@ -63,3 +65,26 @@ def test_support_triage_service_falls_back_when_ai_invents_issue_type():
     assert result.issue_type == "general_question"
     assert result.confidence == 0.95
     assert result.summary == "Customer cannot access purchased content."
+
+
+
+def test_support_triage_service_falls_back_to_high_priority_when_escalation_has_no_priority():
+    ai_client = FakeAIClient(
+        {
+            "issue_type": "complaint",
+            "confidence": 0.82,
+            "summary": "Customer is angry and needs human review.",
+            "should_escalate": True,
+            "missing_information": [],
+        }
+    )
+
+    service = SupportTriageService(ai_client)
+
+    result = service.triage(
+        customer_message="I have asked three times and nobody has helped me.",
+    )
+
+    assert result.issue_type == "complaint"
+    assert result.should_escalate is True
+    assert result.recommended_priority == "high"
