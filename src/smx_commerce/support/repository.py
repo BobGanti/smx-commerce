@@ -108,6 +108,15 @@ class SupportRepository:
         self.session.add(row)
         self.session.flush()
 
+        metadata_json = dict(thread_row.metadata_json or {})
+        if "reply_draft" in metadata_json:
+            metadata_json["last_saved_reply"] = {
+                "message_public_id": row.public_id,
+                "source": "admin_reviewed_reply",
+            }
+            metadata_json.pop("reply_draft", None)
+            thread_row.metadata_json = metadata_json
+
         thread_row.updated_at = row.created_at
         self.session.flush()
 
