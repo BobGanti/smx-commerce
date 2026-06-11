@@ -14,6 +14,7 @@ class FakeAIClient:
             "confidence": 0.97,
             "summary": "Customer paid but cannot access purchased content.",
             "should_escalate": False,
+            "recommended_priority": "high",
             "missing_information": ["order_public_id"],
         }
 
@@ -83,6 +84,7 @@ def test_admin_support_analyze_runs_ai_and_persists_triage(tmp_path):
         "confidence": 0.97,
         "summary": "Customer paid but cannot access purchased content.",
         "should_escalate": False,
+        "recommended_priority": "high",
         "missing_information": ["order_public_id"],
     }
 
@@ -102,6 +104,7 @@ def test_admin_support_analyze_runs_ai_and_persists_triage(tmp_path):
     assert triage["issue_type"] == "account_access_issue"
     assert triage["confidence"] == 0.97
     assert triage["summary"] == "Customer paid but cannot access purchased content."
+    assert triage["recommended_priority"] == "high"
     assert triage["missing_information"] == ["order_public_id"]
 
 
@@ -143,6 +146,8 @@ def test_admin_support_detail_shows_ai_triage_button_and_result(tmp_path):
     assert "Run AI triage" in html
     assert "AI Triage" in html
     assert "account_access_issue" in html
+    assert "Recommended priority" in html
+    assert "high" in html
     assert "0.97" in html
     assert "Customer paid but cannot access purchased content." in html
     assert "Missing: order_public_id" in html

@@ -336,6 +336,13 @@
               {% if detail.thread.metadata["triage"]["should_escalate"] %}Yes{% else %}No{% endif %}
             </p>
           </article>
+
+          <article class="smx-thread-meta-card">
+            <p class="smx-thread-meta-label">Recommended priority</p>
+            <p class="smx-thread-meta-value">
+              {{ detail.thread.metadata["triage"].get("recommended_priority", detail.thread.priority.value) }}
+            </p>
+          </article>
         </div>
 
         <p>{{ detail.thread.metadata["triage"]["summary"] }}</p>

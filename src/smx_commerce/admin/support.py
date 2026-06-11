@@ -121,6 +121,7 @@ def create_support_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
                 "confidence": result.confidence,
                 "summary": result.summary,
                 "should_escalate": result.should_escalate,
+                "recommended_priority": result.recommended_priority,
                 "missing_information": result.missing_information,
             }
         )
