@@ -17,6 +17,7 @@ from smx_commerce.support.objects import (
     SupportThreadPriority,
     SupportThreadStatus,
 )
+from smx_commerce.support.reply_safety import validate_admin_reply_body
 
 
 class SupportRepository:
@@ -100,7 +101,7 @@ class SupportRepository:
             sender_type=SupportMessageSenderType.ADMIN.value,
             sender_name=(sender_name or "Support").strip(),
             sender_email=(sender_email or "").strip().lower(),
-            body=validate_required_text(body, "body"),
+            body=validate_admin_reply_body(body),
             metadata_json=dict(metadata or {}),
         )
 
