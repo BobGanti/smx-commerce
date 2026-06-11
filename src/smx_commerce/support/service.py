@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
+from smx_commerce.checkout.repository import OrderRepository
 from smx_commerce.ai import CommerceAIClient
 from smx_commerce.support.repository import SupportRepository
 from smx_commerce.support.composer import SupportReplyComposerService, SupportReplyDraft
@@ -30,11 +31,14 @@ class SupportAnalysisService:
 
         latest_customer_message = customer_messages[-1]
 
+        order_context = self._order_context_for_thread(detail.thread.order_public_id)
+
         result = self.triage_service.triage(
             customer_email=detail.thread.customer_email,
             order_public_id=detail.thread.order_public_id,
             subject=detail.thread.subject,
             customer_message=latest_customer_message.body,
+            order_context=order_context,
         )
 
         self.repository.record_triage_result(
@@ -67,6 +71,8 @@ class SupportAnalysisService:
         triage = detail.thread.metadata.get("triage", {})
 
         composer = SupportReplyComposerService(self.triage_service.ai_client)
+        order_context = self._order_context_for_thread(detail.thread.order_public_id)
+
         draft = composer.compose_reply(
             customer_email=detail.thread.customer_email,
             customer_name=detail.thread.customer_name,
@@ -75,6 +81,7 @@ class SupportAnalysisService:
             triage_summary=str(triage.get("summary", "")),
             missing_information=triage.get("missing_information", []),
             customer_message=latest_customer_message.body,
+            order_context=order_context,
         )
 
         self.repository.record_reply_draft(
@@ -86,3 +93,30 @@ class SupportAnalysisService:
         )
 
         return draft
+
+    def _order_context_for_thread(self, order_public_id: str) -> dict[str, object]:
+        order_id = (order_public_id or "").strip()
+        if not order_id:
+            return {}
+
+        order = OrderRepository(self.repository.session).get_by_public_id(order_id)
+        if order is None:
+            return {
+                "found": False,
+                "public_id": order_id,
+            }
+
+        return {
+            "found": True,
+            "public_id": order.public_id,
+            "status": order.status.value,
+            "product_slug": order.product_slug,
+            "price_code": order.price_code,
+            "buyer_email": order.buyer.email,
+            "buyer_name": order.buyer.full_name,
+            "amount_cents": order.amount.amount_cents,
+            "currency": order.amount.currency,
+            "payment_provider": order.payment_provider,
+            "payment_reference_present": bool(order.payment_reference),
+            "notes": order.notes,
+        }

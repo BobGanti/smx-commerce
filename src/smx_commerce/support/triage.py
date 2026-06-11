@@ -45,6 +45,7 @@ class SupportTriageService:
         customer_email: str = "",
         order_public_id: str = "",
         subject: str = "",
+        order_context: dict[str, Any] | None = None,
     ) -> SupportTriageResult:
         message = (customer_message or "").strip()
         if not message:
@@ -88,6 +89,7 @@ class SupportTriageService:
             context={
                 "customer_email": customer_email,
                 "order_public_id": order_public_id,
+                "order_context": order_context or {},
                 "subject": subject,
                 "customer_message": message,
                 "allowed_issue_types": sorted(ALLOWED_SUPPORT_ISSUE_TYPES),

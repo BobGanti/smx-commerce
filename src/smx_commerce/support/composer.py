@@ -31,6 +31,7 @@ class SupportReplyComposerService:
         issue_type: str = "",
         triage_summary: str = "",
         missing_information: list[str] | None = None,
+        order_context: dict[str, Any] | None = None,
     ) -> SupportReplyDraft:
         message = (customer_message or "").strip()
         if not message:
@@ -70,6 +71,7 @@ class SupportReplyComposerService:
                 "issue_type": issue_type,
                 "triage_summary": triage_summary,
                 "missing_information": missing_information or [],
+                "order_context": order_context or {},
                 "customer_message": message,
                 "safety_rules": [
                     "Draft only. Do not send.",
