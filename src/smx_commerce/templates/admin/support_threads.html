@@ -173,6 +173,34 @@
       margin: 16px 0;
     }
 
+    .smx-support-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .smx-support-summary-card {
+      padding: 14px;
+      border: 1px solid var(--smx-border);
+      border-radius: 14px;
+      background: #f9fafb;
+    }
+
+    .smx-support-summary-label {
+      margin: 0 0 4px;
+      color: var(--smx-muted);
+      font-size: 0.82rem;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .smx-support-summary-value {
+      margin: 0;
+      font-size: 1.45rem;
+      font-weight: 950;
+    }
+
     @media (max-width: 760px) {
       .smx-nav,
       .smx-inline-form {
@@ -235,6 +263,38 @@
       <p class="smx-muted">
         Review customer support requests submitted through {{ commerce_config.store_title }}.
       </p>
+
+      <div class="smx-support-summary-grid" aria-label="Support inbox summary">
+        <article class="smx-support-summary-card">
+          <p class="smx-support-summary-label">Total</p>
+          <p class="smx-support-summary-value">{{ support_summary.total }}</p>
+        </article>
+
+        <article class="smx-support-summary-card">
+          <p class="smx-support-summary-label">Open threads</p>
+          <p class="smx-support-summary-value">{{ support_summary.open }}</p>
+        </article>
+
+        <article class="smx-support-summary-card">
+          <p class="smx-support-summary-label">Waiting</p>
+          <p class="smx-support-summary-value">{{ support_summary.waiting }}</p>
+        </article>
+
+        <article class="smx-support-summary-card">
+          <p class="smx-support-summary-label">Resolved</p>
+          <p class="smx-support-summary-value">{{ support_summary.resolved }}</p>
+        </article>
+
+        <article class="smx-support-summary-card">
+          <p class="smx-support-summary-label">High</p>
+          <p class="smx-support-summary-value">{{ support_summary.high }}</p>
+        </article>
+
+        <article class="smx-support-summary-card">
+          <p class="smx-support-summary-label">Urgent</p>
+          <p class="smx-support-summary-value">{{ support_summary.urgent }}</p>
+        </article>
+      </div>
 
       <form method="get" action="/commerce/admin/support" class="smx-admin-actions">
         <label for="support-search"><strong>Search support</strong></label>

@@ -51,6 +51,16 @@ def create_support_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
                 status=SupportThreadStatus(status) if status else None,
                 priority=SupportThreadPriority(priority) if priority else None,
             )
+            summary_threads = repository.list_threads(limit=None)
+
+        support_summary = {
+            "total": len(summary_threads),
+            "open": len([thread for thread in summary_threads if thread.status.value == "open"]),
+            "waiting": len([thread for thread in summary_threads if thread.status.value == "waiting"]),
+            "resolved": len([thread for thread in summary_threads if thread.status.value == "resolved"]),
+            "high": len([thread for thread in summary_threads if thread.priority.value == "high"]),
+            "urgent": len([thread for thread in summary_threads if thread.priority.value == "urgent"]),
+        }
 
         if query:
             query_lower = query.lower()
@@ -72,6 +82,7 @@ def create_support_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
                 status=status,
                 priority=priority,
                 query=query,
+                support_summary=support_summary,
                 commerce_config=runtime.config,
             )
 
