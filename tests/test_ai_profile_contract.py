@@ -1,6 +1,7 @@
 ﻿from flask import Flask
 
 from smx_commerce import create_commerce_blueprint, init_commerce
+from smx_commerce.ai import GoogleCommerceAIClient
 
 
 def test_create_commerce_blueprint_accepts_ai_profile():
@@ -20,6 +21,12 @@ def test_create_commerce_blueprint_accepts_ai_profile():
     assert blueprint.ai_profile is ai_profile
     assert blueprint.ai_profile["provider"] == "google"
     assert blueprint.ai_profile["client"] is provider_client
+    assert isinstance(blueprint.ai_client, GoogleCommerceAIClient)
+    assert blueprint.ai_client.model == "gemini-2.0-flash"
+    assert blueprint.ai_client.client is provider_client
+    assert isinstance(blueprint.ai_client, GoogleCommerceAIClient)
+    assert blueprint.ai_client.model == "gemini-2.0-flash"
+    assert blueprint.ai_client.client is provider_client
 
 
 def test_init_commerce_forwards_ai_profile_to_registered_blueprint():
