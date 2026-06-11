@@ -85,8 +85,12 @@ def test_admin_support_compose_reply_persists_ai_reply_draft(tmp_path):
         "next_actions": ["Ask customer for order ID", "Verify payment before promising access"],
     }
 
-    assert len(ai_client.calls) == 1
-    assert ai_client.calls[0]["agent_name"] == "commerce_support_composer"
+    assert len(ai_client.calls) == 3
+    assert [call["agent_name"] for call in ai_client.calls] == [
+        "commerce_support_reply_planner",
+        "commerce_support_reply_composer",
+        "commerce_support_reply_verifier",
+    ]
 
     detail_response = client.get(
         f"/commerce/admin/support/{thread_public_id}?format=json",

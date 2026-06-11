@@ -9,7 +9,7 @@ class FakeAIClient:
     def run_agent_task(self, **kwargs):
         self.calls.append(kwargs)
 
-        if kwargs["agent_name"] == "commerce_support_composer":
+        if kwargs["agent_name"] == "commerce_support_reply_composer":
             return {
                 "body": "Hi Aoife, thanks for reaching out. Please send your order ID so we can verify the payment and help restore access.",
                 "tone": "helpful",
@@ -80,5 +80,7 @@ def test_support_analysis_service_composes_and_persists_reply_draft():
             "commerce_support_missing_information",
             "commerce_support_escalation_assessor",
             "commerce_support_priority_assessor",
-            "commerce_support_composer",
+            "commerce_support_reply_planner",
+            "commerce_support_reply_composer",
+            "commerce_support_reply_verifier",
         ]
