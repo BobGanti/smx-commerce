@@ -63,7 +63,7 @@ def test_support_analysis_service_triages_thread_and_persists_result():
         assert loaded.metadata["triage"]["should_escalate"] is False
         assert loaded.metadata["triage"]["missing_information"] == ["order_public_id"]
 
-        assert len(ai_client.calls) == 1
+        assert len(ai_client.calls) == 5
         assert ai_client.calls[0]["context"]["customer_email"] == "aoife@example.com"
         assert ai_client.calls[0]["context"]["subject"] == "I paid but did not receive access"
         assert ai_client.calls[0]["context"]["customer_message"] == "I paid yesterday and still cannot access the course."

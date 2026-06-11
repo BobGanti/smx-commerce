@@ -75,6 +75,10 @@ def test_support_analysis_service_composes_and_persists_reply_draft():
         }
 
         assert [call["agent_name"] for call in ai_client.calls] == [
-            "commerce_support_triage",
+            "commerce_support_issue_classifier",
+            "commerce_support_summary",
+            "commerce_support_missing_information",
+            "commerce_support_escalation_assessor",
+            "commerce_support_priority_assessor",
             "commerce_support_composer",
         ]

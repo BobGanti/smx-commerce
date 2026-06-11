@@ -1,4 +1,13 @@
-﻿from smx_commerce.support.triage import SupportTriageService
+from smx_commerce.support.triage import SupportTriageService
+
+
+TRIAGE_AGENT_NAMES = [
+    "commerce_support_issue_classifier",
+    "commerce_support_summary",
+    "commerce_support_missing_information",
+    "commerce_support_escalation_assessor",
+    "commerce_support_priority_assessor",
+]
 
 
 class FakeAIClient:
@@ -11,7 +20,7 @@ class FakeAIClient:
         return self.response
 
 
-def test_support_triage_service_calls_ai_client_with_allowed_taxonomy():
+def test_support_triage_service_uses_narrow_single_responsibility_agents():
     ai_client = FakeAIClient(
         {
             "issue_type": "payment_problem",
@@ -39,19 +48,22 @@ def test_support_triage_service_calls_ai_client_with_allowed_taxonomy():
     assert result.recommended_priority == "high"
     assert result.missing_information == ["order_public_id"]
 
-    call = ai_client.calls[0]
-    assert call["agent_name"] == "commerce_support_triage"
-    assert "allowed_issue_types" in call["context"]
-    assert "payment_problem" in call["context"]["allowed_issue_types"]
+    assert [call["agent_name"] for call in ai_client.calls] == TRIAGE_AGENT_NAMES
+
+    first_call = ai_client.calls[0]
+    assert first_call["context"]["customer_email"] == "aoife@example.com"
+    assert "allowed_issue_types" in first_call["context"]
+    assert "payment_problem" in first_call["context"]["allowed_issue_types"]
 
 
-def test_support_triage_service_falls_back_when_ai_invents_issue_type():
+def test_support_triage_service_falls_back_when_classifier_invents_issue_type():
     ai_client = FakeAIClient(
         {
             "issue_type": "access_issue",
             "confidence": 0.95,
             "summary": "Customer cannot access purchased content.",
             "should_escalate": False,
+            "recommended_priority": "normal",
             "missing_information": [],
         }
     )
@@ -65,7 +77,6 @@ def test_support_triage_service_falls_back_when_ai_invents_issue_type():
     assert result.issue_type == "general_question"
     assert result.confidence == 0.95
     assert result.summary == "Customer cannot access purchased content."
-
 
 
 def test_support_triage_service_falls_back_to_high_priority_when_escalation_has_no_priority():

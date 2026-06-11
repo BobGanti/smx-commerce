@@ -88,8 +88,8 @@ def test_admin_support_analyze_runs_ai_and_persists_triage(tmp_path):
         "missing_information": ["order_public_id"],
     }
 
-    assert len(ai_client.calls) == 1
-    assert ai_client.calls[0]["agent_name"] == "commerce_support_triage"
+    assert len(ai_client.calls) == 5
+    assert ai_client.calls[0]["agent_name"] == "commerce_support_issue_classifier"
 
     detail_response = client.get(
         f"/commerce/admin/support/{thread_public_id}?format=json",
