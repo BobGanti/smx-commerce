@@ -7,11 +7,13 @@ from smx_commerce.support.objects import (
     SupportThreadStatus,
 )
 from smx_commerce.support.repository import SupportRepository
+from smx_commerce.support.service import SupportAnalysisService
 
 __all__ = [
     "SupportMessage",
     "SupportMessageSenderType",
     "SupportRepository",
+    "SupportAnalysisService",
     "SupportThread",
     "SupportThreadDetail",
     "SupportThreadPriority",
