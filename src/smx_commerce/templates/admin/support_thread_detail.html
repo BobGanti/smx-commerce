@@ -232,6 +232,10 @@
         <p class="badge">Thread status updated</p>
       {% endif %}
 
+      {% if request.args.get("message") == "priority_updated" %}
+        <p class="badge">Thread priority updated</p>
+      {% endif %}
+
       {% if request.args.get("error") == "ai_client_required" %}
         <p class="smx-muted">AI analysis is unavailable because no commerce AI client was provided by the host app.</p>
       {% endif %}
@@ -242,6 +246,10 @@
 
       {% if request.args.get("error") == "status_invalid" %}
         <p class="smx-muted">Invalid support thread status.</p>
+      {% endif %}
+
+      {% if request.args.get("error") == "priority_invalid" %}
+        <p class="smx-muted">Invalid support thread priority.</p>
       {% endif %}
 
       <form method="post" action="/commerce/admin/support/{{ detail.thread.public_id }}/analyze">
@@ -262,6 +270,17 @@
         <button type="submit">Update status</button>
       </form>
 
+      <form method="post" action="/commerce/admin/support/{{ detail.thread.public_id }}/priority">
+        <label for="thread-priority"><strong>Priority</strong></label>
+        <select id="thread-priority" name="priority">
+          <option value="low"{% if detail.thread.priority.value == "low" %} selected{% endif %}>Low</option>
+          <option value="normal"{% if detail.thread.priority.value == "normal" %} selected{% endif %}>Normal</option>
+          <option value="high"{% if detail.thread.priority.value == "high" %} selected{% endif %}>High</option>
+          <option value="urgent"{% if detail.thread.priority.value == "urgent" %} selected{% endif %}>Urgent</option>
+        </select>
+        <button type="submit">Update priority</button>
+      </form>
+
       <div class="smx-thread-meta">
         <article class="smx-thread-meta-card">
           <p class="smx-thread-meta-label">Customer</p>
@@ -272,6 +291,11 @@
         <article class="smx-thread-meta-card">
           <p class="smx-thread-meta-label">Status</p>
           <p class="smx-thread-meta-value"><span class="badge">{{ detail.thread.status.value }}</span></p>
+        </article>
+
+        <article class="smx-thread-meta-card">
+          <p class="smx-thread-meta-label">Priority</p>
+          <p class="smx-thread-meta-value"><span class="badge">{{ detail.thread.priority.value }}</span></p>
         </article>
 
         <article class="smx-thread-meta-card">

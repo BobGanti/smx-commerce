@@ -147,12 +147,16 @@ class SupportRepository:
         self,
         *,
         status: SupportThreadStatus | str | None = None,
+        priority: SupportThreadPriority | str | None = None,
         limit: int | None = 100,
     ) -> list[SupportThread]:
         statement = select(SupportThreadRow)
 
         if status is not None:
             statement = statement.where(SupportThreadRow.status == self._thread_status_value(status))
+
+        if priority is not None:
+            statement = statement.where(SupportThreadRow.priority == self._thread_priority_value(priority))
 
         statement = statement.order_by(
             SupportThreadRow.updated_at.desc(),
@@ -257,6 +261,19 @@ class SupportRepository:
         thread_row = self._get_thread_row_or_raise(thread_public_id)
 
         thread_row.status = self._thread_status_value(status)
+        self.session.flush()
+
+        return self._to_thread(thread_row)
+
+    def update_thread_priority(
+        self,
+        thread_public_id: str,
+        *,
+        priority: SupportThreadPriority | str,
+    ) -> SupportThread:
+        thread_row = self._get_thread_row_or_raise(thread_public_id)
+
+        thread_row.priority = self._thread_priority_value(priority)
         self.session.flush()
 
         return self._to_thread(thread_row)

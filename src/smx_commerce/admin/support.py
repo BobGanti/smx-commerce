@@ -4,7 +4,7 @@ from flask import Blueprint, abort, jsonify, redirect, render_template, request
 
 from smx_commerce.core import CommerceRuntime
 from smx_commerce.support import SupportAnalysisService, SupportRepository
-from smx_commerce.support.objects import SupportThreadStatus
+from smx_commerce.support.objects import SupportThreadPriority, SupportThreadStatus
 
 
 def admin_support_wants_html() -> bool:
@@ -42,11 +42,13 @@ def create_support_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
     @bp.get("/support")
     def list_support_threads():
         status = request.args.get("status") or None
+        priority = request.args.get("priority") or None
 
         with runtime.session_scope() as session:
             repository = SupportRepository(session)
             threads = repository.list_threads(
                 status=SupportThreadStatus(status) if status else None,
+                priority=SupportThreadPriority(priority) if priority else None,
             )
 
         if admin_support_wants_html():
@@ -54,6 +56,7 @@ def create_support_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
                 "admin/support_threads.html",
                 threads=threads,
                 status=status,
+                priority=priority,
                 commerce_config=runtime.config,
             )
 
@@ -200,6 +203,28 @@ def create_support_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
 
         if admin_support_wants_html():
             return redirect(f"/commerce/admin/support/{thread_public_id}?message=status_updated")
+
+        return jsonify(support_thread_to_dict(thread))
+
+    @bp.post("/support/<thread_public_id>/priority")
+    def update_support_thread_priority(thread_public_id: str):
+        priority = request.form.get("priority", "")
+
+        try:
+            with runtime.session_scope() as session:
+                repository = SupportRepository(session)
+                thread = repository.update_thread_priority(
+                    thread_public_id,
+                    priority=priority,
+                )
+        except ValueError as exc:
+            if admin_support_wants_html():
+                return redirect(f"/commerce/admin/support/{thread_public_id}?error=priority_invalid")
+
+            return jsonify({"error": str(exc)}), 400
+
+        if admin_support_wants_html():
+            return redirect(f"/commerce/admin/support/{thread_public_id}?message=priority_updated")
 
         return jsonify(support_thread_to_dict(thread))
 
