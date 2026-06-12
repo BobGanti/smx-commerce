@@ -75,6 +75,75 @@ class GoogleCommerceAIClient:
         raise CommerceAIClientError("Google AI response did not contain text.")
 
 
+class OpenAIResponsesCommerceAIClient:
+    def __init__(
+        self,
+        *,
+        model: str,
+        client: Any,
+    ):
+        if not model:
+            raise CommerceAIClientError("OpenAI AI profile requires a model.")
+        if client is None:
+            raise CommerceAIClientError("OpenAI AI profile requires a client.")
+
+        self.model = model
+        self.client = client
+
+    def run_agent_task(
+        self,
+        *,
+        agent_name: str,
+        system_prompt: str,
+        task_prompt: str,
+        expected_schema: dict[str, Any],
+        context: dict[str, Any],
+    ) -> dict[str, Any]:
+        prompt = _build_agent_prompt(
+            agent_name=agent_name,
+            system_prompt=system_prompt,
+            task_prompt=task_prompt,
+            expected_schema=expected_schema,
+            context=context,
+        )
+
+        response_text = self._generate_text(prompt)
+        return _parse_json_object(response_text, agent_name=agent_name)
+
+    def _generate_text(self, prompt: str) -> str:
+        try:
+            response = self.client.responses.create(
+                model=self.model,
+                input=prompt,
+                text={
+                    "format": {
+                        "type": "json_object",
+                    },
+                },
+            )
+        except TypeError:
+            response = self.client.responses.create(
+                model=self.model,
+                input=prompt,
+            )
+        except Exception as exc:
+            raise CommerceAIClientError(f"OpenAI Responses API request failed: {exc}") from exc
+
+        text = getattr(response, "output_text", None)
+        if isinstance(text, str) and text.strip():
+            return text
+
+        output = getattr(response, "output", None) or []
+        for item in output:
+            content = getattr(item, "content", None) or []
+            for content_item in content:
+                content_text = getattr(content_item, "text", None)
+                if isinstance(content_text, str) and content_text.strip():
+                    return content_text
+
+        raise CommerceAIClientError("OpenAI Responses API response did not contain output text.")
+
+
 def build_commerce_ai_client_from_profile(profile: dict[str, Any] | None):
     if not profile:
         return None
@@ -83,6 +152,12 @@ def build_commerce_ai_client_from_profile(profile: dict[str, Any] | None):
 
     if provider == "google":
         return GoogleCommerceAIClient(
+            model=str(profile.get("model", "")).strip(),
+            client=profile.get("client"),
+        )
+
+    if provider == "openai":
+        return OpenAIResponsesCommerceAIClient(
             model=str(profile.get("model", "")).strip(),
             client=profile.get("client"),
         )
