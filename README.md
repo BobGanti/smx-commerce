@@ -1,4 +1,4 @@
-# smx-commerce
+﻿# smx-commerce
 
 `smx-commerce` is an installable commerce package for SyntaxMatrix-based projects.
 
@@ -1361,3 +1361,54 @@ Recommended practice:
 ```
 
 After changing secrets, restart the app or service so the new values are loaded.
+
+---
+
+## AI support integration with host-built ai_profile
+
+smx-commerce supports AI-assisted support workflows through a host-provided LLM profile.
+
+The host project builds the profile. smx-commerce uses that profile to create its internal provider adapter, support agents, orchestration, schema handling, deterministic safety rules, and admin review workflow.
+
+For Google/Gemini, the host project should provide an ai_profile dictionary with these fields:
+
+    from google import genai
+
+    ai_profile = {
+        "provider": "google",
+        "model": GEMINI_MODEL,
+        "api_key": GEMINI_API_KEY,
+        "client": genai.Client(api_key=GEMINI_API_KEY),
+    }
+
+Then pass the profile into the generated commerce setup function:
+
+    from commerce.smx_commerce_setup import setup_commerce
+
+    setup_commerce(
+        app,
+        init_schema=True,
+        ai_profile=ai_profile,
+    )
+
+The client project should not create a custom smx_commerce_ai_client.py file.
+
+The client project owns only:
+
+- provider
+- model
+- api_key
+- provider client instance
+
+smx-commerce owns:
+
+- provider adapter
+- support agents
+- parallel and sequential orchestration
+- JSON/schema handling
+- deterministic safety rules
+- admin review workflow
+
+If ai_profile is not provided, commerce still works, but AI support actions such as support analysis and reply drafting are not configured.
+
+Future providers planned for this profile boundary include OpenAI Responses API, Anthropic, and OpenAI-compatible chat-completions providers such as Alibaba, DeepSeek, and Moonshot/Kimi.
