@@ -7,12 +7,18 @@ from smx_commerce.ai import (
 )
 
 
+class FakeAnthropicUsage:
+    input_tokens = 22
+    output_tokens = 9
+
+
 class FakeAnthropicTextBlock:
     text = '{"summary": "Customer cannot access purchased course.", "needs_human_review": true}'
 
 
 class FakeAnthropicResponse:
     content = [FakeAnthropicTextBlock()]
+    usage = FakeAnthropicUsage()
 
 
 class FakeAnthropicMessages:
@@ -65,6 +71,12 @@ def test_build_commerce_ai_client_from_anthropic_profile_returns_adapter():
         "summary": "Customer cannot access purchased course.",
         "needs_human_review": True,
     }
+
+    assert result.usage.provider == "anthropic"
+    assert result.usage.model == "claude-test"
+    assert result.usage.input_tokens == 22
+    assert result.usage.output_tokens == 9
+    assert result.usage.total_tokens == 31
 
     call = provider_client.messages.calls[0]
 

@@ -1,4 +1,4 @@
-﻿from smx_commerce.ai.contracts import CommerceAIClient, CommerceAIClientError
+﻿from smx_commerce.ai.contracts import CommerceAIClient, CommerceAIClientError, CommerceAIResult, CommerceAIUsage
 from smx_commerce.ai.profiles import (
     AnthropicCommerceAIClient,
     GoogleCommerceAIClient,
@@ -9,6 +9,8 @@ from smx_commerce.ai.profiles import (
 __all__ = [
     "CommerceAIClient",
     "CommerceAIClientError",
+    "CommerceAIResult",
+    "CommerceAIUsage",
     "AnthropicCommerceAIClient",
     "GoogleCommerceAIClient",
     "OpenAIResponsesCommerceAIClient",

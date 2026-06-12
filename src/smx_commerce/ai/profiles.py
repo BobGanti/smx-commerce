@@ -4,7 +4,7 @@ import json
 import re
 from typing import Any
 
-from smx_commerce.ai.contracts import CommerceAIClientError
+from smx_commerce.ai.contracts import CommerceAIClientError, CommerceAIResult, CommerceAIUsage
 
 
 class GoogleCommerceAIClient:
@@ -39,10 +39,13 @@ class GoogleCommerceAIClient:
             context=context,
         )
 
-        response_text = self._generate_text(prompt)
-        return _parse_json_object(response_text, agent_name=agent_name)
+        response_text, usage = self._generate_text(prompt)
+        return CommerceAIResult(
+            data=_parse_json_object(response_text, agent_name=agent_name),
+            usage=usage,
+        )
 
-    def _generate_text(self, prompt: str) -> str:
+    def _generate_text(self, prompt: str) -> tuple[str, CommerceAIUsage]:
         try:
             response = self.client.models.generate_content(
                 model=self.model,
@@ -61,7 +64,7 @@ class GoogleCommerceAIClient:
 
         text = getattr(response, "text", None)
         if isinstance(text, str) and text.strip():
-            return text
+            return text, _extract_google_usage(response, provider="google", model=self.model)
 
         candidates = getattr(response, "candidates", None) or []
         for candidate in candidates:
@@ -70,7 +73,7 @@ class GoogleCommerceAIClient:
             for part in parts or []:
                 part_text = getattr(part, "text", None)
                 if isinstance(part_text, str) and part_text.strip():
-                    return part_text
+                    return part_text, _extract_google_usage(response, provider="google", model=self.model)
 
         raise CommerceAIClientError("Google AI response did not contain text.")
 
@@ -107,10 +110,13 @@ class OpenAIResponsesCommerceAIClient:
             context=context,
         )
 
-        response_text = self._generate_text(prompt)
-        return _parse_json_object(response_text, agent_name=agent_name)
+        response_text, usage = self._generate_text(prompt)
+        return CommerceAIResult(
+            data=_parse_json_object(response_text, agent_name=agent_name),
+            usage=usage,
+        )
 
-    def _generate_text(self, prompt: str) -> str:
+    def _generate_text(self, prompt: str) -> tuple[str, CommerceAIUsage]:
         try:
             response = self.client.responses.create(
                 model=self.model,
@@ -131,7 +137,7 @@ class OpenAIResponsesCommerceAIClient:
 
         text = getattr(response, "output_text", None)
         if isinstance(text, str) and text.strip():
-            return text
+            return text, _extract_openai_usage(response, provider="openai", model=self.model)
 
         output = getattr(response, "output", None) or []
         for item in output:
@@ -139,7 +145,7 @@ class OpenAIResponsesCommerceAIClient:
             for content_item in content:
                 content_text = getattr(content_item, "text", None)
                 if isinstance(content_text, str) and content_text.strip():
-                    return content_text
+                    return content_text, _extract_openai_usage(response, provider="openai", model=self.model)
 
         raise CommerceAIClientError("OpenAI Responses API response did not contain output text.")
 
@@ -178,10 +184,13 @@ class AnthropicCommerceAIClient:
             context=context,
         )
 
-        response_text = self._generate_text(prompt)
-        return _parse_json_object(response_text, agent_name=agent_name)
+        response_text, usage = self._generate_text(prompt)
+        return CommerceAIResult(
+            data=_parse_json_object(response_text, agent_name=agent_name),
+            usage=usage,
+        )
 
-    def _generate_text(self, prompt: str) -> str:
+    def _generate_text(self, prompt: str) -> tuple[str, CommerceAIUsage]:
         try:
             response = self.client.messages.create(
                 model=self.model,
@@ -195,14 +204,101 @@ class AnthropicCommerceAIClient:
         for block in content:
             block_text = getattr(block, "text", None)
             if isinstance(block_text, str) and block_text.strip():
-                return block_text
+                return block_text, _extract_anthropic_usage(response, provider="anthropic", model=self.model)
 
             if isinstance(block, dict):
                 block_text = block.get("text")
                 if isinstance(block_text, str) and block_text.strip():
-                    return block_text
+                    return block_text, _extract_anthropic_usage(response, provider="anthropic", model=self.model)
 
         raise CommerceAIClientError("Anthropic AI response did not contain text.")
+
+
+
+
+def _extract_google_usage(response: Any, *, provider: str, model: str) -> CommerceAIUsage:
+    usage = getattr(response, "usage_metadata", None)
+    input_tokens = _coerce_int(getattr(usage, "prompt_token_count", 0))
+    output_tokens = _coerce_int(getattr(usage, "candidates_token_count", 0))
+    total_tokens = _coerce_int(getattr(usage, "total_token_count", 0))
+    if total_tokens <= 0:
+        total_tokens = input_tokens + output_tokens
+
+    return CommerceAIUsage(
+        provider=provider,
+        model=model,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        total_tokens=total_tokens,
+        raw={
+            "prompt_token_count": input_tokens,
+            "candidates_token_count": output_tokens,
+            "total_token_count": total_tokens,
+        },
+    )
+
+
+
+
+
+
+
+def _extract_anthropic_usage(response: Any, *, provider: str, model: str) -> CommerceAIUsage:
+    usage = getattr(response, "usage", None)
+    input_tokens = _coerce_int(_get_usage_value(usage, "input_tokens"))
+    output_tokens = _coerce_int(_get_usage_value(usage, "output_tokens"))
+    total_tokens = input_tokens + output_tokens
+
+    return CommerceAIUsage(
+        provider=provider,
+        model=model,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        total_tokens=total_tokens,
+        raw={
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "total_tokens": total_tokens,
+        },
+    )
+
+def _extract_openai_usage(response: Any, *, provider: str, model: str) -> CommerceAIUsage:
+    usage = getattr(response, "usage", None)
+    input_tokens = _coerce_int(_get_usage_value(usage, "input_tokens"))
+    output_tokens = _coerce_int(_get_usage_value(usage, "output_tokens"))
+    total_tokens = _coerce_int(_get_usage_value(usage, "total_tokens"))
+    if total_tokens <= 0:
+        total_tokens = input_tokens + output_tokens
+
+    return CommerceAIUsage(
+        provider=provider,
+        model=model,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        total_tokens=total_tokens,
+        raw={
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "total_tokens": total_tokens,
+        },
+    )
+
+
+def _get_usage_value(usage: Any, key: str) -> Any:
+    if usage is None:
+        return 0
+    if isinstance(usage, dict):
+        return usage.get(key, 0)
+    return getattr(usage, key, 0)
+
+
+def _coerce_int(value: Any) -> int:
+    try:
+        return int(value or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
 
 def build_commerce_ai_client_from_profile(profile: dict[str, Any] | None):
     if not profile:

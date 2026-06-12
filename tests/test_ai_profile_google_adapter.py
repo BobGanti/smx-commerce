@@ -103,3 +103,48 @@ def test_unsupported_provider_is_rejected():
             }
         )
 
+
+class FakeGoogleUsageMetadata:
+    prompt_token_count = 12
+    candidates_token_count = 8
+    total_token_count = 20
+
+
+class FakeGoogleUsageResponse:
+    text = "{\"issue_type\": \"general_question\", \"confidence\": 0.9}"
+    usage_metadata = FakeGoogleUsageMetadata()
+
+
+class FakeGoogleUsageModels:
+    def generate_content(self, **kwargs):
+        return FakeGoogleUsageResponse()
+
+
+class FakeGoogleUsageClient:
+    models = FakeGoogleUsageModels()
+
+
+def test_google_adapter_returns_usage_metadata():
+    ai_client = build_commerce_ai_client_from_profile(
+        {
+            "provider": "google",
+            "model": "gemini-test",
+            "client": FakeGoogleUsageClient(),
+        }
+    )
+
+    result = ai_client.run_agent_task(
+        agent_name="commerce_support_issue_classifier",
+        system_prompt="Classify.",
+        task_prompt="Return JSON.",
+        expected_schema={"type": "object"},
+        context={},
+    )
+
+    assert result.get("issue_type") == "general_question"
+    assert result.usage.provider == "google"
+    assert result.usage.model == "gemini-test"
+    assert result.usage.input_tokens == 12
+    assert result.usage.output_tokens == 8
+    assert result.usage.total_tokens == 20
+

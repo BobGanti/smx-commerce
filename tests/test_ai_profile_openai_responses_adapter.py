@@ -7,8 +7,15 @@ from smx_commerce.ai import (
 )
 
 
+class FakeOpenAIUsage:
+    input_tokens = 30
+    output_tokens = 12
+    total_tokens = 42
+
+
 class FakeOpenAIResponse:
-    output_text = '{"summary": "Customer cannot access purchased course.", "needs_human_review": true}'
+    output_text = "{\"summary\": \"Customer cannot access purchased course.\", \"needs_human_review\": true}"
+    usage = FakeOpenAIUsage()
 
 
 class FakeOpenAIResponses:
@@ -61,7 +68,14 @@ def test_build_commerce_ai_client_from_openai_profile_returns_responses_adapter(
         "needs_human_review": True,
     }
 
+    assert result.usage.provider == "openai"
+    assert result.usage.model == "gpt-test"
+    assert result.usage.input_tokens == 30
+    assert result.usage.output_tokens == 12
+    assert result.usage.total_tokens == 42
+
     call = provider_client.responses.calls[0]
+
     assert call["model"] == "gpt-test"
     assert "commerce_support_summary" in call["input"]
     assert "aoife@example.com" in call["input"]
