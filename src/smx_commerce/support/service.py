@@ -85,15 +85,28 @@ class SupportAnalysisService:
             order_context=order_context,
         )
 
-        self.repository.record_reply_draft(
-            detail.thread.public_id,
+        needs_human_review = _requires_human_review_from_triage(
+            triage=triage,
+            thread_priority=detail.thread.priority.value,
+            draft_needs_human_review=draft.needs_human_review,
+        )
+
+        final_draft = SupportReplyDraft(
             body=draft.body,
             tone=draft.tone,
-            needs_human_review=draft.needs_human_review,
+            needs_human_review=needs_human_review,
             next_actions=draft.next_actions,
         )
 
-        return draft
+        self.repository.record_reply_draft(
+            detail.thread.public_id,
+            body=final_draft.body,
+            tone=final_draft.tone,
+            needs_human_review=final_draft.needs_human_review,
+            next_actions=final_draft.next_actions,
+        )
+
+        return final_draft
 
     def _order_context_for_thread(self, order_public_id: str) -> dict[str, object]:
         order_id = (order_public_id or "").strip()
@@ -121,3 +134,27 @@ class SupportAnalysisService:
             "payment_reference_present": bool(order.payment_reference),
             "notes": order.notes,
         }
+
+
+def _requires_human_review_from_triage(
+    *,
+    triage: dict,
+    thread_priority: str,
+    draft_needs_human_review: bool,
+) -> bool:
+    if draft_needs_human_review:
+        return True
+
+    if bool(triage.get("should_escalate", False)):
+        return True
+
+    recommended_priority = str(triage.get("recommended_priority", "")).strip().lower()
+    if recommended_priority in {"high", "urgent"}:
+        return True
+
+    normalized_thread_priority = str(thread_priority or "").strip().lower()
+    if normalized_thread_priority in {"high", "urgent"}:
+        return True
+
+    return False
+
