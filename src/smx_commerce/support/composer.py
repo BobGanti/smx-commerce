@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
-from smx_commerce.ai import CommerceAIClient
+from smx_commerce.ai import CommerceAIClient, CommerceAIUsage
 
 
 @dataclass(frozen=True)
@@ -13,6 +13,7 @@ class SupportReplyPlan:
     questions_to_ask: list[str]
     forbidden_claims: list[str]
     needs_human_review: bool
+    usage: CommerceAIUsage = field(default_factory=CommerceAIUsage)
 
 
 @dataclass(frozen=True)
@@ -20,6 +21,7 @@ class SupportReplyComposition:
     body: str
     tone: str
     next_actions: list[str]
+    usage: CommerceAIUsage = field(default_factory=CommerceAIUsage)
 
 
 @dataclass(frozen=True)
@@ -27,6 +29,7 @@ class SupportReplyVerification:
     is_safe: bool
     needs_revision: bool
     concerns: list[str]
+    usage: CommerceAIUsage = field(default_factory=CommerceAIUsage)
 
 
 @dataclass(frozen=True)
@@ -35,6 +38,8 @@ class SupportReplyDraft:
     tone: str
     needs_human_review: bool
     next_actions: list[str]
+    usage_by_agent: dict[str, CommerceAIUsage] = field(default_factory=dict)
+    total_usage: CommerceAIUsage = field(default_factory=CommerceAIUsage)
 
 
 class SupportReplyPlannerAgent:
@@ -79,6 +84,7 @@ class SupportReplyPlannerAgent:
             context=context,
         )
 
+        usage = _usage_from_agent_result(result)
         reply_strategy = str(result.get("reply_strategy", "")).strip()
         if not reply_strategy:
             reply_strategy = "Acknowledge the request, avoid inventing facts, and ask for missing information if needed."
@@ -89,6 +95,7 @@ class SupportReplyPlannerAgent:
             questions_to_ask=_clean_string_list(result.get("questions_to_ask", [])),
             forbidden_claims=_clean_string_list(result.get("forbidden_claims", [])),
             needs_human_review=bool(result.get("needs_human_review", True)),
+            usage=usage,
         )
 
 
@@ -123,6 +130,7 @@ class SupportReplyComposerAgent:
             context=context,
         )
 
+        usage = _usage_from_agent_result(result)
         body = str(result.get("body", "")).strip()
         if not body:
             body = "Thank you for contacting us. We are reviewing your request and will get back to you shortly."
@@ -133,6 +141,7 @@ class SupportReplyComposerAgent:
             body=body,
             tone=tone,
             next_actions=_clean_string_list(result.get("next_actions", [])),
+            usage=usage,
         )
 
 
@@ -168,10 +177,12 @@ class SupportReplyVerifierAgent:
             context=context,
         )
 
+        usage = _usage_from_agent_result(result)
         return SupportReplyVerification(
             is_safe=bool(result.get("is_safe", True)),
             needs_revision=bool(result.get("needs_revision", False)),
             concerns=_clean_string_list(result.get("concerns", [])),
+            usage=usage,
         )
 
 
@@ -248,13 +259,37 @@ class SupportReplyComposerService:
         if verification.concerns:
             next_actions.extend([f"Verifier concern: {concern}" for concern in verification.concerns])
 
+        usage_by_agent = {
+            "commerce_support_reply_planner": plan.usage,
+            "commerce_support_reply_composer": composition.usage,
+            "commerce_support_reply_verifier": verification.usage,
+        }
+        total_usage = _sum_usage_by_agent(usage_by_agent)
+
         return SupportReplyDraft(
             body=composition.body,
             tone=composition.tone,
             needs_human_review=bool(plan.needs_human_review or verification.needs_revision or not verification.is_safe),
             next_actions=next_actions,
+            usage_by_agent=usage_by_agent,
+            total_usage=total_usage,
         )
 
+
+
+
+def _usage_from_agent_result(result: Any) -> CommerceAIUsage:
+    usage = getattr(result, "usage", None)
+    if isinstance(usage, CommerceAIUsage):
+        return usage
+    return CommerceAIUsage()
+
+
+def _sum_usage_by_agent(usage_by_agent: dict[str, CommerceAIUsage]) -> CommerceAIUsage:
+    total = CommerceAIUsage()
+    for usage in usage_by_agent.values():
+        total = total.plus(usage)
+    return total
 
 def _clean_string_list(value: Any) -> list[str]:
     if not isinstance(value, list):
