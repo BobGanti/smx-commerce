@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
-from smx_commerce.ai import CommerceAIClient
+from smx_commerce.ai import CommerceAIClient, CommerceAIUsage
 
 
 ALLOWED_SUPPORT_PRIORITIES = {
@@ -35,26 +35,31 @@ ALLOWED_SUPPORT_ISSUE_TYPES = {
 class IssueClassificationResult:
     issue_type: str
     confidence: float
+    usage: CommerceAIUsage = field(default_factory=CommerceAIUsage)
 
 
 @dataclass(frozen=True)
 class SupportSummaryResult:
     summary: str
+    usage: CommerceAIUsage = field(default_factory=CommerceAIUsage)
 
 
 @dataclass(frozen=True)
 class MissingInformationResult:
     missing_information: list[str]
+    usage: CommerceAIUsage = field(default_factory=CommerceAIUsage)
 
 
 @dataclass(frozen=True)
 class EscalationAssessmentResult:
     should_escalate: bool
+    usage: CommerceAIUsage = field(default_factory=CommerceAIUsage)
 
 
 @dataclass(frozen=True)
 class PriorityAssessmentResult:
     recommended_priority: str
+    usage: CommerceAIUsage = field(default_factory=CommerceAIUsage)
 
 
 @dataclass(frozen=True)
@@ -65,6 +70,8 @@ class SupportTriageResult:
     should_escalate: bool
     recommended_priority: str
     missing_information: list[str]
+    usage_by_agent: dict[str, CommerceAIUsage] = field(default_factory=dict)
+    total_usage: CommerceAIUsage = field(default_factory=CommerceAIUsage)
 
 
 class SupportIssueClassifierAgent:
@@ -98,6 +105,7 @@ class SupportIssueClassifierAgent:
             context=context,
         )
 
+        usage = _usage_from_agent_result(result)
         issue_type = str(result.get("issue_type", "")).strip()
         if issue_type not in ALLOWED_SUPPORT_ISSUE_TYPES:
             issue_type = "general_question"
@@ -105,6 +113,7 @@ class SupportIssueClassifierAgent:
         return IssueClassificationResult(
             issue_type=issue_type,
             confidence=_coerce_confidence(result.get("confidence")),
+            usage=usage,
         )
 
 
@@ -131,11 +140,12 @@ class SupportSummaryAgent:
             context=context,
         )
 
+        usage = _usage_from_agent_result(result)
         summary = str(result.get("summary", "")).strip()
         if not summary:
             summary = "Customer submitted a support request."
 
-        return SupportSummaryResult(summary=summary)
+        return SupportSummaryResult(summary=summary, usage=usage)
 
 
 class SupportMissingInformationAgent:
@@ -164,8 +174,10 @@ class SupportMissingInformationAgent:
             context=context,
         )
 
+        usage = _usage_from_agent_result(result)
         return MissingInformationResult(
-            missing_information=_clean_string_list(result.get("missing_information", []))
+            missing_information=_clean_string_list(result.get("missing_information", [])),
+            usage=usage,
         )
 
 
@@ -192,8 +204,10 @@ class SupportEscalationAssessorAgent:
             context=context,
         )
 
+        usage = _usage_from_agent_result(result)
         return EscalationAssessmentResult(
-            should_escalate=bool(result.get("should_escalate", False))
+            should_escalate=bool(result.get("should_escalate", False)),
+            usage=usage,
         )
 
 
@@ -223,8 +237,9 @@ class SupportPriorityAssessorAgent:
             context=context,
         )
 
+        usage = _usage_from_agent_result(result)
         priority = str(result.get("recommended_priority", "")).strip()
-        return PriorityAssessmentResult(recommended_priority=priority)
+        return PriorityAssessmentResult(recommended_priority=priority, usage=usage)
 
 
 class SupportTriageService:
@@ -282,6 +297,15 @@ class SupportTriageService:
         if recommended_priority not in ALLOWED_SUPPORT_PRIORITIES:
             recommended_priority = "high" if escalation.should_escalate else "normal"
 
+        usage_by_agent = {
+            "commerce_support_issue_classifier": classification.usage,
+            "commerce_support_summary": summary.usage,
+            "commerce_support_missing_information": missing_information.usage,
+            "commerce_support_escalation_assessor": escalation.usage,
+            "commerce_support_priority_assessor": priority.usage,
+        }
+        total_usage = _sum_usage_by_agent(usage_by_agent)
+
         return SupportTriageResult(
             issue_type=classification.issue_type,
             confidence=classification.confidence,
@@ -289,8 +313,25 @@ class SupportTriageService:
             should_escalate=escalation.should_escalate,
             recommended_priority=recommended_priority,
             missing_information=missing_information.missing_information,
+            usage_by_agent=usage_by_agent,
+            total_usage=total_usage,
         )
 
+
+
+
+def _usage_from_agent_result(result: Any) -> CommerceAIUsage:
+    usage = getattr(result, "usage", None)
+    if isinstance(usage, CommerceAIUsage):
+        return usage
+    return CommerceAIUsage()
+
+
+def _sum_usage_by_agent(usage_by_agent: dict[str, CommerceAIUsage]) -> CommerceAIUsage:
+    total = CommerceAIUsage()
+    for usage in usage_by_agent.values():
+        total = total.plus(usage)
+    return total
 
 def _coerce_confidence(value: Any) -> float:
     try:
