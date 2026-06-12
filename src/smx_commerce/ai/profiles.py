@@ -144,6 +144,66 @@ class OpenAIResponsesCommerceAIClient:
         raise CommerceAIClientError("OpenAI Responses API response did not contain output text.")
 
 
+class AnthropicCommerceAIClient:
+    def __init__(
+        self,
+        *,
+        model: str,
+        client: Any,
+        max_tokens: int = 2048,
+    ):
+        if not model:
+            raise CommerceAIClientError("Anthropic AI profile requires a model.")
+        if client is None:
+            raise CommerceAIClientError("Anthropic AI profile requires a client.")
+
+        self.model = model
+        self.client = client
+        self.max_tokens = max_tokens
+
+    def run_agent_task(
+        self,
+        *,
+        agent_name: str,
+        system_prompt: str,
+        task_prompt: str,
+        expected_schema: dict[str, Any],
+        context: dict[str, Any],
+    ) -> dict[str, Any]:
+        prompt = _build_agent_prompt(
+            agent_name=agent_name,
+            system_prompt=system_prompt,
+            task_prompt=task_prompt,
+            expected_schema=expected_schema,
+            context=context,
+        )
+
+        response_text = self._generate_text(prompt)
+        return _parse_json_object(response_text, agent_name=agent_name)
+
+    def _generate_text(self, prompt: str) -> str:
+        try:
+            response = self.client.messages.create(
+                model=self.model,
+                max_tokens=self.max_tokens,
+                messages=[{"role": "user", "content": prompt}],
+            )
+        except Exception as exc:
+            raise CommerceAIClientError(f"Anthropic AI request failed: {exc}") from exc
+
+        content = getattr(response, "content", None) or []
+        for block in content:
+            block_text = getattr(block, "text", None)
+            if isinstance(block_text, str) and block_text.strip():
+                return block_text
+
+            if isinstance(block, dict):
+                block_text = block.get("text")
+                if isinstance(block_text, str) and block_text.strip():
+                    return block_text
+
+        raise CommerceAIClientError("Anthropic AI response did not contain text.")
+
 def build_commerce_ai_client_from_profile(profile: dict[str, Any] | None):
     if not profile:
         return None
@@ -160,6 +220,13 @@ def build_commerce_ai_client_from_profile(profile: dict[str, Any] | None):
         return OpenAIResponsesCommerceAIClient(
             model=str(profile.get("model", "")).strip(),
             client=profile.get("client"),
+        )
+
+    if provider == "anthropic":
+        return AnthropicCommerceAIClient(
+            model=str(profile.get("model", "")).strip(),
+            client=profile.get("client"),
+            max_tokens=int(profile.get("max_tokens", 2048)),
         )
 
     raise CommerceAIClientError(f"Unsupported commerce AI provider: {provider or '<missing>'}")

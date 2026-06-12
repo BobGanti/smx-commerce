@@ -98,7 +98,8 @@ def test_unsupported_provider_is_rejected():
     with pytest.raises(CommerceAIClientError, match="Unsupported commerce AI provider"):
         build_commerce_ai_client_from_profile(
             {
-                "provider": "anthropic",
-                "model": "claude-test",
+                "provider": "not-real-provider",
+                "model": "fake-test",
             }
         )
+
