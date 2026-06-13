@@ -216,6 +216,112 @@ class AnthropicCommerceAIClient:
 
 
 
+
+OPENAI_COMPATIBLE_CHAT_PROVIDERS = {
+    "xai",
+    "alibaba",
+    "deepseek",
+    "moonshotai",
+}
+
+
+class OpenAICompatibleChatCommerceAIClient:
+    def __init__(
+        self,
+        *,
+        provider: str,
+        model: str,
+        client: Any,
+        max_tokens: int = 2048,
+        json_response_format: bool = False,
+    ):
+        if not provider:
+            raise CommerceAIClientError("OpenAI-compatible AI profile requires a provider.")
+        if not model:
+            raise CommerceAIClientError("OpenAI-compatible AI profile requires a model.")
+        if client is None:
+            raise CommerceAIClientError("OpenAI-compatible AI profile requires a client.")
+
+        self.provider = provider
+        self.model = model
+        self.client = client
+        self.max_tokens = max_tokens
+        self.json_response_format = json_response_format
+
+    def run_agent_task(
+        self,
+        *,
+        agent_name: str,
+        system_prompt: str,
+        task_prompt: str,
+        expected_schema: dict[str, Any],
+        context: dict[str, Any],
+    ) -> CommerceAIResult:
+        prompt = _build_agent_prompt(
+            agent_name=agent_name,
+            system_prompt=system_prompt,
+            task_prompt=task_prompt,
+            expected_schema=expected_schema,
+            context=context,
+        )
+
+        response_text, usage = self._generate_text(prompt)
+        return CommerceAIResult(
+            data=_parse_json_object(response_text, agent_name=agent_name),
+            usage=usage,
+        )
+
+    def _generate_text(self, prompt: str) -> tuple[str, CommerceAIUsage]:
+        request_kwargs = {
+            "model": self.model,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": self.max_tokens,
+        }
+
+        if self.json_response_format:
+            request_kwargs["response_format"] = {"type": "json_object"}
+
+        try:
+            response = self.client.chat.completions.create(**request_kwargs)
+        except TypeError:
+            request_kwargs.pop("response_format", None)
+            try:
+                response = self.client.chat.completions.create(**request_kwargs)
+            except TypeError:
+                request_kwargs.pop("max_tokens", None)
+                response = self.client.chat.completions.create(**request_kwargs)
+        except Exception as exc:
+            raise CommerceAIClientError(
+                f"OpenAI-compatible Chat Completions request failed for provider {self.provider}: {exc}"
+            ) from exc
+
+        choices = getattr(response, "choices", None) or []
+        for choice in choices:
+            message = getattr(choice, "message", None)
+            content = getattr(message, "content", None) if message is not None else None
+
+            if isinstance(content, str) and content.strip():
+                return content, _extract_openai_compatible_chat_usage(
+                    response,
+                    provider=self.provider,
+                    model=self.model,
+                )
+
+            if isinstance(choice, dict):
+                message = choice.get("message") or {}
+                content = message.get("content")
+                if isinstance(content, str) and content.strip():
+                    return content, _extract_openai_compatible_chat_usage(
+                        response,
+                        provider=self.provider,
+                        model=self.model,
+                    )
+
+        raise CommerceAIClientError(
+            f"OpenAI-compatible Chat Completions response did not contain message content for provider {self.provider}."
+        )
+
+
 def _extract_google_usage(response: Any, *, provider: str, model: str) -> CommerceAIUsage:
     usage = getattr(response, "usage_metadata", None)
     input_tokens = _coerce_int(getattr(usage, "prompt_token_count", 0))
@@ -238,9 +344,33 @@ def _extract_google_usage(response: Any, *, provider: str, model: str) -> Commer
     )
 
 
+def _extract_openai_compatible_chat_usage(response: Any, *, provider: str, model: str) -> CommerceAIUsage:
+    usage = getattr(response, "usage", None)
 
+    input_tokens = _coerce_int(_get_usage_value(usage, "prompt_tokens"))
+    if input_tokens <= 0:
+        input_tokens = _coerce_int(_get_usage_value(usage, "input_tokens"))
 
+    output_tokens = _coerce_int(_get_usage_value(usage, "completion_tokens"))
+    if output_tokens <= 0:
+        output_tokens = _coerce_int(_get_usage_value(usage, "output_tokens"))
 
+    total_tokens = _coerce_int(_get_usage_value(usage, "total_tokens"))
+    if total_tokens <= 0:
+        total_tokens = input_tokens + output_tokens
+
+    return CommerceAIUsage(
+        provider=provider,
+        model=model,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        total_tokens=total_tokens,
+        raw={
+            "prompt_tokens": input_tokens,
+            "completion_tokens": output_tokens,
+            "total_tokens": total_tokens,
+        },
+    )
 
 
 def _extract_anthropic_usage(response: Any, *, provider: str, model: str) -> CommerceAIUsage:
@@ -323,6 +453,15 @@ def build_commerce_ai_client_from_profile(profile: dict[str, Any] | None):
             model=str(profile.get("model", "")).strip(),
             client=profile.get("client"),
             max_tokens=int(profile.get("max_tokens", 2048)),
+        )
+
+    if provider in OPENAI_COMPATIBLE_CHAT_PROVIDERS:
+        return OpenAICompatibleChatCommerceAIClient(
+            provider=provider,
+            model=str(profile.get("model", "")).strip(),
+            client=profile.get("client"),
+            max_tokens=_coerce_int(profile.get("max_tokens", 2048)) or 2048,
+            json_response_format=bool(profile.get("json_response_format", False)),
         )
 
     raise CommerceAIClientError(f"Unsupported commerce AI provider: {provider or '<missing>'}")
