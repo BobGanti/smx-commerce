@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 
 from flask import Flask
 
@@ -35,8 +35,8 @@ def test_commerce_scaffold_creates_expected_client_files(tmp_path):
     assert "SMX_COMMERCE_DATABASE_URL=sqlite+pysqlite:///./commerce/data/smx_commerce_dev.db" in example_text
     deprecated_admin_key_name = "SMX_COMMERCE_ADMIN_" + "API_KEY"
     assert deprecated_admin_key_name not in example_text
-    assert "SMX_COMMERCE_SITE_TITLE=SyntaxMatrix" in example_text
-    assert "SMX_COMMERCE_MODULE_TITLE=smxCommerce" in example_text
+    assert "SMX_COMMERCE_HOST_SITE_TITLE=SyntaxMatrix" in example_text
+    assert "SMX_COMMERCE_STORE_TITLE=smxCommerce" in example_text
 
     assert "SMX_COMMERCE_DATABASE_URL=sqlite+pysqlite:///" in env_text
     assert "commerce/data/smx_commerce_dev.db" in env_text.replace("\\", "/")

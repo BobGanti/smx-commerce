@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from dataclasses import dataclass
 from importlib import resources
@@ -214,12 +214,10 @@ SMX_COMMERCE_PAYMENT_PROVIDER=none
 SMX_COMMERCE_EMAIL_PROVIDER=none
 
 SMX_COMMERCE_HOST_SITE_TITLE=SyntaxMatrix
-SMX_COMMERCE_SITE_TITLE=SyntaxMatrix
 SMX_COMMERCE_HOST_HOME_URL=https://your-domain.com
-SMX_COMMERCE_PROJECT_HOME_URL=https://your-domain.com
+SMX_COMMERCE_HOST_HOME_URL=https://your-domain.com
 
 SMX_COMMERCE_STORE_TITLE=smxCommerce
-SMX_COMMERCE_MODULE_TITLE=smxCommerce
 SMX_COMMERCE_STORE_HOME_URL=/commerce
 
 SMX_COMMERCE_ASSETS_DIR=./commerce/assets
@@ -256,12 +254,10 @@ SMX_COMMERCE_PAYMENT_PROVIDER=none
 SMX_COMMERCE_EMAIL_PROVIDER=none
 
 SMX_COMMERCE_HOST_SITE_TITLE=SyntaxMatrix
-SMX_COMMERCE_SITE_TITLE=SyntaxMatrix
 SMX_COMMERCE_HOST_HOME_URL=/
-SMX_COMMERCE_PROJECT_HOME_URL=/
+SMX_COMMERCE_HOST_HOME_URL=/
 
 SMX_COMMERCE_STORE_TITLE=smxCommerce
-SMX_COMMERCE_MODULE_TITLE=smxCommerce
 SMX_COMMERCE_STORE_HOME_URL=/commerce
 
 SMX_COMMERCE_ASSETS_DIR={_path_value(assets_dir)}
@@ -377,3 +373,5 @@ GCS_MOUNT_PATH=/app/$LOCAL_DATA_SOURCE
 COMMERCE_ASSETS_BUCKET_PREFIX=commerce/assets
 COMMERCE_RECEIPTS_BUCKET_PREFIX=commerce/assets/receipts
 '''
+
+
