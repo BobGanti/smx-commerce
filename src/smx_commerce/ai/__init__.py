@@ -6,6 +6,7 @@ from smx_commerce.ai.contracts import (
 )
 from smx_commerce.ai.profiles import (
     AnthropicCommerceAIClient,
+    CommerceAIRoutingClient,
     GoogleCommerceAIClient,
     OpenAICompatibleChatCommerceAIClient,
     OpenAIResponsesCommerceAIClient,
@@ -18,6 +19,7 @@ __all__ = [
     "CommerceAIResult",
     "CommerceAIUsage",
     "AnthropicCommerceAIClient",
+    "CommerceAIRoutingClient",
     "GoogleCommerceAIClient",
     "OpenAICompatibleChatCommerceAIClient",
     "OpenAIResponsesCommerceAIClient",

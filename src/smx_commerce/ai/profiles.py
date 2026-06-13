@@ -217,6 +217,57 @@ class AnthropicCommerceAIClient:
 
 
 
+
+SUPPORT_ASSISTANT_AGENT_NAMES = frozenset(
+    {
+        "commerce_support_issue_classifier",
+        "commerce_support_summary",
+        "commerce_support_missing_information",
+        "commerce_support_escalation_assessor",
+        "commerce_support_priority_assessor",
+    }
+)
+
+
+class CommerceAIRoutingClient:
+    def __init__(
+        self,
+        *,
+        main_client: Any,
+        assistant_client: Any | None = None,
+    ):
+        if main_client is None:
+            raise CommerceAIClientError("Commerce AI routing requires a main client.")
+
+        self.main_client = main_client
+        self.assistant_client = assistant_client
+
+    def run_agent_task(
+        self,
+        *,
+        agent_name: str,
+        system_prompt: str,
+        task_prompt: str,
+        expected_schema: dict[str, Any],
+        context: dict[str, Any],
+    ) -> CommerceAIResult:
+        client = self._client_for_agent(agent_name)
+
+        return client.run_agent_task(
+            agent_name=agent_name,
+            system_prompt=system_prompt,
+            task_prompt=task_prompt,
+            expected_schema=expected_schema,
+            context=context,
+        )
+
+    def _client_for_agent(self, agent_name: str):
+        if self.assistant_client is not None and agent_name in SUPPORT_ASSISTANT_AGENT_NAMES:
+            return self.assistant_client
+
+        return self.main_client
+
+
 OPENAI_COMPATIBLE_CHAT_PROVIDERS = {
     "xai",
     "alibaba",
@@ -430,9 +481,35 @@ def _coerce_int(value: Any) -> int:
 
 
 
+
+def _is_labeled_ai_profile(profile: dict[str, Any]) -> bool:
+    return "main" in profile or "assistant" in profile
+
+
 def build_commerce_ai_client_from_profile(profile: dict[str, Any] | None):
     if not profile:
         return None
+
+    if _is_labeled_ai_profile(profile):
+        main_profile = profile.get("main")
+        if not main_profile:
+            raise CommerceAIClientError("Labeled commerce AI profile requires a main profile.")
+
+        main_client = build_commerce_ai_client_from_profile(main_profile)
+        if main_client is None:
+            raise CommerceAIClientError("Labeled commerce AI profile main profile did not create a client.")
+
+        assistant_profile = profile.get("assistant")
+        assistant_client = (
+            build_commerce_ai_client_from_profile(assistant_profile)
+            if assistant_profile
+            else None
+        )
+
+        return CommerceAIRoutingClient(
+            main_client=main_client,
+            assistant_client=assistant_client,
+        )
 
     provider = str(profile.get("provider", "")).strip().lower()
 
