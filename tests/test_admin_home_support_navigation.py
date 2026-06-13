@@ -19,6 +19,9 @@ def create_client(tmp_path):
             "project_home_url": "/client-home",
             "logo_url": "/static/client/logo.png",
             "favicon_url": "/static/client/favicon.ico",
+            "assets_dir": (tmp_path / "assets").as_posix(),
+            "products_assets_dir": (tmp_path / "assets" / "products").as_posix(),
+            "receipts_dir": (tmp_path / "assets" / "receipts").as_posix(),
         },
         init_schema=True,
     )
