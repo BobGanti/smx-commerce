@@ -96,6 +96,8 @@ class SupportAnalysisService:
             tone=draft.tone,
             needs_human_review=needs_human_review,
             next_actions=draft.next_actions,
+            usage_by_agent=draft.usage_by_agent,
+            total_usage=draft.total_usage,
         )
 
         self.repository.record_reply_draft(
