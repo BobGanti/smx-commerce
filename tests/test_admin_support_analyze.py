@@ -79,14 +79,15 @@ def test_admin_support_analyze_runs_ai_and_persists_triage(tmp_path):
 
     data = response.get_json()
 
-    assert data == {
-        "issue_type": "account_access_issue",
-        "confidence": 0.97,
-        "summary": "Customer paid but cannot access purchased content.",
-        "should_escalate": False,
-        "recommended_priority": "high",
-        "missing_information": ["order_public_id"],
-    }
+    assert data["issue_type"] == "account_access_issue"
+    assert data["confidence"] == 0.97
+    assert data["summary"] == "Customer paid but cannot access purchased content."
+    assert data["should_escalate"] is False
+    assert data["recommended_priority"] == "high"
+    assert data["missing_information"] == ["order_public_id"]
+    assert "usage_by_agent" in data
+    assert "total_usage" in data
+    assert data["total_usage"]["total_tokens"] == 0
 
     assert len(ai_client.calls) == 5
     assert {call["agent_name"] for call in ai_client.calls} == {

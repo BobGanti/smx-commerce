@@ -79,12 +79,13 @@ def test_admin_support_compose_reply_persists_ai_reply_draft(tmp_path):
 
     data = response.get_json()
 
-    assert data == {
-        "body": "Hi Aoife, thanks for reaching out. Please send your order ID so we can verify the payment and help restore access.",
-        "tone": "helpful",
-        "needs_human_review": True,
-        "next_actions": ["Ask customer for order ID", "Verify payment before promising access"],
-    }
+    assert data["body"] == "Hi Aoife, thanks for reaching out. Please send your order ID so we can verify the payment and help restore access."
+    assert data["tone"] == "helpful"
+    assert data["needs_human_review"] is True
+    assert data["next_actions"] == ["Ask customer for order ID", "Verify payment before promising access"]
+    assert "usage_by_agent" in data
+    assert "total_usage" in data
+    assert data["total_usage"]["total_tokens"] == 0
 
     assert len(ai_client.calls) == 3
     assert [call["agent_name"] for call in ai_client.calls] == [
@@ -226,12 +227,15 @@ def test_admin_support_compose_reply_uses_ai_profile_google_adapter(tmp_path):
 
     assert response.status_code == 200
 
-    assert response.get_json() == {
-        "body": "Hi Aoife, thanks for reaching out. Please send your order ID so we can verify the payment and help restore access.",
-        "tone": "helpful",
-        "needs_human_review": True,
-        "next_actions": ["Ask customer for order ID", "Verify payment before promising access"],
-    }
+    data = response.get_json()
+
+    assert data["body"] == "Hi Aoife, thanks for reaching out. Please send your order ID so we can verify the payment and help restore access."
+    assert data["tone"] == "helpful"
+    assert data["needs_human_review"] is True
+    assert data["next_actions"] == ["Ask customer for order ID", "Verify payment before promising access"]
+    assert "usage_by_agent" in data
+    assert "total_usage" in data
+    assert data["total_usage"]["provider"] == "google"
 
     assert len(provider_client.models.calls) == 3
     assert all(call["model"] == "gemini-route-test" for call in provider_client.models.calls)

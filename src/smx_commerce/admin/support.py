@@ -36,6 +36,38 @@ def support_thread_to_dict(thread) -> dict:
     }
 
 
+def ai_usage_to_dict(usage) -> dict:
+    if usage is None:
+        return {
+            "provider": "",
+            "model": "",
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0,
+            "raw": {},
+        }
+
+    as_dict = getattr(usage, "as_dict", None)
+    if callable(as_dict):
+        return as_dict()
+
+    return {
+        "provider": getattr(usage, "provider", ""),
+        "model": getattr(usage, "model", ""),
+        "input_tokens": int(getattr(usage, "input_tokens", 0) or 0),
+        "output_tokens": int(getattr(usage, "output_tokens", 0) or 0),
+        "total_tokens": int(getattr(usage, "total_tokens", 0) or 0),
+        "raw": dict(getattr(usage, "raw", {}) or {}),
+    }
+
+
+def ai_usage_by_agent_to_dict(usage_by_agent) -> dict:
+    return {
+        agent_name: ai_usage_to_dict(usage)
+        for agent_name, usage in dict(usage_by_agent or {}).items()
+    }
+
+
 def create_support_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
     bp = Blueprint("smx_commerce_support_admin", __name__)
 
@@ -149,6 +181,8 @@ def create_support_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
                 "should_escalate": result.should_escalate,
                 "recommended_priority": result.recommended_priority,
                 "missing_information": result.missing_information,
+                "usage_by_agent": ai_usage_by_agent_to_dict(result.usage_by_agent),
+                "total_usage": ai_usage_to_dict(result.total_usage),
             }
         )
 
@@ -178,6 +212,8 @@ def create_support_admin_blueprint(runtime: CommerceRuntime) -> Blueprint:
                 "tone": draft.tone,
                 "needs_human_review": draft.needs_human_review,
                 "next_actions": draft.next_actions,
+                "usage_by_agent": ai_usage_by_agent_to_dict(draft.usage_by_agent),
+                "total_usage": ai_usage_to_dict(draft.total_usage),
             }
         )
 
