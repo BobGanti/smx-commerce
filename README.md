@@ -150,13 +150,13 @@ Existing customer-owned files are not overwritten.
 Local runtime config lives at:
 
 ```text
-commerce/.smx_commerce.env
+plugins/commerce/.smx_commerce.env
 ```
 
 The generated local environment file includes values similar to:
 
 ```env
-SMX_COMMERCE_DATABASE_URL=sqlite+pysqlite:///./commerce/data/smx_commerce_dev.db
+SMX_COMMERCE_DATABASE_URL=sqlite+pysqlite:///./plugins/commerce/data/smx_commerce_dev.db
 SMX_COMMERCE_ADMIN_TOKEN=local-admin-token
 SMX_COMMERCE_FLASK_SECRET_KEY=replace-with-a-strong-session-secret
 
@@ -172,9 +172,9 @@ SMX_COMMERCE_STORE_TITLE=smxCommerce
 SMX_COMMERCE_MODULE_TITLE=smxCommerce
 SMX_COMMERCE_STORE_HOME_URL=/commerce
 
-SMX_COMMERCE_ASSETS_DIR=./commerce/assets
-SMX_COMMERCE_PRODUCTS_ASSETS_DIR=./commerce/assets/products
-SMX_COMMERCE_RECEIPTS_DIR=./commerce/assets/receipts
+SMX_COMMERCE_ASSETS_DIR=./plugins/commerce/assets
+SMX_COMMERCE_PRODUCTS_ASSETS_DIR=./plugins/commerce/assets/products
+SMX_COMMERCE_RECEIPTS_DIR=./plugins/commerce/assets/receipts
 SMX_COMMERCE_LOGO_URL=/commerce/assets/logo.png
 SMX_COMMERCE_FAVICON_URL=/commerce/assets/favicon.png
 ```
@@ -211,7 +211,7 @@ Use the existing app object from your SyntaxMatrix project.
 Example:
 
 ```python
-from commerce.smx_commerce_setup import setup_commerce
+from plugins.commerce.smx_commerce_setup import setup_commerce
 
 setup_commerce(
     app,
@@ -225,7 +225,7 @@ A fuller example:
 from pathlib import Path
 
 import syntaxmatrix as smx
-from commerce.smx_commerce_setup import setup_commerce
+from plugins.commerce.smx_commerce_setup import setup_commerce
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -714,16 +714,16 @@ SMX_COMMERCE_STORE_HOME_URL
 Generated local assets live in:
 
 ```text
-commerce/assets/
+plugins/commerce/assets/
 ```
 
 Default paths:
 
 ```text
-commerce/assets/logo.png
-commerce/assets/favicon.png
-commerce/assets/products/
-commerce/assets/receipts/
+plugins/commerce/assets/logo.png
+plugins/commerce/assets/favicon.png
+plugins/commerce/assets/products/
+plugins/commerce/assets/receipts/
 ```
 
 Default URLs:
@@ -740,7 +740,7 @@ Default URLs:
 Local default database:
 
 ```env
-SMX_COMMERCE_DATABASE_URL=sqlite+pysqlite:///./commerce/data/smx_commerce_dev.db
+SMX_COMMERCE_DATABASE_URL=sqlite+pysqlite:///./plugins/commerce/data/smx_commerce_dev.db
 ```
 
 For local development, SQLite is sufficient.
@@ -924,9 +924,9 @@ Typical production asset paths when using a mounted client data source:
 SMX_CLIENT_DIR=/app/$LOCAL_DATA_SOURCE
 GCS_MOUNT_PATH=/app/$LOCAL_DATA_SOURCE
 
-SMX_COMMERCE_ASSETS_DIR=/app/$LOCAL_DATA_SOURCE/commerce/assets
-SMX_COMMERCE_PRODUCTS_ASSETS_DIR=/app/$LOCAL_DATA_SOURCE/commerce/assets/products
-SMX_COMMERCE_RECEIPTS_DIR=/app/$LOCAL_DATA_SOURCE/commerce/assets/receipts
+SMX_COMMERCE_ASSETS_DIR=/app/$LOCAL_DATA_SOURCE/plugins/commerce/assets
+SMX_COMMERCE_PRODUCTS_ASSETS_DIR=/app/$LOCAL_DATA_SOURCE/plugins/commerce/assets/products
+SMX_COMMERCE_RECEIPTS_DIR=/app/$LOCAL_DATA_SOURCE/plugins/commerce/assets/receipts
 ```
 
 Typical public URLs:
@@ -966,7 +966,7 @@ from smx_commerce import get_customer_active_entitlement
 Recommended host integration:
 
 ```python
-from commerce.smx_commerce_setup import setup_commerce
+from plugins.commerce.smx_commerce_setup import setup_commerce
 
 setup_commerce(app, init_schema=True)
 ```
@@ -990,7 +990,7 @@ from smx_commerce import init_commerce_from_env
 
 init_commerce_from_env(
     app,
-    env_file="commerce/.smx_commerce.env",
+    env_file="plugins/commerce/.smx_commerce.env",
     init_schema=True,
 )
 ```
@@ -1062,7 +1062,7 @@ Update local env path:
 to:
 
 ```text
-commerce/.smx_commerce.env
+plugins/commerce/.smx_commerce.env
 ```
 
 Use only this variable for admin authentication:```env
@@ -1078,7 +1078,7 @@ SMX_COMMERCE_ADMIN_TOKEN
 Check the active local env file:
 
 ```text
-commerce/.smx_commerce.env
+plugins/commerce/.smx_commerce.env
 ```
 
 Confirm:
@@ -1160,7 +1160,7 @@ The list pages should stay clean and should not duplicate creation forms.
 Check:
 
 ```env
-SMX_COMMERCE_ASSETS_DIR=./commerce/assets
+SMX_COMMERCE_ASSETS_DIR=./plugins/commerce/assets
 SMX_COMMERCE_LOGO_URL=/commerce/assets/logo.png
 SMX_COMMERCE_FAVICON_URL=/commerce/assets/favicon.png
 ```
@@ -1168,8 +1168,8 @@ SMX_COMMERCE_FAVICON_URL=/commerce/assets/favicon.png
 Also confirm the files exist:
 
 ```text
-commerce/assets/logo.png
-commerce/assets/favicon.png
+plugins/commerce/assets/logo.png
+plugins/commerce/assets/favicon.png
 ```
 
 ---
@@ -1196,10 +1196,10 @@ SMX_COMMERCE_PAYMENT_PROVIDER=none
    python -c "from smx_commerce import ensure_commerce_scaffold; ensure_commerce_scaffold()"
 
 3. Confirm local env:
-   commerce/.smx_commerce.env
+   plugins/commerce/.smx_commerce.env
 
 4. Integrate:
-   from commerce.smx_commerce_setup import setup_commerce
+   from plugins.commerce.smx_commerce_setup import setup_commerce
    setup_commerce(app, init_schema=True)
 
 5. Start host app.
@@ -1299,13 +1299,13 @@ The project owner creates the admin key. `smx-commerce` does not invent a hidden
 For local development, copy:
 
 ```text
-commerce/.smx_commerce_example.env
+plugins/commerce/.smx_commerce_example.env
 ```
 
 to:
 
 ```text
-commerce/.smx_commerce.env
+plugins/commerce/.smx_commerce.env
 ```
 
 Then set:
@@ -1336,7 +1336,7 @@ http://127.0.0.1:5055/commerce/admin
 The local key is whatever you set in:
 
 ```text
-commerce/.smx_commerce.env
+plugins/commerce/.smx_commerce.env
 ```
 
 ### Cloud deployment
@@ -1407,7 +1407,7 @@ GROK_PROFILE = {
 For a simple single-model setup:
 
 ```python
-from commerce.smx_commerce_setup import setup_commerce
+from plugins.commerce.smx_commerce_setup import setup_commerce
 
 setup_commerce(
     app,
@@ -1423,7 +1423,7 @@ In this form, all AI support tasks use the same provider profile.
 For optional model routing:
 
 ```python
-from commerce.smx_commerce_setup import setup_commerce
+from plugins.commerce.smx_commerce_setup import setup_commerce
 
 setup_commerce(
     app,
@@ -1511,4 +1511,3 @@ The host project owns only:
 The client project should not create a custom `smx_commerce_ai_client.py` file.
 
 If `ai_profile` is not provided, commerce still works, but AI support actions such as support analysis and reply drafting are not configured.
-
