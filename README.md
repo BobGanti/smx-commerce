@@ -1366,49 +1366,149 @@ After changing secrets, restart the app or service so the new values are loaded.
 
 ## AI support integration with host-built ai_profile
 
-smx-commerce supports AI-assisted support workflows through a host-provided LLM profile.
+`smx-commerce` supports AI-assisted support workflows through a host-provided `ai_profile`.
 
-The host project builds the profile. smx-commerce uses that profile to create its internal provider adapter, support agents, orchestration, schema handling, deterministic safety rules, and admin review workflow.
+The host project builds the profile. `smx-commerce` uses that profile to create its internal provider adapter, support agents, orchestration, schema handling, token-usage tracking, deterministic safety rules, and admin review workflow.
 
-For Google/Gemini, the host project should provide an ai_profile dictionary with these fields:
+In production SyntaxMatrix, AI profiles should normally come from configured agency/provider records stored in the SyntaxMatrix database. The host reads those records, builds the provider client, places it in a profile dictionary, and passes that profile into `smx-commerce`.
 
-    from google import genai
+In a temporary sandbox, a local `AI_PROFILES` registry can stand in for the missing SyntaxMatrix host configuration layer.
 
-    ai_profile = {
-        "provider": "google",
-        "model": GEMINI_MODEL,
-        "api_key": GEMINI_API_KEY,
-        "client": genai.Client(api_key=GEMINI_API_KEY),
-    }
+Example sandbox-style registry:
 
-Then pass the profile into the generated commerce setup function:
+```python
+AI_PROFILES = {
+    "google": GEMINI_PROFILE,
+    "openai": GPT_PROFILE,
+    "anthropic": CLAUDE_PROFILE,
+    "xai": GROK_PROFILE,
+    "alibaba": QWEN_PROFILE,
+    "deepseek": DEEPSEEK_PROFILE,
+    "moonshotai": KIMI_PROFILE,
+}
+```
 
-    from commerce.smx_commerce_setup import setup_commerce
+Each `AI_PROFILES[...]` entry remains a full provider profile. For example:
 
-    setup_commerce(
-        app,
-        init_schema=True,
-        ai_profile=ai_profile,
-    )
+```python
+GROK_PROFILE = {
+    "provider": "xai",
+    "model": XAI_MODEL,
+    "api_key": XAI_API_KEY,
+    "client": OpenAI(
+        api_key=XAI_API_KEY,
+        base_url="https://api.x.ai/v1",
+    ),
+}
+```
 
-The client project should not create a custom smx_commerce_ai_client.py file.
+### Single-profile form
 
-The client project owns only:
+For a simple single-model setup:
 
-- provider
-- model
-- api_key
-- provider client instance
+```python
+from commerce.smx_commerce_setup import setup_commerce
 
-smx-commerce owns:
+setup_commerce(
+    app,
+    init_schema=True,
+    ai_profile=AI_PROFILES["google"],
+)
+```
 
-- provider adapter
+In this form, all AI support tasks use the same provider profile.
+
+### Labeled main/assistant form
+
+For optional model routing:
+
+```python
+from commerce.smx_commerce_setup import setup_commerce
+
+setup_commerce(
+    app,
+    init_schema=True,
+    ai_profile={
+        "main": AI_PROFILES["xai"],
+        "assistant": AI_PROFILES["alibaba"],
+    },
+)
+```
+
+The `main` profile is the primary model used for heavier support tasks such as reply planning, reply composition, and reply verification.
+
+The `assistant` profile is optional and can be a cheaper or faster model used for narrower support-analysis tasks.
+
+The host does not need to pass `"assistant": None`.
+
+This is valid:
+
+```python
+setup_commerce(
+    app,
+    init_schema=True,
+    ai_profile={
+        "main": AI_PROFILES["xai"],
+    },
+)
+```
+
+If `assistant` is missing, `smx-commerce` automatically uses `main` for all AI tasks.
+
+### Supported providers
+
+Supported provider values are:
+
+```text
+google
+openai
+anthropic
+xai
+alibaba
+deepseek
+moonshotai
+```
+
+Provider means vendor/platform. Model-family names stay inside each selected profile.
+
+Correct:
+
+```python
+AI_PROFILES["xai"]        # Grok models
+AI_PROFILES["alibaba"]    # Qwen models
+AI_PROFILES["deepseek"]   # DeepSeek models
+AI_PROFILES["moonshotai"] # Kimi models
+```
+
+Incorrect:
+
+```python
+{"provider": "grok"}
+{"provider": "qwen"}
+{"provider": "kimi"}
+```
+
+### Package responsibility boundary
+
+The host project owns only:
+
+- provider selection
+- model selection
+- API key retrieval
+- provider client construction
+- choosing which existing `AI_PROFILES[...]` entries to pass as `main` and optional `assistant`
+
+`smx-commerce` owns:
+
+- provider adapters
 - support agents
 - parallel and sequential orchestration
 - JSON/schema handling
+- token-usage aggregation
 - deterministic safety rules
 - admin review workflow
 
-If ai_profile is not provided, commerce still works, but AI support actions such as support analysis and reply drafting are not configured.
+The client project should not create a custom `smx_commerce_ai_client.py` file.
 
-Future providers planned for this profile boundary include OpenAI Responses API, Anthropic, and OpenAI-compatible chat-completions providers such as Alibaba, DeepSeek, and Moonshot/Kimi.
+If `ai_profile` is not provided, commerce still works, but AI support actions such as support analysis and reply drafting are not configured.
+
