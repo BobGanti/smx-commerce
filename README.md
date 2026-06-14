@@ -18,7 +18,7 @@ It plugs a complete commerce module into an existing host project and provides:
 Current package version:
 
 ```text
-0.2.0
+0.2.1
 ```
 
 ---
