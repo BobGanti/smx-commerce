@@ -6,6 +6,7 @@ from pathlib import Path
 import shutil
 
 
+PLUGINS_DIR_NAME = "plugins"
 SCAFFOLD_DIR_NAME = "commerce"
 SETUP_FILE_NAME = "smx_commerce_setup.py"
 ENV_EXAMPLE_FILE_NAME = ".smx_commerce_example.env"
@@ -57,7 +58,8 @@ def ensure_commerce_scaffold(
     """
     root = Path(project_root or Path.cwd()).resolve()
 
-    scaffold_dir = root / SCAFFOLD_DIR_NAME
+    plugins_dir = root / PLUGINS_DIR_NAME
+    scaffold_dir = plugins_dir / SCAFFOLD_DIR_NAME
     data_dir = scaffold_dir / DATA_DIR_NAME
     assets_dir = scaffold_dir / ASSETS_DIR_NAME
     products_assets_dir = assets_dir / PRODUCTS_ASSETS_DIR_NAME
@@ -165,7 +167,7 @@ from pathlib import Path
 from smx_commerce import setup_commerce as _setup_commerce
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 def setup_commerce(app, *, init_schema: bool = True, ai_profile=None):
     """
@@ -191,7 +193,7 @@ def _render_env_example_file() -> str:
 #
 # Copy this file to:
 #
-#   commerce/.smx_commerce.env
+#   plugins/commerce/.smx_commerce.env
 #
 # Then replace the placeholder values.
 #
@@ -200,13 +202,13 @@ def _render_env_example_file() -> str:
 #   python -c "import secrets; print(secrets.token_urlsafe(32))"
 #
 # IMPORTANT:
-# - Do not commit commerce/.smx_commerce.env.
+# - Do not commit plugins/commerce/.smx_commerce.env.
 # - The admin key is chosen by the project owner.
 # - smx-commerce does not generate a hidden admin token.
 # - Public users should not see an Admin button.
 # - Admins enter through /commerce/admin and authenticate with the admin key.
 
-SMX_COMMERCE_DATABASE_URL=sqlite+pysqlite:///./commerce/data/smx_commerce_dev.db
+SMX_COMMERCE_DATABASE_URL=sqlite+pysqlite:///./plugins/commerce/data/smx_commerce_dev.db
 SMX_COMMERCE_ADMIN_TOKEN=replace-with-a-strong-admin-token
 SMX_COMMERCE_FLASK_SECRET_KEY=replace-with-a-strong-session-secret
 
@@ -219,9 +221,9 @@ SMX_COMMERCE_HOST_HOME_URL=/
 SMX_COMMERCE_STORE_TITLE=smxCommerce
 SMX_COMMERCE_STORE_HOME_URL=/commerce
 
-SMX_COMMERCE_ASSETS_DIR=./commerce/assets
-SMX_COMMERCE_PRODUCTS_ASSETS_DIR=./commerce/assets/products
-SMX_COMMERCE_RECEIPTS_DIR=./commerce/assets/receipts
+SMX_COMMERCE_ASSETS_DIR=./plugins/commerce/assets
+SMX_COMMERCE_PRODUCTS_ASSETS_DIR=./plugins/commerce/assets/products
+SMX_COMMERCE_RECEIPTS_DIR=./plugins/commerce/assets/receipts
 SMX_COMMERCE_LOGO_URL=/commerce/assets/logo.png
 SMX_COMMERCE_FAVICON_URL=/commerce/assets/favicon.png
 '''
@@ -274,10 +276,10 @@ def _render_deploy_env_example_file() -> str:
 # - Do not put raw secret values in this file.
 #
 # Local development runtime config:
-#   commerce/.smx_commerce.env
+#   plugins/commerce/.smx_commerce.env
 #
 # Production deployment example:
-#   commerce/.smx_commerce.deploy_example.env
+#   plugins/commerce/.smx_commerce.deploy_example.env
 #
 # smxCP rule:
 #   one Secret Manager vault -> one SMX_COMMERCE_* Cloud Run env var
@@ -296,9 +298,9 @@ SMX_COMMERCE_INSTANCE_CONNECTION_NAME=your-project:your-region:your-cloudsql-ins
 SMX_COMMERCE_AUTO_INIT=1
 SMX_COMMERCE_PAYMENT_PROVIDER=stripe
 
-SMX_COMMERCE_ASSETS_DIR=/app/$LOCAL_DATA_SOURCE/commerce/assets
-SMX_COMMERCE_PRODUCTS_ASSETS_DIR=/app/$LOCAL_DATA_SOURCE/commerce/assets/products
-SMX_COMMERCE_RECEIPTS_DIR=/app/$LOCAL_DATA_SOURCE/commerce/assets/receipts
+SMX_COMMERCE_ASSETS_DIR=/app/$LOCAL_DATA_SOURCE/plugins/commerce/assets
+SMX_COMMERCE_PRODUCTS_ASSETS_DIR=/app/$LOCAL_DATA_SOURCE/plugins/commerce/assets/products
+SMX_COMMERCE_RECEIPTS_DIR=/app/$LOCAL_DATA_SOURCE/plugins/commerce/assets/receipts
 SMX_COMMERCE_LOGO_URL=/commerce/assets/logo.png
 SMX_COMMERCE_FAVICON_URL=/commerce/assets/favicon.png
 
@@ -368,8 +370,8 @@ STRIPE_WEBHOOK_EVENT=checkout.session.completed
 
 SMX_CLIENT_DIR=/app/$LOCAL_DATA_SOURCE
 GCS_MOUNT_PATH=/app/$LOCAL_DATA_SOURCE
-COMMERCE_ASSETS_BUCKET_PREFIX=commerce/assets
-COMMERCE_RECEIPTS_BUCKET_PREFIX=commerce/assets/receipts
+COMMERCE_ASSETS_BUCKET_PREFIX=plugins/commerce/assets
+COMMERCE_RECEIPTS_BUCKET_PREFIX=plugins/commerce/assets/receipts
 '''
 
 
