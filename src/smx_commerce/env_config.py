@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from pathlib import Path
 import os
@@ -201,7 +201,7 @@ def _apply_assets_aliases(config: dict[str, Any], *, prefix: str) -> None:
     if explicit_assets_dir:
         config["assets_dir"] = _resolve_assets_dir(explicit_assets_dir, smx_client_dir)
     elif smx_client_dir:
-        config["assets_dir"] = str(Path(smx_client_dir) / "assets")
+        config["assets_dir"] = str(Path(smx_client_dir) / "plugins" / "commerce" / "assets")
 
     raw_logo_url = os.getenv(f"{prefix}LOGO_URL") or _first_env("COMMERCE_LOGO_URL")
     raw_favicon_url = os.getenv(f"{prefix}FAVICON_URL") or _first_env("COMMERCE_FAVICON_URL")

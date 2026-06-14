@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
@@ -217,7 +217,7 @@ def init_commerce(
 def init_commerce_from_env(
     app,
     *,
-    env_file: str = "commerce/.smx_commerce.env",
+    env_file: str = "plugins/commerce/.smx_commerce.env",
     init_schema: bool = False,
     prefix: str = "SMX_COMMERCE_",
     ai_client: CommerceAIClient | None = None,
@@ -358,7 +358,7 @@ def _build_order_confirmation_service(config: dict):
     else:
         raise ValueError(f"unsupported email_provider: {email_provider}")
 
-    assets_dir = Path(config.get("assets_dir") or "./commerce/assets")
+    assets_dir = Path(config.get("assets_dir") or "./plugins/commerce/assets")
     receipts_dir = config.get("receipts_dir") or str(assets_dir / "receipts")
     logo_path = assets_dir / "logo.png"
 
